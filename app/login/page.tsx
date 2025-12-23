@@ -3,6 +3,9 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LinkedInIcon } from "@/public/linkedin";
+import { FacebookIcon } from "@/public/facebook";
+import { InstagramIcon } from "@/public/instagram";
 
 export default function LoginPage() {
   return (
@@ -62,10 +65,27 @@ export default function LoginPage() {
       </div>
 
       {/* Social Footer */}
-      <div className="flex gap-4 mt-12 opacity-40">
-        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
-        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
-        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
+      <div className="flex gap-6 mt-12 opacity-50">
+        <a
+          href="#"
+          className="text-foreground hover:text-primary transition-colors"
+        >
+          <FacebookIcon size={28} />
+        </a>
+
+        <a
+          href="#"
+          className="text-foreground hover:text-primary transition-colors"
+        >
+          <InstagramIcon size={28} />
+        </a>
+
+        <a
+          href="#"
+          className="text-foreground hover:text-primary transition-colors"
+        >
+          <LinkedInIcon size={28} />
+        </a>
       </div>
     </main>
   );
