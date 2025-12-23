@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-800">
+    <div className="min-h-screen bg-white font-sans text-foreground">
       {/* --- NAVBAR --- */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
         <Image
@@ -32,14 +32,14 @@ export default function HomePage() {
               Cadaste-se
             </Button>
           </Link>
-          <Button className="bg-[#4AA3A2] py-2 h-auto text-xs px-4">
+          <Button className="bg-primary py-2 h-auto text-xs px-4">
             Download App
           </Button>
         </div>
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="bg-gradient-to-r from-[#2C9391] to-[#69B3A2] py-16 md:py-24 px-6">
+      <section className="bg-primary py-16 md:py-24 px-6">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
           <div className="text-white space-y-6">
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">
@@ -50,7 +50,7 @@ export default function HomePage() {
               construa seu futuro financeiro com o ClearBalance.
             </p>
             <div className="flex gap-4 pt-4">
-              <Button className="bg-white text-[#2C9391] hover:bg-gray-100 px-8">
+              <Button className="bg-white text-primary hover:bg-gray-100 px-8">
                 Começar Grátis
               </Button>
               <Button
@@ -63,7 +63,7 @@ export default function HomePage() {
           </div>
           <div className="relative flex justify-center">
             {/* Representação do Mockup do Dashboard */}
-            <div className="w-full max-w-[500px] bg-white rounded-lg shadow-2xl p-2 border border-white/20 overflow-hidden transform md:rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div className="w-full max-w-125 bg-white rounded-lg shadow-2xl p-2 border border-white/20 overflow-hidden transform md:rotate-2 hover:rotate-0 transition-transform duration-500">
               <div className="bg-gray-100 rounded-t-md h-6 w-full flex items-center px-2 gap-1">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 <div className="w-2 h-2 rounded-full bg-yellow-400" />
@@ -77,10 +77,10 @@ export default function HomePage() {
                   <div className="h-12 bg-teal-50 rounded" />
                 </div>
                 <div className="h-32 w-full bg-gray-50 rounded-md border border-dashed border-gray-300 flex items-end p-2 gap-1">
-                  <div className="w-full bg-[#69B3A2]/40 h-[40%]" />
-                  <div className="w-full bg-[#69B3A2]/60 h-[70%]" />
-                  <div className="w-full bg-[#69B3A2] h-[50%]" />
-                  <div className="w-full bg-[#69B3A2]/80 h-[90%]" />
+                  <div className="w-full bg-primary/40 h-[40%]" />
+                  <div className="w-full bg-primary/60 h-[70%]" />
+                  <div className="w-full bg-primary h-[50%]" />
+                  <div className="w-full bg-primary/80 h-[90%]" />
                 </div>
               </div>
             </div>
@@ -121,13 +121,13 @@ export default function HomePage() {
             },
           ].map((item) => (
             <div key={item.id} className="text-center space-y-4 group">
-              <div className="w-16 h-16 bg-[#F0F7F6] text-[#69B3A2] rounded-full flex items-center justify-center mx-auto text-xl font-bold group-hover:bg-[#69B3A2] group-hover:text-white transition-all">
+              <div className="w-16 h-16 bg-[#F0F7F6] text-primary rounded-full flex items-center justify-center mx-auto text-xl font-bold group-hover:bg-primary group-hover:text-white transition-all">
                 {item.icon}
               </div>
-              <h3 className="font-bold text-gray-700">
+              <h3 className="font-bold text-foreground">
                 {item.id}. {item.title}
               </h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
+              <p className="text-sm text-foreground leading-relaxed">
                 {item.desc}
               </p>
             </div>
@@ -137,7 +137,7 @@ export default function HomePage() {
 
       {/* --- CALL TO ACTION --- */}
       <section className="px-6 pb-20">
-        <div className="max-w-5xl mx-auto bg-[#4AA3A2] rounded-2xl p-12 text-center text-white space-y-6">
+        <div className="max-w-5xl mx-auto bg-primary rounded-2xl p-12 text-center text-white space-y-6">
           <h2 className="text-3xl font-bold">
             Pronto para ter clareza financeira?
           </h2>
@@ -145,14 +145,14 @@ export default function HomePage() {
             Junte-se aos milhares de usuários que transformaram suas vidas
             financeiras com nossa plataforma.
           </p>
-          <Button className="bg-white text-[#4AA3A2] hover:bg-gray-100 px-10 py-6 text-lg">
+          <Button className="bg-white text-primary hover:bg-gray-100 px-10 py-6 text-lg">
             Criar minha conta gratuita
           </Button>
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-8 text-center text-gray-400 text-xs border-t border-gray-100">
+      <footer className="py-8 text-center text-foreground text-xs border-t border-gray-100">
         <p>© 2025 ClearBalance. Todos os direitos reservados.</p>
       </footer>
     </div>

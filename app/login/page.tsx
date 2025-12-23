@@ -34,9 +34,9 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-gray-300 text-[#69B3A2] focus:ring-[#69B3A2]"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
-              <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+              <span className="text-sm text-gray-500 group-hover:text-foreground transition-colors">
                 Remember me
               </span>
             </label>
@@ -48,13 +48,13 @@ export default function LoginPage() {
         <div className="flex items-center justify-between mt-10 text-sm">
           <a
             href="#"
-            className="text-gray-400 hover:text-[#69B3A2] transition-colors"
+            className="text-gray-400 hover:text-primary transition-colors"
           >
             Forgot password?
           </a>
           <a
             href="#"
-            className="text-gray-400 hover:text-[#69B3A2] transition-colors font-medium"
+            className="text-gray-400 hover:text-primary transition-colors font-medium"
           >
             Create an account
           </a>
@@ -63,9 +63,9 @@ export default function LoginPage() {
 
       {/* Social Footer */}
       <div className="flex gap-4 mt-12 opacity-40">
-        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
-        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
-        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
+        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
+        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
+        <div className="w-8 h-8 bg-foreground rounded-full hover:bg-primary cursor-pointer transition-colors" />
       </div>
     </main>
   );
