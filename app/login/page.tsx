@@ -1,0 +1,72 @@
+"use client";
+
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default function LoginPage() {
+  return (
+    <main className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans">
+      {/* Logo Area - Agora usando o arquivo logo.png */}
+      <div className="mb-8">
+        <Image
+          src="/logo.png"
+          alt="ClearBalance Logo"
+          width={180} // Ajuste o tamanho conforme necessário
+          height={50}
+          priority // Carrega a logo com prioridade
+          className="object-contain"
+        />
+      </div>
+
+      {/* Login Card */}
+      <div className="w-full max-w-120 bg-white rounded-xl shadow-xl shadow-gray-200/50 p-10 border border-white">
+        <h1 className="text-2xl font-bold text-gray-800 mb-8 text-center md:text-left">
+          Welcome back to financial clarity
+        </h1>
+
+        <form className="space-y-4">
+          <Input type="email" placeholder="Email address" required />
+
+          <Input type="password" placeholder="Password" required />
+
+          <div className="flex items-center justify-between mt-6">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-gray-300 text-[#69B3A2] focus:ring-[#69B3A2]"
+              />
+              <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                Remember me
+              </span>
+            </label>
+
+            <Button type="submit">Secure Login</Button>
+          </div>
+        </form>
+
+        <div className="flex items-center justify-between mt-10 text-sm">
+          <a
+            href="#"
+            className="text-gray-400 hover:text-[#69B3A2] transition-colors"
+          >
+            Forgot password?
+          </a>
+          <a
+            href="#"
+            className="text-gray-400 hover:text-[#69B3A2] transition-colors font-medium"
+          >
+            Create an account
+          </a>
+        </div>
+      </div>
+
+      {/* Social Footer */}
+      <div className="flex gap-4 mt-12 opacity-40">
+        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
+        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
+        <div className="w-8 h-8 bg-gray-600 rounded-full hover:bg-[#69B3A2] cursor-pointer transition-colors" />
+      </div>
+    </main>
+  );
+}
