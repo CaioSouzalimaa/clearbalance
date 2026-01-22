@@ -18,7 +18,7 @@ export const DashboardHeader = () => {
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-border text-gray-600">
+          <Button variant="outline" className="border-border text-foreground">
             Exportar
           </Button>
           <Button onClick={() => setIsModalOpen(true)}>Nova transação</Button>

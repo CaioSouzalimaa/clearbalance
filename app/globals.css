@@ -6,4 +6,18 @@
   --color-background: #f8f9fa;
   --color-foreground: #343a40;
   --color-border: #e9ecef;
+  --color-surface: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #6b7280;
+}
+
+.dark {
+  --color-primary: #7cc7b8;
+  --color-secondary: #6fb39f;
+  --color-background: #0f172a;
+  --color-foreground: #e2e8f0;
+  --color-border: #1f2937;
+  --color-surface: #111827;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
 }
