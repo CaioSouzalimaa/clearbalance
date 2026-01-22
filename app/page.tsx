@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white font-sans text-foreground">
+    <div className="min-h-screen bg-background font-sans text-foreground">
       {/* --- NAVBAR --- */}
       <nav className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
         <Image
@@ -14,7 +14,7 @@ export default function HomePage() {
           height={40}
           className="object-contain"
         />
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
           <Link href="#" className="hover:text-brand-teal transition-colors">
             Entrar
           </Link>
@@ -27,7 +27,7 @@ export default function HomePage() {
           <Link href="/login">
             <Button
               variant="outline"
-              className="py-2 h-auto text-xs border-gray-300"
+              className="py-2 h-auto text-xs border-border"
             >
               Cadaste-se
             </Button>
@@ -50,7 +50,7 @@ export default function HomePage() {
               construa seu futuro financeiro com o ClearBalance.
             </p>
             <div className="flex gap-4 pt-4">
-              <Button className="bg-white text-primary hover:bg-gray-100 px-8">
+              <Button className="bg-surface text-primary hover:bg-muted px-8">
                 Começar Grátis
               </Button>
               <Button
@@ -63,20 +63,20 @@ export default function HomePage() {
           </div>
           <div className="relative flex justify-center">
             {/* Representação do Mockup do Dashboard */}
-            <div className="w-full max-w-125 bg-white rounded-lg shadow-2xl p-2 border border-white/20 overflow-hidden transform md:rotate-2 hover:rotate-0 transition-transform duration-500">
-              <div className="bg-gray-100 rounded-t-md h-6 w-full flex items-center px-2 gap-1">
+            <div className="w-full max-w-125 bg-surface rounded-lg shadow-2xl p-2 border border-white/20 overflow-hidden transform md:rotate-2 hover:rotate-0 transition-transform duration-500">
+              <div className="bg-muted rounded-t-md h-6 w-full flex items-center px-2 gap-1">
                 <div className="w-2 h-2 rounded-full bg-red-400" />
                 <div className="w-2 h-2 rounded-full bg-yellow-400" />
                 <div className="w-2 h-2 rounded-full bg-green-400" />
               </div>
-              <div className="p-4 bg-white space-y-4">
-                <div className="h-4 w-1/3 bg-gray-200 rounded" />
+              <div className="p-4 bg-surface space-y-4">
+                <div className="h-4 w-1/3 bg-border rounded" />
                 <div className="grid grid-cols-3 gap-2">
                   <div className="h-12 bg-teal-50 rounded" />
                   <div className="h-12 bg-teal-50 rounded" />
                   <div className="h-12 bg-teal-50 rounded" />
                 </div>
-                <div className="h-32 w-full bg-gray-50 rounded-md border border-dashed border-gray-300 flex items-end p-2 gap-1">
+                <div className="h-32 w-full bg-muted rounded-md border border-dashed border-border flex items-end p-2 gap-1">
                   <div className="w-full bg-primary/40 h-[40%]" />
                   <div className="w-full bg-primary/60 h-[70%]" />
                   <div className="w-full bg-primary h-[50%]" />
@@ -90,7 +90,7 @@ export default function HomePage() {
 
       {/* --- HOW IT WORKS --- */}
       <section className="py-20 px-6 max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-16">
+        <h2 className="text-3xl font-bold text-center text-foreground mb-16">
           Como o ClearBalance funciona?
         </h2>
         <div className="grid md:grid-cols-4 gap-8">
@@ -145,14 +145,14 @@ export default function HomePage() {
             Junte-se aos milhares de usuários que transformaram suas vidas
             financeiras com nossa plataforma.
           </p>
-          <Button className="bg-white text-primary hover:bg-gray-100 px-10 py-6 text-lg">
+          <Button className="bg-surface text-primary hover:bg-muted px-10 py-6 text-lg">
             Criar minha conta gratuita
           </Button>
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="py-8 text-center text-foreground text-xs border-t border-gray-100">
+      <footer className="py-8 text-center text-foreground text-xs border-t border-border">
         <p>© 2025 ClearBalance. Todos os direitos reservados.</p>
       </footer>
     </div>

@@ -9,7 +9,7 @@ import { InstagramIcon } from "@/public/instagram";
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans">
+    <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4 font-sans">
       {/* Logo Area - Agora usando o arquivo logo.png */}
       <div className="mb-8">
         <Image
@@ -23,8 +23,8 @@ export default function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-120 bg-white rounded-xl shadow-xl shadow-gray-200/50 p-10 border border-white">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8 text-center md:text-left">
+      <div className="w-full max-w-120 bg-surface rounded-xl shadow-xl shadow-black/10 p-10 border border-border">
+        <h1 className="text-2xl font-bold text-foreground mb-8 text-center md:text-left">
           Welcome back to financial clarity
         </h1>
 
@@ -37,9 +37,9 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
               />
-              <span className="text-sm text-gray-500 group-hover:text-foreground transition-colors">
+              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
                 Remember me
               </span>
             </label>
@@ -51,13 +51,13 @@ export default function LoginPage() {
         <div className="flex items-center justify-between mt-10 text-sm">
           <a
             href="#"
-            className="text-gray-400 hover:text-primary transition-colors"
+            className="text-muted-foreground hover:text-primary transition-colors"
           >
             Forgot password?
           </a>
           <a
             href="#"
-            className="text-gray-400 hover:text-primary transition-colors font-medium"
+            className="text-muted-foreground hover:text-primary transition-colors font-medium"
           >
             Create an account
           </a>
