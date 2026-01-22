@@ -12,9 +12,7 @@ export const DashboardHeader = () => {
     <>
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Bem-vinda de volta
-          </p>
+          <p className="text-sm font-medium text-gray-500">Bem-vinda de volta</p>
           <h1 className="text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
