@@ -1,6 +1,7 @@
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { SummaryCard } from "@/components/dashboard/summary-card";
+import { TransactionsCalendar } from "@/components/dashboard/transactions-calendar";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { VariationChart } from "@/components/dashboard/variation-chart";
 
@@ -98,11 +99,11 @@ export default function DashboardPage() {
           </section>
 
           <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-foreground">
                 Distribuição por categoria
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Suas principais categorias no mês atual.
               </p>
               <div className="mt-6 space-y-4">
@@ -116,9 +117,11 @@ export default function DashboardPage() {
                       <span className="font-medium text-foreground">
                         {item.label}
                       </span>
-                      <span className="text-gray-500">{item.value}</span>
+                      <span className="text-muted-foreground">
+                        {item.value}
+                      </span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-gray-100">
+                    <div className="h-2 w-full rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-primary"
                         style={{
@@ -131,11 +134,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-foreground">
                 Metas do mês
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Progresso das suas metas financeiras.
               </p>
               <div className="mt-6 space-y-5">
@@ -149,9 +152,11 @@ export default function DashboardPage() {
                       <span className="font-medium text-foreground">
                         {item.label}
                       </span>
-                      <span className="text-gray-500">{item.value}</span>
+                      <span className="text-muted-foreground">
+                        {item.value}
+                      </span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-gray-100">
+                    <div className="h-2 w-full rounded-full bg-muted">
                       <div
                         className="h-2 rounded-full bg-secondary"
                         style={{
@@ -179,6 +184,8 @@ export default function DashboardPage() {
               data={expenseVariation}
             />
           </section>
+
+          <TransactionsCalendar transactions={transactions} />
 
           <TransactionsTable transactions={transactions} />
         </main>

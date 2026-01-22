@@ -13,7 +13,8 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const variants = {
     primary: "bg-primary text-white hover:bg-secondary shadow-sm",
-    outline: "border border-gray-300 text-gray-600 hover:bg-gray-50",
+    outline:
+      "border border-border text-foreground hover:bg-muted hover:text-foreground",
   };
 
   return (

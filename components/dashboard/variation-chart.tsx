@@ -38,11 +38,11 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   const points = buildPoints(data, width, height);
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
-          <p className="text-sm text-gray-500">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <span className={`text-xs font-semibold ${accentClassName}`}>
           {data[data.length - 1].value.toFixed(1)}%
@@ -61,11 +61,11 @@ export const VariationChart: React.FC<VariationChartProps> = ({
             fill="none"
             stroke="currentColor"
             strokeWidth="1"
-            className="text-gray-200"
+            className="text-border"
             points={`0,${height} ${width},${height}`}
           />
         </svg>
-        <div className="mt-4 flex justify-between text-xs text-gray-400">
+        <div className="mt-4 flex justify-between text-xs text-muted-foreground">
           {data.map((item) => (
             <span key={item.month}>{item.month}</span>
           ))}
