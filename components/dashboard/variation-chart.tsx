@@ -1,14 +1,4 @@
-"use client";
-
 import React from "react";
-import {
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 interface VariationPoint {
   month: string;
@@ -22,9 +12,19 @@ interface VariationChartProps {
   data: VariationPoint[];
 }
 
-const accentMap: Record<string, string> = {
-  "text-primary": "#69b3a2",
-  "text-rose-500": "#f43f5e",
+const buildPoints = (data: VariationPoint[], width: number, height: number) => {
+  const values = data.map((item) => item.value);
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const range = max - min || 1;
+
+  return data
+    .map((item, index) => {
+      const x = (index / (data.length - 1 || 1)) * width;
+      const y = height - ((item.value - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(" ");
 };
 
 export const VariationChart: React.FC<VariationChartProps> = ({
@@ -33,8 +33,9 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   accentClassName = "text-primary",
   data,
 }) => {
-  const latest = data[data.length - 1]?.value ?? 0;
-  const strokeColor = accentMap[accentClassName] ?? "#69b3a2";
+  const width = 260;
+  const height = 90;
+  const points = buildPoints(data, width, height);
 
   return (
     <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
@@ -44,37 +45,31 @@ export const VariationChart: React.FC<VariationChartProps> = ({
           <p className="text-sm text-gray-500">{subtitle}</p>
         </div>
         <span className={`text-xs font-semibold ${accentClassName}`}>
-          {latest.toFixed(1)}%
+          {data[data.length - 1].value.toFixed(1)}%
         </span>
       </div>
-      <div className="mt-6 h-36">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <XAxis
-              dataKey="month"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
-            />
-            <YAxis hide domain={["dataMin - 1", "dataMax + 1"]} />
-            <Tooltip
-              cursor={{ stroke: "#e5e7eb", strokeDasharray: "4 4" }}
-              contentStyle={{
-                borderRadius: "12px",
-                borderColor: "#e5e7eb",
-                fontSize: "12px",
-              }}
-              formatter={(value: number) => [`${value.toFixed(1)}%`, "Variação"]}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={strokeColor}
-              strokeWidth={3}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="mt-6">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full">
+          <polyline
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            className={accentClassName}
+            points={points}
+          />
+          <polyline
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            className="text-gray-200"
+            points={`0,${height} ${width},${height}`}
+          />
+        </svg>
+        <div className="mt-4 flex justify-between text-xs text-gray-400">
+          {data.map((item) => (
+            <span key={item.month}>{item.month}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
