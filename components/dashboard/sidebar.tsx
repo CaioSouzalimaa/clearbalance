@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 const navItems = [
-  { label: "Dashboard", href: "#" },
+  { label: "Dashboard", href: "/dashboard" },
   { label: "Carteiras", href: "#" },
   { label: "Lançamentos", href: "#" },
   { label: "Metas", href: "#" },
