@@ -86,9 +86,9 @@ const expenseVariation = [
 export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="flex min-h-screen flex-col md:flex-row">
+      <div className="grid min-h-screen grid-cols-[260px_1fr]">
         <Sidebar />
-        <main className="flex flex-1 flex-col gap-8 bg-background px-6 py-8 pb-24 md:px-10 md:py-10 md:pb-10">
+        <main className="flex flex-col gap-8 bg-background px-8 py-10">
           <DashboardHeader />
 
           <section className="grid gap-6 md:grid-cols-3">
@@ -97,7 +97,7 @@ export default function DashboardPage() {
             ))}
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+          <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
             <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-foreground">
                 Distribuição por categoria
