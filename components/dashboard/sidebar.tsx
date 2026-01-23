@@ -63,7 +63,7 @@ interface SidebarProps {
 export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
   return (
     <aside
-      className={`hidden h-full flex-col gap-8 border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
+      className={`hidden min-h-screen flex-col gap-8 border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
         isCollapsed ? "w-20 px-4" : "w-[260px] px-6"
       }`}
     >
