@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { DollarSign } from "lucide";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +15,12 @@ interface Transaction {
   date: string;
   amount: string;
   type: "entrada" | "saida";
-  recurrenceType: "unica" | "parcelada" | "fixa";
-  installments?: number;
-  hasOtherRecurrences?: boolean;
-  recurrenceCount?: number;
+  recurrenceMode: "nao_recorrente" | "recorrente";
+  recurrenceKind?: "fixa" | "variavel";
+  recurrenceFrequency?: "mensal" | "semanal" | "anual";
+  billingDay?: string;
   isSettled: boolean;
+  paymentDate?: string;
 }
 
 interface TransactionsTableProps {
@@ -31,11 +33,12 @@ interface TransactionFormState {
   date: string;
   amount: string;
   type: "entrada" | "saida";
-  recurrenceType: Transaction["recurrenceType"];
-  installments: string;
-  hasOtherRecurrences: boolean;
-  recurrenceCount: string;
+  recurrenceMode: Transaction["recurrenceMode"];
+  recurrenceKind: Transaction["recurrenceKind"];
+  recurrenceFrequency: Transaction["recurrenceFrequency"];
+  billingDay: string;
   isSettled: boolean;
+  paymentDate: string;
 }
 
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({
@@ -50,12 +53,67 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     date: "",
     amount: "",
     type: "entrada",
-    recurrenceType: "unica",
-    installments: "",
-    hasOtherRecurrences: false,
-    recurrenceCount: "",
+    recurrenceMode: "nao_recorrente",
+    recurrenceKind: "fixa",
+    recurrenceFrequency: "mensal",
+    billingDay: "",
     isSettled: false,
+    paymentDate: "",
   });
+  const [saveFeedback, setSaveFeedback] = useState("");
+
+  const formatCurrencyBRL = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+
+    if (!digits) {
+      return "";
+    }
+
+    const numberValue = Number(digits) / 100;
+
+    return numberValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const formatAmountWithType = (value: string, type: Transaction["type"]) => {
+    const formatted = formatCurrencyBRL(value);
+
+    if (!formatted) {
+      return "";
+    }
+
+    return `${type === "entrada" ? "+" : "-"} ${formatted}`;
+  };
+
+  const formatBillingLabel = (transaction: Transaction) => {
+    if (transaction.recurrenceMode !== "recorrente" || !transaction.billingDay) {
+      return "";
+    }
+
+    if (transaction.recurrenceFrequency === "semanal") {
+      return `• ${transaction.billingDay}`;
+    }
+
+    if (transaction.recurrenceFrequency === "anual") {
+      return `• ${transaction.billingDay}`;
+    }
+
+    return `• Dia ${transaction.billingDay}`;
+  };
+
+  const getBillingDayLabel = () => {
+    if (formState.recurrenceFrequency === "semanal") {
+      return "Dia da semana";
+    }
+
+    if (formState.recurrenceFrequency === "anual") {
+      return "Data de cobrança";
+    }
+
+    return "Dia de cobrança";
+  };
 
   const startEditing = (transaction: Transaction) => {
     setEditingTransaction(transaction);
@@ -63,17 +121,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       description: transaction.description,
       category: transaction.category,
       date: transaction.date,
-      amount: transaction.amount,
+      amount: formatCurrencyBRL(transaction.amount),
       type: transaction.type,
-      recurrenceType: transaction.recurrenceType,
-      installments: transaction.installments
-        ? `${transaction.installments}`
-        : "",
-      hasOtherRecurrences: transaction.hasOtherRecurrences ?? false,
-      recurrenceCount: transaction.recurrenceCount
-        ? `${transaction.recurrenceCount}`
-        : "",
+      recurrenceMode: transaction.recurrenceMode,
+      recurrenceKind: transaction.recurrenceKind ?? "fixa",
+      recurrenceFrequency: transaction.recurrenceFrequency ?? "mensal",
+      billingDay: transaction.billingDay ?? "",
       isSettled: transaction.isSettled,
+      paymentDate:
+        transaction.paymentDate ??
+        (transaction.isSettled ? new Date().toISOString().split("T")[0] : ""),
     });
   };
 
@@ -96,30 +153,30 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               description: formState.description,
               category: formState.category,
               date: formState.date,
-              amount: formState.amount,
+              amount: formatAmountWithType(formState.amount, formState.type),
               type: formState.type,
-              recurrenceType: formState.recurrenceType,
-              installments:
-                formState.recurrenceType === "parcelada" &&
-                formState.installments
-                  ? Number(formState.installments)
+              recurrenceMode: formState.recurrenceMode,
+              recurrenceKind:
+                formState.recurrenceMode === "recorrente"
+                  ? formState.recurrenceKind
                   : undefined,
-              hasOtherRecurrences:
-                formState.recurrenceType === "fixa"
-                  ? formState.hasOtherRecurrences
+              recurrenceFrequency:
+                formState.recurrenceMode === "recorrente"
+                  ? formState.recurrenceFrequency
                   : undefined,
-              recurrenceCount:
-                formState.recurrenceType === "fixa" &&
-                formState.hasOtherRecurrences &&
-                formState.recurrenceCount
-                  ? Number(formState.recurrenceCount)
+              billingDay:
+                formState.recurrenceMode === "recorrente"
+                  ? formState.billingDay
                   : undefined,
               isSettled: formState.isSettled,
+              paymentDate: formState.isSettled ? formState.paymentDate : "",
             }
           : item
       )
     );
     setEditingTransaction(null);
+    setSaveFeedback("Alterações salvas com sucesso.");
+    window.setTimeout(() => setSaveFeedback(""), 3000);
   };
 
   return (
@@ -136,6 +193,11 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             {transactions.length} itens
           </span>
         </div>
+        {saveFeedback ? (
+          <div className="border-b border-border bg-primary/5 px-6 py-3 text-sm font-medium text-primary">
+            {saveFeedback}
+          </div>
+        ) : null}
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-background text-left text-muted-foreground">
@@ -185,17 +247,21 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     <td className="px-6 py-4 text-muted-foreground">
                       <div className="flex flex-col">
                         <span className="font-medium text-foreground">
-                          {item.recurrenceType === "parcelada"
-                            ? `${item.installments ?? 1}x`
-                            : item.recurrenceType === "fixa"
-                            ? "Fixa"
-                            : "Única"}
+                          {item.recurrenceMode === "recorrente"
+                            ? item.recurrenceKind === "fixa"
+                              ? "Recorrente fixa"
+                              : "Recorrente variável"
+                            : "Não recorrente"}
                         </span>
-                        {item.recurrenceType === "fixa" &&
-                        item.hasOtherRecurrences &&
-                        item.recurrenceCount ? (
+                        {item.recurrenceMode === "recorrente" &&
+                        item.recurrenceFrequency ? (
                           <span className="text-xs text-muted-foreground">
-                            + {item.recurrenceCount} recorrências
+                            {item.recurrenceFrequency === "mensal"
+                              ? "Mensal"
+                              : item.recurrenceFrequency === "semanal"
+                              ? "Semanal"
+                              : "Anual"}
+                            {formatBillingLabel(item)}
                           </span>
                         ) : null}
                       </div>
@@ -282,7 +348,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               </button>
             </div>
 
-            <form className="mt-6 space-y-4" onSubmit={handleSave}>
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={handleSave}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setEditingTransaction(null);
+                }
+              }}
+            >
               <div className="space-y-2">
                 <label
                   htmlFor="edit-descricao"
@@ -311,17 +386,35 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   >
                     Valor
                   </label>
-                  <Input
-                    id="edit-valor"
-                    name="amount"
-                    value={formState.amount}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        amount: event.target.value,
-                      }))
-                    }
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+                      <LucideIcon
+                        icon={DollarSign}
+                        className="h-4 w-4"
+                        aria-hidden
+                      />
+                    </span>
+                    <Input
+                      id="edit-valor"
+                      name="amount"
+                      inputMode="numeric"
+                      value={formState.amount}
+                      onChange={(event) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          amount: formatCurrencyBRL(event.target.value),
+                        }))
+                      }
+                      className="pl-9 text-right"
+                      aria-describedby="edit-valor-helper"
+                    />
+                  </div>
+                  <p
+                    id="edit-valor-helper"
+                    className="text-xs text-muted-foreground"
+                  >
+                    Informe o valor total do lançamento.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <label
@@ -373,7 +466,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     htmlFor="edit-data"
                     className="text-sm font-medium text-foreground"
                   >
-                    Data
+                    {formState.recurrenceMode === "recorrente"
+                      ? "Data do primeiro lançamento"
+                      : "Data do lançamento"}
                   </label>
                   <Input
                     id="edit-data"
@@ -391,126 +486,238 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label
-                    htmlFor="edit-recurrence"
-                    className="text-sm font-medium text-foreground"
-                  >
+                  <label className="text-sm font-medium text-foreground">
                     Recorrência
                   </label>
-                  <select
-                    id="edit-recurrence"
-                    name="recurrenceType"
-                    value={formState.recurrenceType}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        recurrenceType:
-                          event.target.value as TransactionFormState["recurrenceType"],
-                        installments: "",
-                        recurrenceCount: "",
-                        hasOtherRecurrences: false,
-                      }))
-                    }
-                    className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    <option value="unica">Única</option>
-                    <option value="parcelada">Parcelada</option>
-                    <option value="fixa">Fixa</option>
-                  </select>
+                  <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+                    <label className="flex items-center gap-2 text-sm text-foreground">
+                      <input
+                        type="radio"
+                        name="recurrenceMode"
+                        value="nao_recorrente"
+                        checked={formState.recurrenceMode === "nao_recorrente"}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            recurrenceMode:
+                              event.target.value as TransactionFormState["recurrenceMode"],
+                          }))
+                        }
+                        className="h-4 w-4 border-border text-primary"
+                      />
+                      Não recorrente
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-foreground">
+                      <input
+                        type="radio"
+                        name="recurrenceMode"
+                        value="recorrente"
+                        checked={formState.recurrenceMode === "recorrente"}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            recurrenceMode:
+                              event.target.value as TransactionFormState["recurrenceMode"],
+                          }))
+                        }
+                        className="h-4 w-4 border-border text-primary"
+                      />
+                      Recorrente
+                    </label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Usado para despesas ou receitas que se repetem.
+                  </p>
                 </div>
-                {formState.recurrenceType === "parcelada" ? (
+                {formState.recurrenceMode === "recorrente" ? (
                   <div className="space-y-2">
                     <label
-                      htmlFor="edit-installments"
+                      htmlFor="edit-recurrence-type"
                       className="text-sm font-medium text-foreground"
                     >
-                      Quantidade de parcelas
+                      Tipo
                     </label>
-                    <Input
-                      id="edit-installments"
-                      name="installments"
-                      type="number"
-                      min={1}
-                      value={formState.installments}
+                    <select
+                      id="edit-recurrence-type"
+                      name="recurrenceKind"
+                      value={formState.recurrenceKind ?? "fixa"}
                       onChange={(event) =>
                         setFormState((prev) => ({
                           ...prev,
-                          installments: event.target.value,
+                          recurrenceKind:
+                            event.target.value as TransactionFormState["recurrenceKind"],
                         }))
                       }
-                    />
+                      className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="fixa">Fixa</option>
+                      <option value="variavel">Variável</option>
+                    </select>
                   </div>
                 ) : null}
               </div>
 
-              {formState.recurrenceType === "fixa" ? (
-                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
-                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <input
-                      type="checkbox"
-                      checked={formState.hasOtherRecurrences}
+              {formState.recurrenceMode === "recorrente" ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="edit-recurrence-frequency"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Frequência
+                    </label>
+                    <select
+                      id="edit-recurrence-frequency"
+                      name="recurrenceFrequency"
+                      value={formState.recurrenceFrequency ?? "mensal"}
                       onChange={(event) =>
                         setFormState((prev) => ({
                           ...prev,
-                          hasOtherRecurrences: event.target.checked,
-                          recurrenceCount: event.target.checked
-                            ? prev.recurrenceCount
-                            : "",
+                          recurrenceFrequency:
+                            event.target.value as TransactionFormState["recurrenceFrequency"],
+                          billingDay: "",
                         }))
                       }
-                      className="h-4 w-4 rounded border-border text-primary"
-                    />
-                    Possui outras recorrências?
-                  </label>
-                  {formState.hasOtherRecurrences ? (
-                    <div className="space-y-2">
-                      <label
-                        htmlFor="edit-recurrence-count"
-                        className="text-sm font-medium text-foreground"
-                      >
-                        Quantas recorrências adicionais?
-                      </label>
-                      <Input
-                        id="edit-recurrence-count"
-                        name="recurrenceCount"
-                        type="number"
-                        min={1}
-                        value={formState.recurrenceCount}
+                      className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="mensal">Mensal</option>
+                      <option value="semanal">Semanal</option>
+                      <option value="anual">Anual</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="edit-billing-day"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      {getBillingDayLabel()}
+                    </label>
+                    {formState.recurrenceFrequency === "semanal" ? (
+                      <select
+                        id="edit-billing-day"
+                        name="billingDay"
+                        value={formState.billingDay}
                         onChange={(event) =>
                           setFormState((prev) => ({
                             ...prev,
-                            recurrenceCount: event.target.value,
+                            billingDay: event.target.value,
+                          }))
+                        }
+                        className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">Selecione</option>
+                        <option value="Segunda-feira">Segunda-feira</option>
+                        <option value="Terça-feira">Terça-feira</option>
+                        <option value="Quarta-feira">Quarta-feira</option>
+                        <option value="Quinta-feira">Quinta-feira</option>
+                        <option value="Sexta-feira">Sexta-feira</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                      </select>
+                    ) : formState.recurrenceFrequency === "anual" ? (
+                      <Input
+                        id="edit-billing-day"
+                        name="billingDay"
+                        type="date"
+                        value={formState.billingDay}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            billingDay: event.target.value,
                           }))
                         }
                       />
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Marque para informar outras entradas ou saídas fixas.
-                    </p>
-                  )}
+                    ) : (
+                      <Input
+                        id="edit-billing-day"
+                        name="billingDay"
+                        type="number"
+                        min={1}
+                        max={31}
+                        placeholder="Ex: 5"
+                        value={formState.billingDay}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            billingDay: event.target.value,
+                          }))
+                        }
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground md:col-span-2">
+                    Lançamentos recorrentes são gerados automaticamente.
+                  </p>
                 </div>
               ) : null}
 
               <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={formState.isSettled}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        isSettled: event.target.checked,
-                      }))
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Status de pagamento
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Use este status para controlar o que já foi liquidado.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formState.isSettled}
+                    onClick={() =>
+                      setFormState((prev) => {
+                        const nextValue = !prev.isSettled;
+                        const nextPaymentDate = nextValue
+                          ? prev.paymentDate ||
+                            new Date().toISOString().split("T")[0]
+                          : "";
+
+                        return {
+                          ...prev,
+                          isSettled: nextValue,
+                          paymentDate: nextPaymentDate,
+                        };
+                      })
                     }
-                    className="h-4 w-4 rounded border-border text-primary"
-                  />
-                  Marcar como{" "}
-                  {formState.type === "entrada" ? "recebido" : "pago"}
-                </label>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Use este status para controlar o que já foi liquidado.
-                </p>
+                    className={`relative inline-flex h-8 w-16 items-center rounded-full border transition ${
+                      formState.isSettled
+                        ? "border-primary bg-primary"
+                        : "border-border bg-muted"
+                    }`}
+                  >
+                    <span
+                      className={`absolute left-1 flex h-6 w-6 items-center justify-center rounded-full bg-background shadow transition ${
+                        formState.isSettled ? "translate-x-8" : "translate-x-0"
+                      }`}
+                    />
+                    <span className="sr-only">Alternar status</span>
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{formState.isSettled ? "Pago" : "Pendente"}</span>
+                  {formState.isSettled ? (
+                    <label
+                      htmlFor="edit-payment-date"
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <span>Data de pagamento</span>
+                      <Input
+                        id="edit-payment-date"
+                        name="paymentDate"
+                        type="date"
+                        value={formState.paymentDate}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            paymentDate: event.target.value,
+                          }))
+                        }
+                        className="h-8 w-auto px-2 py-1 text-xs"
+                      />
+                    </label>
+                  ) : null}
+                </div>
               </div>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
