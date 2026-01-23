@@ -1,0 +1,309 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { CalendarDays, Plus, Target, TrendingUp } from "lucide";
+
+import { LucideIcon } from "@/components/dashboard/sidebar";
+import { SidebarShell } from "@/components/dashboard/sidebar-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const initialGoals = [
+  {
+    id: 1,
+    name: "Reserva de emergência",
+    category: "Segurança",
+    target: 12000,
+    saved: 7450,
+    deadline: "Dez 2024",
+  },
+  {
+    id: 2,
+    name: "Viagem para Portugal",
+    category: "Lazer",
+    target: 8500,
+    saved: 3980,
+    deadline: "Mar 2025",
+  },
+  {
+    id: 3,
+    name: "Entrada do carro",
+    category: "Mobilidade",
+    target: 20000,
+    saved: 12700,
+    deadline: "Ago 2025",
+  },
+];
+
+const nextSteps = [
+  {
+    id: 1,
+    title: "Agendar aporte mensal",
+    description: "Automatize transferências para manter o ritmo das metas.",
+  },
+  {
+    id: 2,
+    title: "Revisar gastos variáveis",
+    description: "Encontre oportunidades para acelerar a viagem.",
+  },
+  {
+    id: 3,
+    title: "Simular rentabilidade",
+    description: "Veja quanto renderia investir as metas em renda fixa.",
+  },
+];
+
+export default function GoalsPage() {
+  const [goals, setGoals] = useState(initialGoals);
+  const [contributions, setContributions] = useState<Record<number, string>>(
+    {}
+  );
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+
+  const totals = useMemo(() => {
+    const totalSaved = goals.reduce((sum, goal) => sum + goal.saved, 0);
+    const nextDeadline = goals[0]?.deadline ?? "-";
+    return { totalSaved, nextDeadline };
+  }, [goals]);
+
+  const highlights = [
+    {
+      id: 1,
+      label: "Metas ativas",
+      value: `${goals.length} metas`,
+      icon: Target,
+    },
+    {
+      id: 2,
+      label: "Valor acumulado",
+      value: formatCurrency(totals.totalSaved),
+      icon: TrendingUp,
+    },
+    {
+      id: 3,
+      label: "Próximo prazo",
+      value: totals.nextDeadline,
+      icon: CalendarDays,
+    },
+  ];
+
+  const handleContributionChange = (goalId: number, value: string) => {
+    setContributions((prev) => ({ ...prev, [goalId]: value }));
+  };
+
+  const handleAddContribution = (goalId: number) => {
+    const rawValue = contributions[goalId]?.trim() ?? "";
+    if (!rawValue) {
+      return;
+    }
+
+    const normalized = rawValue.replace(/\./g, "").replace(",", ".");
+    const amount = Number(normalized);
+    if (Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+
+    setGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId
+          ? { ...goal, saved: Math.min(goal.saved + amount, goal.target) }
+          : goal
+      )
+    );
+    setContributions((prev) => ({ ...prev, [goalId]: "" }));
+  };
+
+  return (
+    <SidebarShell>
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-muted-foreground">
+            Acompanhe o progresso das suas metas
+          </p>
+          <h1 className="text-2xl font-semibold text-foreground">Metas</h1>
+        </div>
+        <Button className="gap-2">
+          <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
+          Nova meta
+        </Button>
+      </header>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        {highlights.map((highlight) => (
+          <div
+            key={highlight.id}
+            className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-muted-foreground">
+                {highlight.label}
+              </p>
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <LucideIcon
+                  icon={highlight.icon}
+                  className="h-4 w-4"
+                  aria-hidden
+                />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-semibold text-foreground">
+              {highlight.value}
+            </p>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">
+                Metas em andamento
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Visão geral dos objetivos que você está construindo.
+              </p>
+            </div>
+            <Button variant="outline" className="border-border">
+              Ver histórico
+            </Button>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {goals.map((goal) => {
+              const progress = Math.min(
+                100,
+                Math.round((goal.saved / goal.target) * 100)
+              );
+              return (
+                <div
+                  key={goal.id}
+                  className="rounded-xl border border-border px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {goal.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {goal.category} • Prazo: {goal.deadline}
+                      </p>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <p className="font-semibold text-foreground">
+                        {formatCurrency(goal.saved)}
+                      </p>
+                      <p>de {formatCurrency(goal.target)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Progresso</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex-1">
+                      <label
+                        htmlFor={`aporte-${goal.id}`}
+                        className="text-xs font-medium text-muted-foreground"
+                      >
+                        Atualizar aporte
+                      </label>
+                      <Input
+                        id={`aporte-${goal.id}`}
+                        name={`aporte-${goal.id}`}
+                        placeholder="Ex.: 250,00"
+                        value={contributions[goal.id] ?? ""}
+                        onChange={(event) =>
+                          handleContributionChange(
+                            goal.id,
+                            event.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-border"
+                      onClick={() => handleAddContribution(goal.id)}
+                    >
+                      Registrar
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">
+              Próximas ações
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Mantenha o foco com pequenos passos.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              {nextSteps.map((step) => (
+                <div
+                  key={step.id}
+                  className="rounded-xl border border-border bg-background px-4 py-3"
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {step.title}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">
+              Status do mês
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Você já alcançou 72% da meta mensal de aportes.
+            </p>
+
+            <div className="mt-5 space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span>Aportes planejados</span>
+                <span className="font-semibold text-foreground">R$ 2.400</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Aportes realizados</span>
+                <span className="font-semibold text-foreground">R$ 1.720</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Faltam</span>
+                <span className="font-semibold text-primary">R$ 680</span>
+              </div>
+            </div>
+
+            <Button variant="outline" className="mt-6 w-full border-border">
+              Ajustar planejamento
+            </Button>
+          </div>
+        </div>
+      </section>
+    </SidebarShell>
+  );
+}
