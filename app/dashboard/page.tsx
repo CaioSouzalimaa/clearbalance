@@ -42,6 +42,10 @@ const transactions = [
     date: "05 Mar 2025",
     amount: "+ R$ 8.500,00",
     type: "entrada" as const,
+    recurrenceType: "fixa" as const,
+    hasOtherRecurrences: true,
+    recurrenceCount: 2,
+    isSettled: true,
   },
   {
     id: 2,
@@ -51,6 +55,9 @@ const transactions = [
     date: "03 Mar 2025",
     amount: "- R$ 2.150,00",
     type: "saida" as const,
+    recurrenceType: "fixa" as const,
+    hasOtherRecurrences: false,
+    isSettled: true,
   },
   {
     id: 3,
@@ -60,6 +67,8 @@ const transactions = [
     date: "02 Mar 2025",
     amount: "- R$ 620,00",
     type: "saida" as const,
+    recurrenceType: "unica" as const,
+    isSettled: false,
   },
   {
     id: 4,
@@ -69,6 +78,9 @@ const transactions = [
     date: "01 Mar 2025",
     amount: "+ R$ 1.200,00",
     type: "entrada" as const,
+    recurrenceType: "parcelada" as const,
+    installments: 6,
+    isSettled: false,
   },
   {
     id: 5,
@@ -78,6 +90,9 @@ const transactions = [
     date: "28 Fev 2025",
     amount: "- R$ 310,00",
     type: "saida" as const,
+    recurrenceType: "parcelada" as const,
+    installments: 3,
+    isSettled: false,
   },
 ];
 
