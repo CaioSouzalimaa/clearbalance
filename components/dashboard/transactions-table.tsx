@@ -87,6 +87,34 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     return `${type === "entrada" ? "+" : "-"} ${formatted}`;
   };
 
+  const formatBillingLabel = (transaction: Transaction) => {
+    if (transaction.recurrenceMode !== "recorrente" || !transaction.billingDay) {
+      return "";
+    }
+
+    if (transaction.recurrenceFrequency === "semanal") {
+      return `• ${transaction.billingDay}`;
+    }
+
+    if (transaction.recurrenceFrequency === "anual") {
+      return `• ${transaction.billingDay}`;
+    }
+
+    return `• Dia ${transaction.billingDay}`;
+  };
+
+  const getBillingDayLabel = () => {
+    if (formState.recurrenceFrequency === "semanal") {
+      return "Dia da semana";
+    }
+
+    if (formState.recurrenceFrequency === "anual") {
+      return "Data de cobrança";
+    }
+
+    return "Dia de cobrança";
+  };
+
   const startEditing = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setFormState({
@@ -233,9 +261,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                               : item.recurrenceFrequency === "semanal"
                               ? "Semanal"
                               : "Anual"}
-                            {item.billingDay
-                              ? ` • Dia ${item.billingDay}`
-                              : ""}
+                            {formatBillingLabel(item)}
                           </span>
                         ) : null}
                       </div>
@@ -549,6 +575,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                           ...prev,
                           recurrenceFrequency:
                             event.target.value as TransactionFormState["recurrenceFrequency"],
+                          billingDay: "",
                         }))
                       }
                       className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -563,23 +590,60 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       htmlFor="edit-billing-day"
                       className="text-sm font-medium text-foreground"
                     >
-                      Dia de cobrança
+                      {getBillingDayLabel()}
                     </label>
-                    <Input
-                      id="edit-billing-day"
-                      name="billingDay"
-                      type="number"
-                      min={1}
-                      max={31}
-                      placeholder="Ex: 5"
-                      value={formState.billingDay}
-                      onChange={(event) =>
-                        setFormState((prev) => ({
-                          ...prev,
-                          billingDay: event.target.value,
-                        }))
-                      }
-                    />
+                    {formState.recurrenceFrequency === "semanal" ? (
+                      <select
+                        id="edit-billing-day"
+                        name="billingDay"
+                        value={formState.billingDay}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            billingDay: event.target.value,
+                          }))
+                        }
+                        className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">Selecione</option>
+                        <option value="Segunda-feira">Segunda-feira</option>
+                        <option value="Terça-feira">Terça-feira</option>
+                        <option value="Quarta-feira">Quarta-feira</option>
+                        <option value="Quinta-feira">Quinta-feira</option>
+                        <option value="Sexta-feira">Sexta-feira</option>
+                        <option value="Sábado">Sábado</option>
+                        <option value="Domingo">Domingo</option>
+                      </select>
+                    ) : formState.recurrenceFrequency === "anual" ? (
+                      <Input
+                        id="edit-billing-day"
+                        name="billingDay"
+                        type="date"
+                        value={formState.billingDay}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            billingDay: event.target.value,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <Input
+                        id="edit-billing-day"
+                        name="billingDay"
+                        type="number"
+                        min={1}
+                        max={31}
+                        placeholder="Ex: 5"
+                        value={formState.billingDay}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            billingDay: event.target.value,
+                          }))
+                        }
+                      />
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground md:col-span-2">
                     Lançamentos recorrentes são gerados automaticamente.
