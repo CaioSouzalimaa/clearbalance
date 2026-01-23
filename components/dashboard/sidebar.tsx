@@ -1,5 +1,6 @@
 import { createElement } from "react";
 import Image from "next/image";
+import icon from "@/app/icon.png";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -19,7 +20,7 @@ export const navItems = [
   { label: "Categorias", href: "/categories", icon: Tags },
   { label: "Carteiras", href: "#", icon: Wallet },
   { label: "Lançamentos", href: "#", icon: Receipt },
-  { label: "Metas", href: "#", icon: Goal },
+  { label: "Metas", href: "/goals", icon: Goal },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
@@ -72,7 +73,13 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           {isCollapsed ? (
-            <span className="text-lg font-semibold text-foreground">CB</span>
+            <Image
+              src={icon}
+              alt="ClearBalance"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
           ) : (
             <Image
               src="/logo.png"
