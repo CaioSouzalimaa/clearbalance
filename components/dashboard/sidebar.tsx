@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Receipt,
   Settings,
+  Tags,
   Wallet,
 } from "lucide";
 
@@ -15,13 +16,14 @@ import { Button } from "@/components/ui/button";
 
 export const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Categorias", href: "/categories", icon: Tags },
   { label: "Carteiras", href: "#", icon: Wallet },
   { label: "Lançamentos", href: "#", icon: Receipt },
   { label: "Metas", href: "#", icon: Goal },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
-type IconNode = [string, Record<string, string | number>][];
+export type IconNode = [string, Record<string, string | number>][];
 
 interface LucideIconProps {
   icon: IconNode;

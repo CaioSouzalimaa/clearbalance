@@ -4,11 +4,13 @@ import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LucideIcon, IconNode } from "@/components/dashboard/sidebar";
 
 interface Transaction {
   id: number;
   description: string;
   category: string;
+  categoryIcon?: IconNode;
   date: string;
   amount: string;
   type: "entrada" | "saida";
@@ -121,7 +123,18 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       {item.description}
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
-                      {item.category}
+                      <div className="flex items-center gap-2">
+                        {item.categoryIcon ? (
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
+                            <LucideIcon
+                              icon={item.categoryIcon}
+                              className="h-4 w-4"
+                              aria-hidden
+                            />
+                          </span>
+                        ) : null}
+                        <span>{item.category}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {item.date}

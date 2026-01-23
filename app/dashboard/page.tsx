@@ -1,4 +1,14 @@
+import {
+  Briefcase,
+  Home,
+  Lightbulb,
+  PiggyBank,
+  ShoppingCart,
+} from "lucide";
+
+import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { GoalsProgressChart } from "@/components/dashboard/goals-progress-chart";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { TransactionsCalendar } from "@/components/dashboard/transactions-calendar";
@@ -28,6 +38,7 @@ const transactions = [
     id: 1,
     description: "Salário mensal",
     category: "Renda",
+    categoryIcon: Briefcase,
     date: "05 Mar 2025",
     amount: "+ R$ 8.500,00",
     type: "entrada" as const,
@@ -36,6 +47,7 @@ const transactions = [
     id: 2,
     description: "Aluguel",
     category: "Moradia",
+    categoryIcon: Home,
     date: "03 Mar 2025",
     amount: "- R$ 2.150,00",
     type: "saida" as const,
@@ -44,6 +56,7 @@ const transactions = [
     id: 3,
     description: "Supermercado",
     category: "Alimentação",
+    categoryIcon: ShoppingCart,
     date: "02 Mar 2025",
     amount: "- R$ 620,00",
     type: "saida" as const,
@@ -52,6 +65,7 @@ const transactions = [
     id: 4,
     description: "Investimento CDB",
     category: "Investimentos",
+    categoryIcon: PiggyBank,
     date: "01 Mar 2025",
     amount: "+ R$ 1.200,00",
     type: "entrada" as const,
@@ -60,6 +74,7 @@ const transactions = [
     id: 5,
     description: "Conta de energia",
     category: "Serviços",
+    categoryIcon: Lightbulb,
     date: "28 Fev 2025",
     amount: "- R$ 310,00",
     type: "saida" as const,
@@ -84,109 +99,66 @@ const expenseVariation = [
   { month: "Mar", value: 4.3 },
 ];
 
+const categoryDistribution = [
+  { label: "Moradia", value: 35, color: "#69b3a2" },
+  { label: "Alimentação", value: 22, color: "#8fc1a9" },
+  { label: "Transporte", value: 18, color: "#f2cc8f" },
+  { label: "Lazer", value: 15, color: "#f4a261" },
+  { label: "Outros", value: 10, color: "#e9c46a" },
+];
+
+const goalsProgress = [
+  { label: "Reserva", value: 75 },
+  { label: "Viagem", value: 40 },
+  { label: "Cursos", value: 60 },
+];
+
 export default function DashboardPage() {
   return (
     <>
-    <SidebarShell>
-      <DashboardHeader />
+      <SidebarShell>
+        <DashboardHeader />
 
-      <section className="grid gap-6 md:grid-cols-3">
-        {summaryCards.map((card) => (
-          <SummaryCard key={card.title} {...card} />
-        ))}
-      </section>
+        <section className="grid gap-6 md:grid-cols-3">
+          {summaryCards.map((card) => (
+            <SummaryCard key={card.title} {...card} />
+          ))}
+        </section>
 
-          <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-            <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-foreground">
-                Distribuição por categoria
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Suas principais categorias no mês atual.
-              </p>
-              <div className="mt-6 space-y-4">
-                {[
-                  { label: "Moradia", value: "35%" },
-                  { label: "Alimentação", value: "22%" },
-                  { label: "Transporte", value: "18%" },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-foreground">
-                        {item.label}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {item.value}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-muted">
-                      <div
-                        className="h-2 rounded-full bg-primary"
-                        style={{
-                          width: item.value,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground">
-              Metas do mês
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Progresso das suas metas financeiras.
-            </p>
-            <div className="mt-6 space-y-5">
-              {[
-                { label: "Reserva de emergência", value: "75%" },
-                { label: "Viagem", value: "40%" },
-                { label: "Cursos", value: "60%" },
-              ].map((item) => (
-                <div key={item.label} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-foreground">
-                      {item.label}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {item.value}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted">
-                    <div
-                      className="h-2 rounded-full bg-secondary"
-                      style={{
-                        width: item.value,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-    </section>
+        <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+          <CategoryDistributionChart
+            title="Distribuição por categoria"
+            subtitle="Suas principais categorias no mês atual."
+            data={categoryDistribution}
+          />
+          <GoalsProgressChart
+            title="Metas do mês"
+            subtitle="Progresso das suas metas financeiras."
+            data={goalsProgress}
+          />
+        </section>
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <VariationChart
-          title="Variação de entradas"
-          subtitle="Últimos 6 meses"
-          accentClassName="text-primary"
-          data={incomeVariation}
-        />
-        <VariationChart
-          title="Variação de saídas"
-          subtitle="Últimos 6 meses"
-          accentClassName="text-rose-500"
-          data={expenseVariation}
-        />
-      </section>
+        <section className="grid gap-6 md:grid-cols-2">
+          <VariationChart
+            title="Variação de entradas"
+            subtitle="Últimos 6 meses"
+            accentClassName="text-primary"
+            accentColor="#69b3a2"
+            data={incomeVariation}
+          />
+          <VariationChart
+            title="Variação de saídas"
+            subtitle="Últimos 6 meses"
+            accentClassName="text-rose-500"
+            accentColor="#f43f5e"
+            data={expenseVariation}
+          />
+        </section>
 
-      <TransactionsCalendar transactions={transactions} />
+        <TransactionsCalendar transactions={transactions} />
 
-      <TransactionsTable transactions={transactions} />
-    </SidebarShell>
-  </>
+        <TransactionsTable transactions={transactions} />
+      </SidebarShell>
+    </>
   );
 }
