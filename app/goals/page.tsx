@@ -1,57 +1,37 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { CalendarDays, Plus, Target, TrendingUp } from "lucide";
 
 import { LucideIcon } from "@/components/dashboard/sidebar";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-const goals = [
+const initialGoals = [
   {
     id: 1,
     name: "Reserva de emergência",
     category: "Segurança",
-    target: "R$ 12.000",
-    saved: "R$ 7.450",
-    progress: 62,
+    target: 12000,
+    saved: 7450,
     deadline: "Dez 2024",
   },
   {
     id: 2,
     name: "Viagem para Portugal",
     category: "Lazer",
-    target: "R$ 8.500",
-    saved: "R$ 3.980",
-    progress: 46,
+    target: 8500,
+    saved: 3980,
     deadline: "Mar 2025",
   },
   {
     id: 3,
     name: "Entrada do carro",
     category: "Mobilidade",
-    target: "R$ 20.000",
-    saved: "R$ 12.700",
-    progress: 64,
+    target: 20000,
+    saved: 12700,
     deadline: "Ago 2025",
-  },
-];
-
-const highlights = [
-  {
-    id: 1,
-    label: "Metas ativas",
-    value: "3 metas",
-    icon: Target,
-  },
-  {
-    id: 2,
-    label: "Valor acumulado",
-    value: "R$ 24.130",
-    icon: TrendingUp,
-  },
-  {
-    id: 3,
-    label: "Próximo prazo",
-    value: "Dezembro 2024",
-    icon: CalendarDays,
   },
 ];
 
@@ -74,6 +54,70 @@ const nextSteps = [
 ];
 
 export default function GoalsPage() {
+  const [goals, setGoals] = useState(initialGoals);
+  const [contributions, setContributions] = useState<Record<number, string>>(
+    {}
+  );
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+
+  const totals = useMemo(() => {
+    const totalSaved = goals.reduce((sum, goal) => sum + goal.saved, 0);
+    const nextDeadline = goals[0]?.deadline ?? "-";
+    return { totalSaved, nextDeadline };
+  }, [goals]);
+
+  const highlights = [
+    {
+      id: 1,
+      label: "Metas ativas",
+      value: `${goals.length} metas`,
+      icon: Target,
+    },
+    {
+      id: 2,
+      label: "Valor acumulado",
+      value: formatCurrency(totals.totalSaved),
+      icon: TrendingUp,
+    },
+    {
+      id: 3,
+      label: "Próximo prazo",
+      value: totals.nextDeadline,
+      icon: CalendarDays,
+    },
+  ];
+
+  const handleContributionChange = (goalId: number, value: string) => {
+    setContributions((prev) => ({ ...prev, [goalId]: value }));
+  };
+
+  const handleAddContribution = (goalId: number) => {
+    const rawValue = contributions[goalId]?.trim() ?? "";
+    if (!rawValue) {
+      return;
+    }
+
+    const normalized = rawValue.replace(/\./g, "").replace(",", ".");
+    const amount = Number(normalized);
+    if (Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+
+    setGoals((prev) =>
+      prev.map((goal) =>
+        goal.id === goalId
+          ? { ...goal, saved: Math.min(goal.saved + amount, goal.target) }
+          : goal
+      )
+    );
+    setContributions((prev) => ({ ...prev, [goalId]: "" }));
+  };
+
   return (
     <SidebarShell>
       <header className="flex flex-wrap items-center justify-between gap-4">
@@ -131,41 +175,77 @@ export default function GoalsPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            {goals.map((goal) => (
-              <div
-                key={goal.id}
-                className="rounded-xl border border-border px-4 py-4"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {goal.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {goal.category} • Prazo: {goal.deadline}
-                    </p>
+            {goals.map((goal) => {
+              const progress = Math.min(
+                100,
+                Math.round((goal.saved / goal.target) * 100)
+              );
+              return (
+                <div
+                  key={goal.id}
+                  className="rounded-xl border border-border px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {goal.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {goal.category} • Prazo: {goal.deadline}
+                      </p>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <p className="font-semibold text-foreground">
+                        {formatCurrency(goal.saved)}
+                      </p>
+                      <p>de {formatCurrency(goal.target)}</p>
+                    </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    <p className="font-semibold text-foreground">
-                      {goal.saved}
-                    </p>
-                    <p>de {goal.target}</p>
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Progresso</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="flex-1">
+                      <label
+                        htmlFor={`aporte-${goal.id}`}
+                        className="text-xs font-medium text-muted-foreground"
+                      >
+                        Atualizar aporte
+                      </label>
+                      <Input
+                        id={`aporte-${goal.id}`}
+                        name={`aporte-${goal.id}`}
+                        placeholder="Ex.: 250,00"
+                        value={contributions[goal.id] ?? ""}
+                        onChange={(event) =>
+                          handleContributionChange(
+                            goal.id,
+                            event.target.value
+                          )
+                        }
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-border"
+                      onClick={() => handleAddContribution(goal.id)}
+                    >
+                      Registrar
+                    </Button>
                   </div>
                 </div>
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Progresso</span>
-                    <span>{goal.progress}%</span>
-                  </div>
-                  <div className="mt-2 h-2 rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${goal.progress}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
