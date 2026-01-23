@@ -14,6 +14,11 @@ interface Transaction {
   date: string;
   amount: string;
   type: "entrada" | "saida";
+  recurrenceType: "unica" | "parcelada" | "fixa";
+  installments?: number;
+  hasOtherRecurrences?: boolean;
+  recurrenceCount?: number;
+  isSettled: boolean;
 }
 
 interface TransactionsTableProps {
@@ -26,6 +31,11 @@ interface TransactionFormState {
   date: string;
   amount: string;
   type: "entrada" | "saida";
+  recurrenceType: Transaction["recurrenceType"];
+  installments: string;
+  hasOtherRecurrences: boolean;
+  recurrenceCount: string;
+  isSettled: boolean;
 }
 
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({
@@ -40,6 +50,11 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     date: "",
     amount: "",
     type: "entrada",
+    recurrenceType: "unica",
+    installments: "",
+    hasOtherRecurrences: false,
+    recurrenceCount: "",
+    isSettled: false,
   });
 
   const startEditing = (transaction: Transaction) => {
@@ -50,6 +65,15 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       date: transaction.date,
       amount: transaction.amount,
       type: transaction.type,
+      recurrenceType: transaction.recurrenceType,
+      installments: transaction.installments
+        ? `${transaction.installments}`
+        : "",
+      hasOtherRecurrences: transaction.hasOtherRecurrences ?? false,
+      recurrenceCount: transaction.recurrenceCount
+        ? `${transaction.recurrenceCount}`
+        : "",
+      isSettled: transaction.isSettled,
     });
   };
 
@@ -74,6 +98,23 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               date: formState.date,
               amount: formState.amount,
               type: formState.type,
+              recurrenceType: formState.recurrenceType,
+              installments:
+                formState.recurrenceType === "parcelada" &&
+                formState.installments
+                  ? Number(formState.installments)
+                  : undefined,
+              hasOtherRecurrences:
+                formState.recurrenceType === "fixa"
+                  ? formState.hasOtherRecurrences
+                  : undefined,
+              recurrenceCount:
+                formState.recurrenceType === "fixa" &&
+                formState.hasOtherRecurrences &&
+                formState.recurrenceCount
+                  ? Number(formState.recurrenceCount)
+                  : undefined,
+              isSettled: formState.isSettled,
             }
           : item
       )
@@ -102,6 +143,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 <th className="px-6 py-3 font-semibold">Descrição</th>
                 <th className="px-6 py-3 font-semibold">Categoria</th>
                 <th className="px-6 py-3 font-semibold">Data</th>
+                <th className="px-6 py-3 font-semibold">Recorrência</th>
+                <th className="px-6 py-3 font-semibold">Status</th>
                 <th className="px-6 py-3 font-semibold text-right">Valor</th>
                 <th className="px-6 py-3 text-right font-semibold">Ações</th>
               </tr>
@@ -110,7 +153,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={7}
                     className="px-6 py-6 text-center text-sm text-muted-foreground"
                   >
                     Nenhum lançamento cadastrado.
@@ -138,6 +181,39 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {item.date}
+                    </td>
+                    <td className="px-6 py-4 text-muted-foreground">
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">
+                          {item.recurrenceType === "parcelada"
+                            ? `${item.installments ?? 1}x`
+                            : item.recurrenceType === "fixa"
+                            ? "Fixa"
+                            : "Única"}
+                        </span>
+                        {item.recurrenceType === "fixa" &&
+                        item.hasOtherRecurrences &&
+                        item.recurrenceCount ? (
+                          <span className="text-xs text-muted-foreground">
+                            + {item.recurrenceCount} recorrências
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                          item.isSettled
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {item.isSettled
+                          ? item.type === "entrada"
+                            ? "Recebido"
+                            : "Pago"
+                          : "Pendente"}
+                      </span>
                     </td>
                     <td
                       className={`px-6 py-4 text-right font-semibold ${
@@ -311,6 +387,130 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     }
                   />
                 </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="edit-recurrence"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Recorrência
+                  </label>
+                  <select
+                    id="edit-recurrence"
+                    name="recurrenceType"
+                    value={formState.recurrenceType}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        recurrenceType:
+                          event.target.value as TransactionFormState["recurrenceType"],
+                        installments: "",
+                        recurrenceCount: "",
+                        hasOtherRecurrences: false,
+                      }))
+                    }
+                    className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="unica">Única</option>
+                    <option value="parcelada">Parcelada</option>
+                    <option value="fixa">Fixa</option>
+                  </select>
+                </div>
+                {formState.recurrenceType === "parcelada" ? (
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="edit-installments"
+                      className="text-sm font-medium text-foreground"
+                    >
+                      Quantidade de parcelas
+                    </label>
+                    <Input
+                      id="edit-installments"
+                      name="installments"
+                      type="number"
+                      min={1}
+                      value={formState.installments}
+                      onChange={(event) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          installments: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                ) : null}
+              </div>
+
+              {formState.recurrenceType === "fixa" ? (
+                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+                  <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={formState.hasOtherRecurrences}
+                      onChange={(event) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          hasOtherRecurrences: event.target.checked,
+                          recurrenceCount: event.target.checked
+                            ? prev.recurrenceCount
+                            : "",
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-border text-primary"
+                    />
+                    Possui outras recorrências?
+                  </label>
+                  {formState.hasOtherRecurrences ? (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="edit-recurrence-count"
+                        className="text-sm font-medium text-foreground"
+                      >
+                        Quantas recorrências adicionais?
+                      </label>
+                      <Input
+                        id="edit-recurrence-count"
+                        name="recurrenceCount"
+                        type="number"
+                        min={1}
+                        value={formState.recurrenceCount}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            recurrenceCount: event.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Marque para informar outras entradas ou saídas fixas.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={formState.isSettled}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        isSettled: event.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-border text-primary"
+                  />
+                  Marcar como{" "}
+                  {formState.type === "entrada" ? "recebido" : "pago"}
+                </label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Use este status para controlar o que já foi liquidado.
+                </p>
               </div>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
