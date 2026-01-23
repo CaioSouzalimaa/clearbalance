@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { DollarSign } from "lucide";
 
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     paymentDate: "",
   });
   const [saveFeedback, setSaveFeedback] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "todos" | "pendente" | "liquidado"
+  >("todos");
+  const [typeFilter, setTypeFilter] = useState<"todos" | "entrada" | "saida">(
+    "todos"
+  );
+  const [recurrenceFilter, setRecurrenceFilter] = useState<
+    "todos" | "recorrente" | "nao_recorrente"
+  >("todos");
 
   const formatCurrencyBRL = (value: string) => {
     const digits = value.replace(/\D/g, "");
@@ -179,6 +189,52 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     window.setTimeout(() => setSaveFeedback(""), 3000);
   };
 
+  const handleToggleSettlement = (id: number) => {
+    setRows((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) {
+          return item;
+        }
+
+        const nextSettled = !item.isSettled;
+
+        return {
+          ...item,
+          isSettled: nextSettled,
+          paymentDate: nextSettled
+            ? item.paymentDate || new Date().toISOString().split("T")[0]
+            : "",
+        };
+      })
+    );
+  };
+
+  const filteredRows = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return rows.filter((item) => {
+      const matchesSearch = normalizedSearch
+        ? `${item.description} ${item.category}`
+            .toLowerCase()
+            .includes(normalizedSearch)
+        : true;
+      const matchesStatus =
+        statusFilter === "todos"
+          ? true
+          : statusFilter === "liquidado"
+          ? item.isSettled
+          : !item.isSettled;
+      const matchesType =
+        typeFilter === "todos" ? true : item.type === typeFilter;
+      const matchesRecurrence =
+        recurrenceFilter === "todos"
+          ? true
+          : item.recurrenceMode === recurrenceFilter;
+
+      return matchesSearch && matchesStatus && matchesType && matchesRecurrence;
+    });
+  }, [recurrenceFilter, rows, searchTerm, statusFilter, typeFilter]);
+
   return (
     <>
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
@@ -190,8 +246,62 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </p>
           </div>
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            {transactions.length} itens
+            {filteredRows.length} de {rows.length} itens
           </span>
+        </div>
+        <div className="border-b border-border bg-muted/20 px-6 py-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+              <Input
+                placeholder="Pesquisar por descrição ou categoria"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="sm:max-w-sm"
+              />
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(
+                    event.target.value as "todos" | "pendente" | "liquidado"
+                  )
+                }
+                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-44"
+              >
+                <option value="todos">Todos os status</option>
+                <option value="pendente">Pendentes</option>
+                <option value="liquidado">Liquidados</option>
+              </select>
+              <select
+                value={typeFilter}
+                onChange={(event) =>
+                  setTypeFilter(
+                    event.target.value as "todos" | "entrada" | "saida"
+                  )
+                }
+                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-36"
+              >
+                <option value="todos">Todos os tipos</option>
+                <option value="entrada">Entradas</option>
+                <option value="saida">Saídas</option>
+              </select>
+            </div>
+            <select
+              value={recurrenceFilter}
+              onChange={(event) =>
+                setRecurrenceFilter(
+                  event.target.value as
+                    | "todos"
+                    | "recorrente"
+                    | "nao_recorrente"
+                )
+              }
+              className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-52"
+            >
+              <option value="todos">Todas as recorrências</option>
+              <option value="nao_recorrente">Não recorrentes</option>
+              <option value="recorrente">Recorrentes</option>
+            </select>
+          </div>
         </div>
         {saveFeedback ? (
           <div className="border-b border-border bg-primary/5 px-6 py-3 text-sm font-medium text-primary">
@@ -212,17 +322,17 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {filteredRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={7}
                     className="px-6 py-6 text-center text-sm text-muted-foreground"
                   >
-                    Nenhum lançamento cadastrado.
+                    Nenhum lançamento encontrado com os filtros atuais.
                   </td>
                 </tr>
               ) : (
-                rows.map((item) => (
+                filteredRows.map((item) => (
                   <tr key={item.id} className="border-t border-border">
                     <td className="px-6 py-4 font-medium text-foreground">
                       {item.description}
@@ -267,19 +377,37 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                          item.isSettled
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {item.isSettled
-                          ? item.type === "entrada"
-                            ? "Recebido"
-                            : "Pago"
-                          : "Pendente"}
-                      </span>
+                      <div className="flex flex-col gap-2">
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            item.isSettled
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {item.isSettled
+                            ? item.type === "entrada"
+                              ? "Recebido"
+                              : "Pago"
+                            : "Pendente"}
+                        </span>
+                        {item.isSettled && item.paymentDate ? (
+                          <span className="text-xs text-muted-foreground">
+                            Pago em {item.paymentDate}
+                          </span>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSettlement(item.id)}
+                          className="text-left text-xs font-medium text-primary transition hover:text-primary/80"
+                        >
+                          {item.isSettled
+                            ? "Marcar como pendente"
+                            : item.type === "entrada"
+                            ? "Marcar como recebido"
+                            : "Marcar como pago"}
+                        </button>
+                      </div>
                     </td>
                     <td
                       className={`px-6 py-4 text-right font-semibold ${
