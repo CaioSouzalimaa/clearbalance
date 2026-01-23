@@ -86,6 +86,7 @@ const expenseVariation = [
 
 export default function DashboardPage() {
   return (
+    <>
     <SidebarShell>
       <DashboardHeader />
 
@@ -129,47 +130,43 @@ export default function DashboardPage() {
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-        </div>
-
-            <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-foreground">
-                Metas do mês
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Progresso das suas metas financeiras.
-              </p>
-              <div className="mt-6 space-y-5">
-                {[
-                  { label: "Reserva de emergência", value: "75%" },
-                  { label: "Viagem", value: "40%" },
-                  { label: "Cursos", value: "60%" },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-foreground">
-                        {item.label}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {item.value}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full rounded-full bg-muted">
-                      <div
-                        className="h-2 rounded-full bg-secondary"
-                        style={{
-                          width: item.value,
-                        }}
-                      />
-                    </div>
+            </div>
+          
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">
+              Metas do mês
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Progresso das suas metas financeiras.
+            </p>
+            <div className="mt-6 space-y-5">
+              {[
+                { label: "Reserva de emergência", value: "75%" },
+                { label: "Viagem", value: "40%" },
+                { label: "Cursos", value: "60%" },
+              ].map((item) => (
+                <div key={item.label} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground">
+                      {item.label}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {item.value}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ))}
+                  <div className="h-2 w-full rounded-full bg-muted">
+                    <div
+                      className="h-2 rounded-full bg-secondary"
+                      style={{
+                        width: item.value,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+    </section>
 
       <section className="grid gap-6 md:grid-cols-2">
         <VariationChart
@@ -190,5 +187,6 @@ export default function DashboardPage() {
 
       <TransactionsTable transactions={transactions} />
     </SidebarShell>
+  </>
   );
 }

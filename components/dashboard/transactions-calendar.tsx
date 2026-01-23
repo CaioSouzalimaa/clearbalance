@@ -35,10 +35,10 @@ export const TransactionsCalendar = ({
     const startWeekday = firstDay.getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    const calendarDays: Array<number | null> = Array.from(
-      { length: startWeekday },
-      () => null
-    ).concat(Array.from({ length: daysInMonth }, (_, index) => index + 1));
+    const calendarDays: Array<number | null> = [
+      ...Array.from({ length: startWeekday }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+    ];
 
     const grouped = transactions.reduce<Record<string, Transaction[]>>(
       (acc, item) => {
