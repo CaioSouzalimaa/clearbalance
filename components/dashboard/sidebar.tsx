@@ -66,46 +66,30 @@ interface SidebarProps {
 export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
   return (
     <aside
-      className={`hidden min-h-screen flex-col gap-8 border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
+      className={`hidden h-screen flex-col gap-8 overflow-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
         isCollapsed ? "w-20 px-4" : "w-[260px] px-6"
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          {isCollapsed ? (
-            <Image
-              src={icon}
-              alt="ClearBalance"
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-          ) : (
-            <Image
-              src="/logo.png"
-              alt="ClearBalance"
-              width={140}
-              height={40}
-              className="object-contain"
-            />
-          )}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onToggleCollapse}
-          aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
-          aria-expanded={!isCollapsed}
-          className="flex h-9 w-9 items-center justify-center px-0"
-        >
-          {isCollapsed ? (
-            <LucideIcon icon={ChevronRight} className="h-4 w-4" aria-hidden />
-          ) : (
-            <LucideIcon icon={ChevronLeft} className="h-4 w-4" aria-hidden />
-          )}
-        </Button>
+      <div className="flex items-center gap-3">
+        {isCollapsed ? (
+          <Image
+            src={icon}
+            alt="ClearBalance"
+            width={32}
+            height={32}
+            className="object-contain"
+          />
+        ) : (
+          <Image
+            src="/logo.png"
+            alt="ClearBalance"
+            width={140}
+            height={40}
+            className="object-contain"
+          />
+        )}
       </div>
-      <nav className="flex flex-col gap-2 text-sm font-medium text-muted-foreground">
+      <nav className="flex flex-1 flex-col gap-2 text-sm font-medium text-muted-foreground">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -125,14 +109,32 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
           );
         })}
       </nav>
-      {!isCollapsed ? (
-        <div className="mt-auto rounded-2xl bg-primary/10 p-4 text-sm text-muted-foreground">
-          <p className="font-semibold text-foreground">Dica rápida</p>
-          <p className="mt-2">
-            Categorize seus lançamentos para visualizar seus maiores gastos.
-          </p>
-        </div>
-      ) : null}
+      <div className="mt-auto flex flex-col gap-4">
+        {!isCollapsed ? (
+          <div className="rounded-2xl bg-primary/10 p-4 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Dica rápida</p>
+            <p className="mt-2">
+              Categorize seus lançamentos para visualizar seus maiores gastos.
+            </p>
+          </div>
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onToggleCollapse}
+          aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
+          aria-expanded={!isCollapsed}
+          className={`flex h-9 w-9 items-center justify-center px-0 ${
+            isCollapsed ? "self-center" : ""
+          }`}
+        >
+          {isCollapsed ? (
+            <LucideIcon icon={ChevronRight} className="h-4 w-4" aria-hidden />
+          ) : (
+            <LucideIcon icon={ChevronLeft} className="h-4 w-4" aria-hidden />
+          )}
+        </Button>
+      </div>
     </aside>
   );
 };
