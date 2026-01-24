@@ -66,11 +66,15 @@ interface SidebarProps {
 export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
   return (
     <aside
-      className={`hidden h-screen flex-col gap-8 overflow-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
+      className={`sticky top-0 hidden h-screen flex-col gap-8 overflow-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
         isCollapsed ? "w-20 px-4" : "w-[260px] px-6"
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div
+        className={`flex w-full items-center gap-3 ${
+          isCollapsed ? "justify-center" : ""
+        }`}
+      >
         {isCollapsed ? (
           <Image
             src={icon}
