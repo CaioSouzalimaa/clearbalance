@@ -77,18 +77,26 @@ export const DashboardHeader = () => {
 
   return (
     <>
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
           <p className="text-sm font-medium text-gray-500">Bem-vinda de volta</p>
           <h1 className="text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="border-border text-foreground">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+          <Button
+            variant="outline"
+            className="w-full border-border text-foreground sm:w-auto"
+          >
             Exportar
           </Button>
-          <Button onClick={() => setIsModalOpen(true)}>Nova transação</Button>
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto"
+          >
+            Nova transação
+          </Button>
         </div>
       </header>
 

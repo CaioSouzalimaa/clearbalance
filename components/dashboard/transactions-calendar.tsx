@@ -27,7 +27,7 @@ const formatKey = (date: Date) => {
 export const TransactionsCalendar = ({
   transactions,
 }: TransactionsCalendarProps) => {
-  const { days, transactionsByDay, monthLabel } = useMemo(() => {
+  const { days, transactionsByDay, monthLabel, mobileEntries } = useMemo(() => {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
@@ -58,10 +58,22 @@ export const TransactionsCalendar = ({
       year: "numeric",
     });
 
+    const mobileItems = transactions
+      .map((item) => {
+        const parsedDate = new Date(item.date);
+        return {
+          ...item,
+          parsedDate,
+        };
+      })
+      .filter((item) => !Number.isNaN(item.parsedDate.getTime()))
+      .sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+
     return {
       days: calendarDays,
       transactionsByDay: grouped,
       monthLabel: label,
+      mobileEntries: mobileItems,
     };
   }, [transactions]);
 
@@ -81,7 +93,7 @@ export const TransactionsCalendar = ({
         </span>
       </div>
 
-      <div className="mt-6 grid grid-cols-7 gap-2 text-xs text-muted-foreground">
+      <div className="mt-6 hidden grid-cols-7 gap-2 text-xs text-muted-foreground sm:grid">
         {weekDays.map((day) => (
           <span key={day} className="text-center font-medium">
             {day}
@@ -89,7 +101,7 @@ export const TransactionsCalendar = ({
         ))}
       </div>
 
-      <div className="mt-3 grid grid-cols-7 gap-2">
+      <div className="mt-3 hidden grid-cols-7 gap-2 sm:grid">
         {days.map((day, index) => {
           if (!day) {
             return <div key={`empty-${index}`} className="h-24" />;
@@ -137,6 +149,44 @@ export const TransactionsCalendar = ({
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-5 space-y-3 sm:hidden">
+        {mobileEntries.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhum lançamento encontrado para este período.
+          </p>
+        ) : (
+          mobileEntries.map((transaction) => (
+            <div
+              key={transaction.id}
+              className="rounded-xl border border-border bg-background p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {transaction.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {transaction.category}
+                  </p>
+                </div>
+                <span
+                  className={`text-sm font-semibold ${
+                    transaction.type === "entrada"
+                      ? "text-emerald-600"
+                      : "text-rose-500"
+                  }`}
+                >
+                  {transaction.amount}
+                </span>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                {transaction.parsedDate.toLocaleDateString("pt-BR")}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

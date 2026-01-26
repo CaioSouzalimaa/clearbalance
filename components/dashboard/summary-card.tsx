@@ -14,9 +14,9 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <div className="mt-3 flex items-end justify-between">
+      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <p className="text-2xl font-semibold text-foreground">{value}</p>
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+        <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           {helper}
         </span>
       </div>

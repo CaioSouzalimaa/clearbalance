@@ -97,20 +97,23 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     return `${type === "entrada" ? "+" : "-"} ${formatted}`;
   };
 
-  const formatBillingLabel = (transaction: Transaction) => {
+  const formatBillingLabel = (
+    transaction: Transaction,
+    prefix = "• "
+  ) => {
     if (transaction.recurrenceMode !== "recorrente" || !transaction.billingDay) {
       return "";
     }
 
     if (transaction.recurrenceFrequency === "semanal") {
-      return `• ${transaction.billingDay}`;
+      return `${prefix}${transaction.billingDay}`;
     }
 
     if (transaction.recurrenceFrequency === "anual") {
-      return `• ${transaction.billingDay}`;
+      return `${prefix}${transaction.billingDay}`;
     }
 
-    return `• Dia ${transaction.billingDay}`;
+    return `${prefix}Dia ${transaction.billingDay}`;
   };
 
   const getBillingDayLabel = () => {
@@ -238,8 +241,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   return (
     <>
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-6 py-4">
+          <div className="space-y-1">
             <h2 className="text-lg font-semibold text-foreground">Lançamentos</h2>
             <p className="text-sm text-muted-foreground">
               Confira suas movimentações recentes.
@@ -308,7 +311,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             {saveFeedback}
           </div>
         ) : null}
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full text-sm">
             <thead className="bg-background text-left text-muted-foreground">
               <tr>
@@ -443,6 +446,126 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex flex-col gap-4 border-t border-border px-6 py-4 md:hidden">
+          {filteredRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum lançamento encontrado com os filtros atuais.
+            </p>
+          ) : (
+            filteredRows.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-xl border border-border bg-background p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {item.description}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      {item.categoryIcon ? (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-foreground">
+                          <LucideIcon
+                            icon={item.categoryIcon}
+                            className="h-3.5 w-3.5"
+                            aria-hidden
+                          />
+                        </span>
+                      ) : null}
+                      <span>{item.category}</span>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-sm font-semibold ${
+                      item.type === "entrada"
+                        ? "text-emerald-600"
+                        : "text-rose-500"
+                    }`}
+                  >
+                    {item.amount}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>{item.date}</span>
+                  <span>•</span>
+                  <span>
+                    {item.recurrenceMode === "recorrente"
+                      ? item.recurrenceKind === "fixa"
+                        ? "Recorrente fixa"
+                        : "Recorrente variável"
+                      : "Não recorrente"}
+                  </span>
+                  {item.recurrenceMode === "recorrente" &&
+                  item.recurrenceFrequency ? (
+                    <span>
+                      ({item.recurrenceFrequency === "mensal"
+                        ? "Mensal"
+                        : item.recurrenceFrequency === "semanal"
+                        ? "Semanal"
+                        : "Anual"}
+                      {formatBillingLabel(item, " ")}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                      item.isSettled
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {item.isSettled
+                      ? item.type === "entrada"
+                        ? "Recebido"
+                        : "Pago"
+                      : "Pendente"}
+                  </span>
+                  {item.isSettled && item.paymentDate ? (
+                    <span className="text-xs text-muted-foreground">
+                      Pago em {item.paymentDate}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleSettlement(item.id)}
+                    className="text-left text-primary transition hover:text-primary/80"
+                  >
+                    {item.isSettled
+                      ? "Marcar como pendente"
+                      : item.type === "entrada"
+                      ? "Marcar como recebido"
+                      : "Marcar como pago"}
+                  </button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 border-border px-3 py-1 text-xs"
+                      onClick={() => startEditing(item)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
+                      onClick={() => handleDelete(item.id)}
+                    >
+                      Excluir
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
