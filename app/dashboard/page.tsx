@@ -143,13 +143,13 @@ export default function DashboardPage() {
       <SidebarShell>
         <DashboardHeader />
 
-        <section className="grid gap-6 md:grid-cols-3">
+        <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (
             <SummaryCard key={card.title} {...card} />
           ))}
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        <section className="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
           <CategoryDistributionChart
             title="Distribuição por categoria"
             subtitle="Suas principais categorias no mês atual."
@@ -162,7 +162,7 @@ export default function DashboardPage() {
           />
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2">
+        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <VariationChart
             title="Variação de entradas"
             subtitle="Últimos 6 meses"
