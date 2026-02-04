@@ -19,3 +19,30 @@ ClearBalance é uma **plataforma de controle de despesas pessoais** que permite 
 - **Fórum da Comunidade:** Compartilhe insights e aprenda com outros investidores.
 - **Categorias Personalizáveis:** Organize despesas por categorias.
 - **Design Responsivo:** Funciona perfeitamente em desktop e dispositivos móveis.
+
+---
+
+## ⚙️ Configuração rápida (Auth + DB)
+
+1. Crie o arquivo `.env` baseado no exemplo:
+   ```bash
+   cp .env.example .env
+   ```
+2. Aplique as migrations:
+   ```bash
+   prisma migrate dev
+   ```
+3. Rode o projeto:
+   ```bash
+   npm run dev
+   ```
+
+## 🧪 Testes
+
+```bash
+npm test
+```
+
+## 🔒 Rotas privadas
+
+As rotas privadas são definidas no `middleware.ts`. Para adicionar novas rotas protegidas, inclua os caminhos no array `protectedPaths` e no `matcher` para garantir que o middleware execute nessas URLs.

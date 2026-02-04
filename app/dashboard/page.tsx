@@ -14,6 +14,7 @@ import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { TransactionsCalendar } from "@/components/dashboard/transactions-calendar";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { VariationChart } from "@/components/dashboard/variation-chart";
+import { AuthBanner } from "@/components/dashboard/auth-banner";
 
 const summaryCards = [
   {
@@ -141,6 +142,7 @@ export default function DashboardPage() {
   return (
     <>
       <SidebarShell>
+        <AuthBanner />
         <DashboardHeader />
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
