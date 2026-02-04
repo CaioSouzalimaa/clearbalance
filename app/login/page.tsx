@@ -1,6 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LinkedInIcon } from "@/public/linkedin";
@@ -8,6 +11,33 @@ import { FacebookIcon } from "@/public/facebook";
 import { InstagramIcon } from "@/public/instagram";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+
+    setIsSubmitting(false);
+
+    if (result?.error) {
+      setError("Email ou senha inválidos. Tente novamente.");
+      return;
+    }
+
+    router.push("/dashboard");
+  };
+
   return (
     <main className="min-h-screen bg-background flex flex-col items-center justify-center p-4 font-sans">
       {/* Logo Area - Agora usando o arquivo logo.png */}
@@ -28,10 +58,22 @@ export default function LoginPage() {
           Welcome back to financial clarity
         </h1>
 
-        <form className="space-y-4">
-          <Input type="email" placeholder="Email address" required />
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
 
-          <Input type="password" placeholder="Password" required />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
 
           <div className="flex items-center justify-between mt-6">
             <label className="flex items-center gap-2 cursor-pointer group">
@@ -44,8 +86,16 @@ export default function LoginPage() {
               </span>
             </label>
 
-            <Button type="submit">Secure Login</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Entrando..." : "Secure Login"}
+            </Button>
           </div>
+
+          {error ? (
+            <p className="text-sm text-red-500" role="alert">
+              {error}
+            </p>
+          ) : null}
         </form>
 
         <div className="flex items-center justify-between mt-10 text-sm">

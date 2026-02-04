@@ -19,3 +19,28 @@ ClearBalance é uma **plataforma de controle de despesas pessoais** que permite 
 - **Fórum da Comunidade:** Compartilhe insights e aprenda com outros investidores.
 - **Categorias Personalizáveis:** Organize despesas por categorias.
 - **Design Responsivo:** Funciona perfeitamente em desktop e dispositivos móveis.
+
+---
+
+## 🚀 Primeiros passos
+
+1. Configure o ambiente:
+   ```bash
+   cp .env.example .env
+   ```
+2. Rode as migrations do Prisma:
+   ```bash
+   npx prisma migrate dev
+   ```
+3. Inicie o projeto:
+   ```bash
+   npm run dev
+   ```
+
+## ✅ Testes unitários
+
+Execute os testes com Jest:
+
+```bash
+npm test
+```
