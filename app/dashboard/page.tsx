@@ -14,6 +14,9 @@ import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { TransactionsCalendar } from "@/components/dashboard/transactions-calendar";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { VariationChart } from "@/components/dashboard/variation-chart";
+import { authOptions } from "@/src/lib/auth";
+import { getServerSession } from "next-auth";
+import { SignOutButton } from "./sign-out-button";
 
 const summaryCards = [
   {
@@ -137,11 +140,20 @@ const goalsProgress = [
   { label: "Cursos", value: 60 },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email ?? "usuário";
+
   return (
     <>
       <SidebarShell>
         <DashboardHeader />
+        <section className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            Olá, <strong className="text-foreground">{email}</strong>
+          </span>
+          <SignOutButton />
+        </section>
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (
