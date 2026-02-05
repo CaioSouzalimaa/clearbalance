@@ -13,11 +13,12 @@ export async function middleware(request: NextRequest) {
 
   const isAuthenticated = Boolean(token);
   const isLoginRoute = pathname.startsWith("/login");
+  const isRegisterRoute = pathname.startsWith("/register");
   const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  if (isLoginRoute && isAuthenticated) {
+  if ((isLoginRoute || isRegisterRoute) && isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
@@ -35,6 +36,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/login",
+    "/register",
     "/dashboard/:path*",
     "/categories/:path*",
     "/goals/:path*",

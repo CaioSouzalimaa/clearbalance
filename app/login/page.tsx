@@ -106,7 +106,7 @@ export default function LoginPage() {
             Forgot password?
           </a>
           <a
-            href="#"
+            href="/register"
             className="text-muted-foreground hover:text-primary transition-colors font-medium"
           >
             Create an account
