@@ -1,3 +1,5 @@
+import { auth } from "@/src/lib/auth";
+import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import {
   Briefcase,
   Home,
@@ -137,11 +139,21 @@ const goalsProgress = [
   { label: "Cursos", value: 60 },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
   return (
     <>
       <SidebarShell>
         <DashboardHeader />
+
+
+        <section className="flex items-center justify-between rounded-xl border border-border bg-surface p-4">
+          <div>
+            <p className="text-sm text-muted-foreground">Usuário autenticado</p>
+            <p className="font-semibold text-foreground">{session?.user?.name ?? session?.user?.email}</p>
+          </div>
+          <SignOutButton />
+        </section>
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (
