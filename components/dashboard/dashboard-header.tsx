@@ -2,20 +2,28 @@
 
 import { useState } from "react";
 
+import { LogoutButton } from "@/components/auth/logout-button";
 import { Button } from "@/components/ui/button";
 import {
   TransactionModal,
   defaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
 
-export const DashboardHeader = () => {
+type DashboardHeaderProps = {
+  userName?: string | null;
+  userEmail?: string | null;
+};
+
+export const DashboardHeader = ({ userName, userEmail }: DashboardHeaderProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">Bem-vinda de volta</p>
+          <p className="text-sm font-medium text-gray-500">
+            Bem-vinda(o), {userName ?? userEmail ?? "usuário"}
+          </p>
           <h1 className="text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
@@ -30,6 +38,7 @@ export const DashboardHeader = () => {
           <Button className="w-full sm:w-auto" onClick={() => setIsModalOpen(true)}>
             Nova transação
           </Button>
+          <LogoutButton />
         </div>
       </header>
 

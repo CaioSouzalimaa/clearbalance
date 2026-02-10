@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+
+import { auth } from "@/src/lib/auth";
 import {
   Briefcase,
   Home,
@@ -137,11 +140,16 @@ const goalsProgress = [
   { label: "Cursos", value: 60 },
 ];
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
   return (
     <>
       <SidebarShell>
-        <DashboardHeader />
+        <DashboardHeader userName={session.user.name} userEmail={session.user.email} />
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (

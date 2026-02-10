@@ -1,21 +1,99 @@
 # ClearBalance
 
-**ClearBalance** é uma aplicação web moderna e confiável, projetada para ajudar os usuários a **gerenciar suas finanças pessoais** e participar de uma comunidade voltada para **o mercado financeiro**.
+Aplicação Next.js (App Router) com autenticação via **NextAuth + Credentials**, persistência em **Postgres/Prisma** e testes unitários com **Jest**.
 
----
+## Requisitos
 
-## 📝 Visão Geral
+- Node.js 20+
+- Docker + Docker Compose
 
-ClearBalance é uma **plataforma de controle de despesas pessoais** que permite aos usuários:
+## Variáveis de ambiente
 
-- Monitorar e controlar seus gastos através de **gráficos e dashboards claros**.
-- Participar de uma **área de comunidade** para discussão sobre o mercado financeiro.
+1. Copie o arquivo de exemplo local:
 
----
+```bash
+cp .env.local.example .env.local
+```
 
-## 💻 Funcionalidades
+2. Ajuste os valores conforme seu ambiente.
 
-- **Dashboard de Despesas:** Visualize receitas e gastos com gráficos intuitivos.
-- **Fórum da Comunidade:** Compartilhe insights e aprenda com outros investidores.
-- **Categorias Personalizáveis:** Organize despesas por categorias.
-- **Design Responsivo:** Funciona perfeitamente em desktop e dispositivos móveis.
+### Variáveis obrigatórias
+
+- `DATABASE_URL` (montada a partir de `PG*`)
+- `PGHOST`
+- `PGDATABASE`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGSSLMODE`
+- `PGCHANNELBINDING`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+
+## Postgres local com Docker
+
+Suba o banco local:
+
+```bash
+docker compose up -d
+```
+
+## Migrations Prisma
+
+Com o banco rodando e `.env.local` configurado:
+
+```bash
+npm run prisma:migrate:dev
+npm run prisma:generate
+```
+
+## Rodar o projeto
+
+```bash
+npm run dev
+```
+
+## Rodar testes
+
+```bash
+npm test
+npm run test:watch
+npm run test:ci
+```
+
+> Os testes unitários de serviços usam **mock do Prisma**, sem conexão com Postgres real.
+
+## Produção com Neon
+
+Configure no ambiente de produção:
+
+- `PGHOST`
+- `PGDATABASE`
+- `PGUSER`
+- `PGPASSWORD`
+- `PGSSLMODE=require`
+- `PGCHANNELBINDING=require`
+
+A `DATABASE_URL` deve ser formada dinamicamente a partir das variáveis acima. Exemplo:
+
+```env
+DATABASE_URL="postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}/${PGDATABASE}?sslmode=${PGSSLMODE}&channel_binding=${PGCHANNELBINDING}"
+```
+
+## Rotas privadas
+
+As rotas privadas são controladas em `middleware.ts` no array `privateRoutes`.
+
+Para proteger novas rotas, adicione o prefixo desejado no array, por exemplo:
+
+```ts
+const privateRoutes = ["/dashboard", "/goals", "/categories", "/settings", "/reports"];
+```
+
+## Checklist operacional
+
+Comandos principais:
+
+- `docker compose up -d`
+- `npm run prisma:migrate:dev`
+- `npm run dev`
+- `npm test`
