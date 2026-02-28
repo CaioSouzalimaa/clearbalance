@@ -6,7 +6,6 @@ import { prisma } from "@/lib/db";
 import { loginSchema } from "@/lib/validations/auth";
 
 export const authOptions: NextAuthOptions = {
-  // @ts-expect-error - PrismaAdapter types are incompatible with NextAuth v4
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
