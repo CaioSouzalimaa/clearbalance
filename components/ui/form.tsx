@@ -19,12 +19,10 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
 
 // Generic component so control prop keeps its field values type
 const FormField = <TFieldValues extends FieldValues = FieldValues>(
-  props: ControllerProps<TFieldValues>
+  props: ControllerProps<TFieldValues>,
 ) => {
   return (
-    <FormFieldContext.Provider
-      value={{ name: props.name as string }}
-    >
+    <FormFieldContext.Provider value={{ name: props.name as string }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
   );
