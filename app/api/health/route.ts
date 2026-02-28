@@ -7,6 +7,9 @@ export async function GET() {
     const users = await prisma.user.count();
     return NextResponse.json({ ok: true, users });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: String(error) }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: String(error) },
+      { status: 500 },
+    );
   }
 }
