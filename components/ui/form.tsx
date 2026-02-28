@@ -1,5 +1,11 @@
 import * as React from "react";
-import { Controller, FormProvider, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useFormContext,
+  FieldValues,
+  ControllerProps,
+} from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
@@ -11,16 +17,18 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue,
 );
 
-const FormField = React.forwardRef<
-  HTMLDivElement,
-  React.ComponentProps<typeof Controller>
->(({ ...props }) => {
+// Generic component so control prop keeps its field values type
+const FormField = <TFieldValues extends FieldValues = FieldValues>(
+  props: ControllerProps<TFieldValues>
+) => {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormFieldContext.Provider
+      value={{ name: props.name as string }}
+    >
       <Controller {...props} />
     </FormFieldContext.Provider>
   );
-});
+};
 
 FormField.displayName = "FormField";
 
