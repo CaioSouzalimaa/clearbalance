@@ -1,12 +1,16 @@
+"use client";
+
 import { createElement } from "react";
 import Image from "next/image";
 import icon from "@/app/icon.png";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import {
   ChevronLeft,
   ChevronRight,
   Goal,
   LayoutDashboard,
+  LogOut,
   Receipt,
   Settings,
   Tags,
@@ -32,11 +36,7 @@ interface LucideIconProps {
   "aria-hidden"?: boolean;
 }
 
-export const LucideIcon = ({
-  icon,
-  className,
-  ...props
-}: LucideIconProps) => {
+export const LucideIcon = ({ icon, className, ...props }: LucideIconProps) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +52,7 @@ export const LucideIcon = ({
       {...props}
     >
       {icon.map(([tag, attrs], index) =>
-        createElement(tag, { ...attrs, key: `${tag}-${index}` })
+        createElement(tag, { ...attrs, key: `${tag}-${index}` }),
       )}
     </svg>
   );
@@ -106,14 +106,23 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
               }`}
             >
               <LucideIcon icon={Icon} className="h-5 w-5" aria-hidden />
-              <span className={isCollapsed ? "sr-only" : ""}>
-                {item.label}
-              </span>
+              <span className={isCollapsed ? "sr-only" : ""}>{item.label}</span>
             </Link>
           );
         })}
       </nav>
       <div className="mt-auto flex flex-col gap-4">
+        {/* Logout Button */}
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 ${
+            isCollapsed ? "justify-center" : ""
+          }`}
+        >
+          <LucideIcon icon={LogOut} className="h-5 w-5" aria-hidden />
+          <span className={isCollapsed ? "sr-only" : ""}>Sair</span>
+        </button>
+
         {!isCollapsed ? (
           <div className="rounded-2xl bg-primary/10 p-4 text-sm text-muted-foreground">
             <p className="font-semibold text-foreground">Dica rápida</p>
