@@ -3,7 +3,7 @@
 import { Fragment, useMemo } from "react";
 
 interface Transaction {
-  id: number;
+  id: string;
   description: string;
   category: string;
   date: string;

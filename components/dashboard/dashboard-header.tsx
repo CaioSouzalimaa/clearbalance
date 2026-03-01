@@ -1,15 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
   TransactionModal,
+  TransactionFormState,
   defaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
 
 export const DashboardHeader = () => {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (state: TransactionFormState) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.error("Erro ao salvar transação:", data);
+        return;
+      }
+      setIsModalOpen(false);
+      router.refresh();
+    } catch (err) {
+      console.error("Erro ao salvar transação:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -38,11 +64,12 @@ export const DashboardHeader = () => {
         dialogId="nova-transacao"
         title="Nova transação"
         subtitle="Adicione os detalhes da movimentação financeira."
-        submitLabel="Salvar transação"
+        submitLabel={isSubmitting ? "Salvando…" : "Salvar transação"}
         initialState={defaultTransactionFormState}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={() => setIsModalOpen(false)}
+        onSubmit={handleSubmit}
       />
     </>
   );
 };
+

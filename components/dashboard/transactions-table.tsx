@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import {
 } from "@/components/dashboard/transaction-modal";
 
 interface Transaction {
-  id: number;
+  id: string;
   description: string;
   category: string;
   categoryIcon?: IconNode;
@@ -34,10 +35,16 @@ interface TransactionsTableProps {
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   transactions,
 }) => {
+  const router = useRouter();
   const [rows, setRows] = useState<Transaction[]>(transactions);
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [saveFeedback, setSaveFeedback] = useState("");
+
+  // Sync with server-rendered data after router.refresh()
+  useEffect(() => {
+    setRows(transactions);
+  }, [transactions]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "todos" | "pendente" | "liquidado"
@@ -94,18 +101,28 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     setEditingTransaction(transaction);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
+    // Optimistic removal
     setRows((prev) => prev.filter((item) => item.id !== id));
+    try {
+      const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("delete failed");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      // Revert on failure
+      setRows(transactions);
+    }
   };
 
-  const handleSave = (formState: TransactionFormState) => {
-    if (!editingTransaction) {
-      return;
-    }
+  const handleSave = async (formState: TransactionFormState) => {
+    if (!editingTransaction) return;
+    const id = editingTransaction.id;
 
+    // Optimistic update
     setRows((prev) =>
       prev.map((item) =>
-        item.id === editingTransaction.id
+        item.id === id
           ? {
               ...item,
               description: formState.description,
@@ -135,17 +152,26 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     setEditingTransaction(null);
     setSaveFeedback("Alterações salvas com sucesso.");
     window.setTimeout(() => setSaveFeedback(""), 3000);
+
+    try {
+      const res = await fetch(`/api/transactions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formState),
+      });
+      if (!res.ok) throw new Error("update failed");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleToggleSettlement = (id: number) => {
+  const handleToggleSettlement = async (id: string) => {
+    // Optimistic toggle
     setRows((prev) =>
       prev.map((item) => {
-        if (item.id !== id) {
-          return item;
-        }
-
+        if (item.id !== id) return item;
         const nextSettled = !item.isSettled;
-
         return {
           ...item,
           isSettled: nextSettled,
@@ -155,6 +181,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         };
       })
     );
+
+    try {
+      const res = await fetch(`/api/transactions/${id}`, { method: "PATCH" });
+      if (!res.ok) throw new Error("toggle failed");
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      // Revert on failure
+      setRows(transactions);
+    }
   };
 
   const filteredRows = useMemo(() => {
