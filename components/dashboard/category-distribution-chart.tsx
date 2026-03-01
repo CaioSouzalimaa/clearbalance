@@ -8,7 +8,8 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface CategoryDataPoint {
   label: string;
-  value: number;
+  value: number;  // percentage
+  amount: number; // BRL total
   color: string;
 }
 
@@ -46,8 +47,14 @@ export const CategoryDistributionChart = ({
                 legend: { display: false },
                 tooltip: {
                   callbacks: {
-                    label: (context) =>
-                      `${context.label}: ${context.parsed}%`,
+                    label: (context) => {
+                      const item = data[context.dataIndex];
+                      const brl = item.amount.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      });
+                      return `${context.label}: ${brl} (${item.value}%)`;
+                    },
                   },
                 },
               },
@@ -69,7 +76,13 @@ export const CategoryDistributionChart = ({
                   {item.label}
                 </span>
               </div>
-              <span className="text-muted-foreground">{item.value}%</span>
+              <span className="text-muted-foreground">
+                  {item.amount.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}{" "}
+                  <span className="text-xs opacity-60">({item.value}%)</span>
+                </span>
             </div>
           ))}
         </div>

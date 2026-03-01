@@ -39,16 +39,11 @@ export const defaultTransactionFormState: TransactionFormState = {
   paymentDate: "",
 };
 
-const categoryOptions = [
-  "Renda",
-  "Moradia",
-  "Alimentação",
-  "Transporte",
-  "Lazer",
-  "Investimentos",
-  "Serviços",
-  "Outros",
-];
+// will be loaded from server when modal opens
+interface CategoryOption {
+  id: string;
+  name: string;
+}
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -72,6 +67,33 @@ export const TransactionModal = ({
   onSubmit,
 }: TransactionModalProps) => {
   const [formState, setFormState] = useState<TransactionFormState>(initialState);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+
+  // load categories when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/categories");
+        if (!res.ok) return;
+        const data: CategoryOption[] = await res.json();
+        if (cancelled) return;
+        setCategories(data);
+        // if creating new and no category selected, default to first
+        if (!initialState.category && data.length > 0) {
+          setFormState((prev) => ({ ...prev, category: data[0].name }));
+        }
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, initialState.category]);
 
   useEffect(() => {
     if (isOpen) {
@@ -108,12 +130,22 @@ export const TransactionModal = ({
     return "Dia de cobrança";
   };
 
+  const isValid = useMemo(() => {
+    const hasDescription = formState.description.trim().length > 0;
+    const hasCategory = formState.category.trim().length > 0;
+    const hasDate = /^\d{4}-\d{2}-\d{2}$/.test(formState.date);
+    const amountDigits = formState.amount.replace(/\D/g, "");
+    const hasAmount = amountDigits.length > 0 && Number(amountDigits) > 0;
+    if (formState.isSettled && !formState.paymentDate) return false;
+    return hasDescription && hasCategory && hasDate && hasAmount;
+  }, [formState]);
+
   if (!isOpen) {
     return null;
   }
 
   const titleId = `${dialogId}-title`;
-  const categoryListId = `${dialogId}-categories`;
+  // const categoryListId no longer used (we use a select)
 
   return (
     <div
@@ -150,6 +182,7 @@ export const TransactionModal = ({
           className="mt-6 space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
+            if (!isValid) return;
             onSubmit(formState);
           }}
         >
@@ -209,24 +242,27 @@ export const TransactionModal = ({
               >
                 Categoria
               </label>
-              <Input
+              <select
                 id={`${dialogId}-categoria`}
                 name="categoria"
-                list={categoryListId}
-                placeholder="Ex.: Moradia"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none"
                 value={formState.category}
                 onChange={(event) =>
-                  setFormState((prev) => ({
-                    ...prev,
-                    category: event.target.value,
-                  }))
+                  setFormState((prev) => ({ ...prev, category: event.target.value }))
                 }
-              />
-              <datalist id={categoryListId}>
-                {categoryOptions.map((category) => (
-                  <option key={category} value={category} />
-                ))}
-              </datalist>
+              >
+                {categories.length === 0 ? (
+                  <option value="" disabled>
+                    Carregando categorias...
+                  </option>
+                ) : (
+                  categories.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
           </div>
 
@@ -518,7 +554,9 @@ export const TransactionModal = ({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit">{submitLabel}</Button>
+            <Button type="submit" disabled={!isValid}>
+              {submitLabel}
+            </Button>
           </div>
         </form>
       </div>

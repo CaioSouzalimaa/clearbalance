@@ -93,7 +93,7 @@ export default async function DashboardPage({
           month={month}
         />
 
-        <TransactionsTable transactions={transactions} />
+        <TransactionsTable transactions={transactions} year={year} month={month} />
       </SidebarShell>
     </>
   );

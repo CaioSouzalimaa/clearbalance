@@ -46,6 +46,9 @@ const buildDataset = (data: VariationPoint[], accentColor: string) => ({
   ],
 });
 
+const formatBRL = (value: number) =>
+  value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 export const VariationChart: React.FC<VariationChartProps> = ({
   title,
   subtitle,
@@ -63,7 +66,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <span className={`text-xs font-semibold ${accentClassName}`}>
-          {data[data.length - 1].value.toFixed(1)}%
+          {formatBRL(data[data.length - 1]?.value ?? 0)}
         </span>
       </div>
       <div className="mt-6 h-32">
@@ -76,8 +79,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
               legend: { display: false },
               tooltip: {
                 callbacks: {
-                  label: (context) =>
-                    `${(context.parsed.y ?? 0).toFixed(1)}%`,
+                  label: (context) => formatBRL(context.parsed.y ?? 0),
                 },
               },
             },
@@ -91,7 +93,8 @@ export const VariationChart: React.FC<VariationChartProps> = ({
                 ticks: {
                   color: "#6b7280",
                   font: { size: 10 },
-                  callback: (value) => `${value}%`,
+                  callback: (value) =>
+                    formatBRL(typeof value === "number" ? value : Number(value)),
                 },
               },
             },

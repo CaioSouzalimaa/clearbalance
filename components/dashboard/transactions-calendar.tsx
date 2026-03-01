@@ -2,6 +2,8 @@
 
 import { Fragment, useMemo } from "react";
 
+import { MonthSelector } from "@/components/dashboard/month-selector";
+
 const PT_MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const PT_MONTHS_FULL = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 
@@ -75,9 +77,7 @@ export const TransactionsCalendar = ({
             Visualize seus lançamentos por dia.
           </p>
         </div>
-        <span className="text-sm font-medium capitalize text-muted-foreground">
-          {monthLabel}
-        </span>
+        <MonthSelector year={year} month={month} />
       </div>
 
       <div className="mt-6 overflow-x-auto">

@@ -12,6 +12,7 @@ import {
   defaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
+import { MonthSelector } from "@/components/dashboard/month-selector";
 
 interface Transaction {
   id: string;
@@ -32,10 +33,14 @@ interface Transaction {
 
 interface TransactionsTableProps {
   transactions: Transaction[];
+  year: number;
+  month: number; // 0-indexed
 }
 
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   transactions,
+  year,
+  month,
 }) => {
   const router = useRouter();
   const [rows, setRows] = useState<Transaction[]>(transactions);
@@ -73,6 +78,33 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       style: "currency",
       currency: "BRL",
     });
+  };
+
+  const PT_MONTHS = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+
+  /** Convert UI date "05 Mar 2025" → "2025-03-05" for date inputs */
+  const parseUiDateToIso = (dateStr: string): string => {
+    if (!dateStr) return "";
+    const parts = dateStr.split(" ");
+    if (parts.length !== 3) return "";
+    const day = parts[0].padStart(2, "0");
+    const monthIndex = PT_MONTHS.indexOf(parts[1]);
+    const year = parts[2];
+    if (monthIndex === -1) return "";
+    return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${day}`;
   };
 
   const formatAmountWithType = (value: string, type: Transaction["type"]) => {
@@ -239,7 +271,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     return {
       description: editingTransaction.description,
       category: editingTransaction.category,
-      date: editingTransaction.date,
+      date: parseUiDateToIso(editingTransaction.date),
       amount: formatCurrencyBRL(editingTransaction.amount),
       type: editingTransaction.type,
       recurrenceMode: editingTransaction.recurrenceMode,
@@ -265,9 +297,12 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               Confira suas movimentações recentes.
             </p>
           </div>
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-            {filteredRows.length} de {rows.length} itens
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <MonthSelector year={year} month={month} />
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              {filteredRows.length} de {rows.length} itens
+            </span>
+          </div>
         </div>
         <div className="border-b border-border bg-muted/20 px-6 py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

@@ -36,7 +36,8 @@ export interface ChartPoint {
 
 export interface CategoryPoint {
   label: string;
-  value: number;
+  value: number;  // percentage (0-100)
+  amount: number; // BRL total
   color: string;
 }
 
@@ -436,6 +437,7 @@ export async function getDashboardData(
     ([label, value]) => ({
       label,
       value: parseFloat(value.div(totalExpenseForDist).mul(100).toFixed(1)),
+      amount: parseFloat(value.toFixed(2)),
       color: CATEGORY_COLORS[colorIndex++ % CATEGORY_COLORS.length],
     })
   );
@@ -468,8 +470,8 @@ export async function getDashboardData(
     const d = new Date(Date.UTC(currentYear, currentMonth - i, 1));
     const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
     const month = PT_MONTHS[d.getUTCMonth()];
-    incomeVariation.push({ month, value: parseFloat(((incomeByMonth.get(key) ?? 0) / 1000).toFixed(1)) });
-    expenseVariation.push({ month, value: parseFloat(((expenseByMonth.get(key) ?? 0) / 1000).toFixed(1)) });
+    incomeVariation.push({ month, value: parseFloat((incomeByMonth.get(key) ?? 0).toFixed(2)) });
+    expenseVariation.push({ month, value: parseFloat((expenseByMonth.get(key) ?? 0).toFixed(2)) });
   }
 
   // ── Goals progress ────────────────────────────────────────────────────────
