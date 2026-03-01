@@ -19,6 +19,8 @@ export interface UITransaction {
   billingDay?: string;
   isSettled: boolean;
   paymentDate?: string;
+  /** True for projected occurrences generated from a recurring rule — not persisted in DB */
+  isVirtual?: boolean;
 }
 
 export interface SummaryCardData {
@@ -86,6 +88,11 @@ function formatDate(date: Date): string {
   const month = PT_MONTHS[d.getUTCMonth()];
   const year = d.getUTCFullYear();
   return `${day} ${month} ${year}`;
+}
+
+/** Format a Date as "YYYY-MM-DD" (ISO, UTC) */
+function formatIso(date: Date): string {
+  return date.toISOString().split("T")[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -198,17 +205,92 @@ async function formToDbPayload(
 }
 
 // ---------------------------------------------------------------------------
+// Recurring expansion
+// ---------------------------------------------------------------------------
+
+/**
+ * For a given 0-indexed month, generates virtual UITransaction entries
+ * from all recurring DB transactions. Skips a recurring tx in its origin month
+ * (the real DB entry is already included). Does NOT mutate the DB.
+ */
+function expandRecurringForMonth(
+  recurringRecords: NonNullable<PrismaTransaction>[],
+  year: number,
+  month: number // 0-indexed
+): UITransaction[] {
+  const results: UITransaction[] = [];
+  const monthEnd = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+
+  for (const tx of recurringRecords) {
+    if (tx.recurrenceMode === RecurrenceMode.NONE) continue;
+    const txStart = new Date(tx.date);
+    if (txStart > monthEnd) continue;
+    // The origin month already has a real DB entry — skip virtual for it
+    if (txStart.getUTCFullYear() === year && txStart.getUTCMonth() === month) continue;
+
+    const base = mapDbToUI(tx);
+    const freq = tx.recurrenceFrequency;
+
+    if (!freq || freq === RecurrenceFrequency.MONTHLY || freq === RecurrenceFrequency.DAILY) {
+      const day = tx.billingDay ?? txStart.getUTCDate();
+      const actualDay = Math.min(day, daysInMonth);
+      const occDate = new Date(Date.UTC(year, month, actualDay));
+      results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+    } else if (freq === RecurrenceFrequency.WEEKLY) {
+      const targetWeekday = txStart.getUTCDay();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const occDate = new Date(Date.UTC(year, month, d));
+        if (occDate.getUTCDay() === targetWeekday) {
+          results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+        }
+      }
+    } else if (freq === RecurrenceFrequency.YEARLY) {
+      if (txStart.getUTCMonth() === month) {
+        const occDate = new Date(Date.UTC(year, month, txStart.getUTCDate()));
+        results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+      }
+    }
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // API helpers
 // ---------------------------------------------------------------------------
 
-/** All transactions for a user, most recent first */
-export async function getUserTransactions(userId: string): Promise<UITransaction[]> {
-  const records = await prisma.transaction.findMany({
-    where: { userId },
-    include: { category: true },
-    orderBy: { date: "desc" },
+/** Transactions for a user in the given month, with recurring expansion. Defaults to current month. */
+export async function getUserTransactions(
+  userId: string,
+  year?: number,
+  month?: number // 0-indexed
+): Promise<UITransaction[]> {
+  const now = new Date();
+  const y = year ?? now.getFullYear();
+  const m = month ?? now.getMonth();
+  const monthStart = new Date(Date.UTC(y, m, 1));
+  const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
+
+  const [records, recurringRecords] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { userId, date: { gte: monthStart, lte: monthEnd } },
+      include: { category: true },
+      orderBy: { date: "desc" },
+    }),
+    prisma.transaction.findMany({
+      where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
+      include: { category: true },
+    }),
+  ]);
+
+  const real = records.map(mapDbToUI);
+  const virtual = expandRecurringForMonth(recurringRecords, y, m);
+  // Sort combined list by date descending
+  return [...real, ...virtual].sort((a, b) => {
+    const parse = (s: string) => new Date(s.split(" ").reverse().join("-")).getTime();
+    return parse(b.date) - parse(a.date);
   });
-  return records.map(mapDbToUI);
 }
 
 /** Create a new transaction */
@@ -271,20 +353,30 @@ export async function toggleTransactionSettlement(
 // Dashboard aggregations
 // ---------------------------------------------------------------------------
 
-export async function getDashboardData(userId: string): Promise<DashboardData> {
+export async function getDashboardData(
+  userId: string,
+  year?: number,
+  month?: number // 0-indexed
+): Promise<DashboardData> {
   const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const currentYear = year ?? now.getFullYear();
+  const currentMonth = month ?? now.getMonth();
 
   const monthStart = new Date(Date.UTC(currentYear, currentMonth, 1));
   const monthEnd = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59));
 
-  // ── Current month transactions ──────────────────────────────────────────
-  const currentMonthTxs = await prisma.transaction.findMany({
-    where: { userId, date: { gte: monthStart, lte: monthEnd } },
-    include: { category: true },
-    orderBy: { date: "desc" },
-  });
+  // ── Current month real transactions + all recurring records ──────────────
+  const [currentMonthTxs, recurringRecords] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { userId, date: { gte: monthStart, lte: monthEnd } },
+      include: { category: true },
+      orderBy: { date: "desc" },
+    }),
+    prisma.transaction.findMany({
+      where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
+      include: { category: true },
+    }),
+  ]);
 
   // ── Summary cards ────────────────────────────────────────────────────────
   let totalIncome = new Prisma.Decimal(0);
@@ -318,10 +410,17 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     },
   ];
 
-  // ── Transactions list (current month, most recent first) ─────────────────
-  const transactions = currentMonthTxs.map(mapDbToUI);
+  // ── Transactions list: real + virtual recurring, sorted by date desc ─────
+  const virtualTxs = expandRecurringForMonth(recurringRecords, currentYear, currentMonth);
+  const transactions = [...currentMonthTxs.map(mapDbToUI), ...virtualTxs].sort((a, b) => {
+    const parse = (s: string) => {
+      const parts = s.split(" "); // ["05", "Mar", "2025"]
+      return new Date(`${parts[1]} ${parts[0]} ${parts[2]}`).getTime();
+    };
+    return parse(b.date) - parse(a.date);
+  });
 
-  // ── Category distribution (expenses this month) ──────────────────────────
+  // ── Category distribution (expenses this month, including virtual) ────────
   const expenseTxs = currentMonthTxs.filter((tx) => tx.type === TransactionType.EXPENSE);
   const byCategoryMap = new Map<string, Prisma.Decimal>();
   for (const tx of expenseTxs) {

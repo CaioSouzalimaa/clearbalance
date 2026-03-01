@@ -6,15 +6,34 @@ import { getDashboardData } from "@/lib/transactions";
 import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { GoalsProgressChart } from "@/components/dashboard/goals-progress-chart";
+import { MonthSelector } from "@/components/dashboard/month-selector";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { TransactionsCalendar } from "@/components/dashboard/transactions-calendar";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { VariationChart } from "@/components/dashboard/variation-chart";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/login");
+
+  const params = await searchParams;
+  const now = new Date();
+
+  let year = now.getFullYear();
+  let month = now.getMonth(); // 0-indexed
+
+  if (params.month) {
+    const [y, m] = params.month.split("-").map(Number);
+    if (!isNaN(y) && !isNaN(m) && m >= 1 && m <= 12) {
+      year = y;
+      month = m - 1; // convert to 0-indexed
+    }
+  }
 
   const {
     summaryCards,
@@ -23,12 +42,14 @@ export default async function DashboardPage() {
     expenseVariation,
     categoryDistribution,
     goalsProgress,
-  } = await getDashboardData(session.user.id);
+  } = await getDashboardData(session.user.id, year, month);
 
   return (
     <>
       <SidebarShell>
         <DashboardHeader />
+
+        <MonthSelector year={year} month={month} />
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (
@@ -66,10 +87,15 @@ export default async function DashboardPage() {
           />
         </section>
 
-        <TransactionsCalendar transactions={transactions} />
+        <TransactionsCalendar
+          transactions={transactions}
+          year={year}
+          month={month}
+        />
 
         <TransactionsTable transactions={transactions} />
       </SidebarShell>
     </>
   );
 }
+

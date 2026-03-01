@@ -11,6 +11,7 @@ import {
   TransactionFormState,
   defaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
+import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 
 interface Transaction {
   id: string;
@@ -26,6 +27,7 @@ interface Transaction {
   billingDay?: string;
   isSettled: boolean;
   paymentDate?: string;
+  isVirtual?: boolean;
 }
 
 interface TransactionsTableProps {
@@ -40,6 +42,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
   const [saveFeedback, setSaveFeedback] = useState("");
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sync with server-rendered data after router.refresh()
   useEffect(() => {
@@ -101,16 +105,24 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     setEditingTransaction(transaction);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    setIsDeleting(true);
     // Optimistic removal
-    setRows((prev) => prev.filter((item) => item.id !== id));
+    setRows((prev) => prev.filter((item) => item.id !== pendingDeleteId));
+    const id = pendingDeleteId;
+    setPendingDeleteId(null);
+    setIsDeleting(false);
     try {
       const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("delete failed");
       router.refresh();
     } catch (err) {
       console.error(err);
-      // Revert on failure
       setRows(transactions);
     }
   };
@@ -394,17 +406,19 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                           : "Pago"
                         : "Pendente"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleSettlement(item.id)}
-                      className="text-xs font-medium text-primary transition hover:text-primary/80"
-                    >
-                      {item.isSettled
-                        ? "Marcar como pendente"
-                        : item.type === "entrada"
-                        ? "Marcar como recebido"
-                        : "Marcar como pago"}
-                    </button>
+                    {!item.isVirtual && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSettlement(item.id)}
+                        className="text-xs font-medium text-primary transition hover:text-primary/80"
+                      >
+                        {item.isSettled
+                          ? "Marcar como pendente"
+                          : item.type === "entrada"
+                          ? "Marcar como recebido"
+                          : "Marcar como pago"}
+                      </button>
+                    )}
                   </div>
 
                   {item.isSettled && item.paymentDate ? (
@@ -414,22 +428,31 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   ) : null}
 
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-border text-xs"
-                      onClick={() => startEditing(item)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-border text-xs text-rose-500 hover:bg-rose-500/10"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Excluir
-                    </Button>
+                    {!item.isVirtual && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-border text-xs"
+                          onClick={() => startEditing(item)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-border text-xs text-rose-500 hover:bg-rose-500/10"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </>
+                    )}
+                    {item.isVirtual && (
+                      <span className="col-span-2 text-center text-xs text-muted-foreground">
+                        Recorrência projetada
+                      </span>
+                    )}
                   </div>
                 </div>
               ))
@@ -527,7 +550,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         <button
                           type="button"
                           onClick={() => handleToggleSettlement(item.id)}
-                          className="text-left text-xs font-medium text-primary transition hover:text-primary/80"
+                          className={`text-left text-xs font-medium text-primary transition hover:text-primary/80 ${
+                            item.isVirtual ? "hidden" : ""
+                          }`}
                         >
                           {item.isSettled
                             ? "Marcar como pendente"
@@ -548,22 +573,30 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="border-border px-3 py-1 text-xs"
-                          onClick={() => startEditing(item)}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Excluir
-                        </Button>
+                        {!item.isVirtual ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-border px-3 py-1 text-xs"
+                              onClick={() => startEditing(item)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              Excluir
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Projetada
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -583,6 +616,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         initialState={editingFormState}
         onClose={() => setEditingTransaction(null)}
         onSubmit={handleSave}
+      />
+
+      <ConfirmModal
+        isOpen={pendingDeleteId !== null}
+        title="Excluir lançamento"
+        message="Esta ação não pode ser desfeita. Tem certeza que deseja excluir este lançamento?"
+        confirmLabel="Excluir"
+        isLoading={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
       />
     </>
   );
