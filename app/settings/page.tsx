@@ -1,9 +1,159 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+interface UserProfile {
+  id: string;
+  name: string | null;
+  email: string;
+  createdAt: string;
+}
+
+interface Feedback {
+  type: "success" | "error";
+  message: string;
+}
+
 export default function SettingsPage() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileFeedback, setProfileFeedback] = useState<Feedback | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<Feedback | null>(
+    null,
+  );
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await fetch("/api/settings");
+        if (!res.ok) throw new Error("Falha ao carregar perfil");
+        const data: UserProfile = await res.json();
+        setProfile(data);
+        setName(data.name ?? "");
+        setEmail(data.email);
+      } catch {
+        setProfileFeedback({
+          type: "error",
+          message: "Erro ao carregar informações do perfil.",
+        });
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    }
+    loadProfile();
+  }, []);
+
+  async function handleSaveProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    setProfileFeedback(null);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setProfileFeedback({
+          type: "error",
+          message: data.error ?? "Erro ao salvar.",
+        });
+      } else {
+        setProfile(data);
+        setProfileFeedback({
+          type: "success",
+          message: "Perfil atualizado com sucesso!",
+        });
+      }
+    } catch {
+      setProfileFeedback({ type: "error", message: "Erro de conexão." });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  }
+
+  async function handleChangePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordFeedback(null);
+
+    if (newPassword.length < 8) {
+      setPasswordFeedback({
+        type: "error",
+        message: "A nova senha deve ter pelo menos 8 caracteres.",
+      });
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      setPasswordFeedback({
+        type: "error",
+        message: "A nova senha deve conter pelo menos uma letra maiúscula.",
+      });
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      setPasswordFeedback({
+        type: "error",
+        message: "A nova senha deve conter pelo menos uma letra minúscula.",
+      });
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      setPasswordFeedback({
+        type: "error",
+        message: "A nova senha deve conter pelo menos um número.",
+      });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({
+        type: "error",
+        message: "As senhas não coincidem.",
+      });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      const res = await fetch("/api/settings/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPasswordFeedback({
+          type: "error",
+          message: data.error ?? "Erro ao alterar senha.",
+        });
+      } else {
+        setPasswordFeedback({
+          type: "success",
+          message: "Senha alterada com sucesso!",
+        });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch {
+      setPasswordFeedback({ type: "error", message: "Erro de conexão." });
+    } finally {
+      setIsSavingPassword(false);
+    }
+  }
+
   return (
     <SidebarShell>
       <header className="space-y-1">
@@ -16,6 +166,7 @@ export default function SettingsPage() {
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+        {/* ── Perfil ── */}
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-foreground">
             Informações do perfil
@@ -24,89 +175,76 @@ export default function SettingsPage() {
             Mantenha seus dados sempre atualizados.
           </p>
 
-          <form className="mt-6 space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  htmlFor="nome"
-                  className="text-sm font-medium text-foreground"
+          {isLoadingProfile ? (
+            <p className="mt-6 text-sm text-muted-foreground">Carregando...</p>
+          ) : (
+            <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
+              {profileFeedback && (
+                <p
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium ${
+                    profileFeedback.type === "success"
+                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                      : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                  }`}
                 >
-                  Nome completo
-                </label>
-                <Input
-                  id="nome"
-                  name="nome"
-                  placeholder="Ex.: Ana Beatriz Oliveira"
-                />
-              </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="email"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="ana@email.com"
-                />
-              </div>
-            </div>
+                  {profileFeedback.message}
+                </p>
+              )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  htmlFor="telefone"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Telefone
-                </label>
-                <Input
-                  id="telefone"
-                  name="telefone"
-                  placeholder="(11) 91234-5678"
-                />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="nome"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Nome completo
+                  </label>
+                  <Input
+                    id="nome"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ex.: Ana Beatriz Oliveira"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="ana@email.com"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label
-                  htmlFor="cargo"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Cargo
-                </label>
-                <Input
-                  id="cargo"
-                  name="cargo"
-                  placeholder="Ex.: Analista financeiro"
-                />
+
+              {profile && (
+                <p className="text-xs text-muted-foreground">
+                  Membro desde{" "}
+                  {new Date(profile.createdAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isSavingProfile}>
+                  {isSavingProfile ? "Salvando..." : "Salvar alterações"}
+                </Button>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="bio"
-                className="text-sm font-medium text-foreground"
-              >
-                Bio
-              </label>
-              <textarea
-                id="bio"
-                name="bio"
-                rows={4}
-                className="w-full rounded-md border border-border bg-background px-4 py-2.5 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                placeholder="Conte um pouco sobre sua rotina financeira."
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button type="submit">Salvar alterações</Button>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
 
         <div className="flex flex-col gap-6">
+          {/* ── Preferências ── */}
           <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-foreground">
               Preferências
@@ -120,44 +258,88 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium text-foreground">Tema</p>
                 <ThemeToggle />
               </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">
-                  Notificações
-                </p>
-                <label className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                    defaultChecked
-                  />
-                  Receber lembretes semanais de metas
-                </label>
-                <label className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                  />
-                  Alertas de gastos acima do orçamento
-                </label>
-              </div>
             </div>
           </div>
 
+          {/* ── Segurança / Alterar senha ── */}
           <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-foreground">Segurança</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Controle seus acessos e dados sensíveis.
+              Altere sua senha de acesso.
             </p>
 
-            <div className="mt-6 space-y-3">
-              <Button variant="outline" className="w-full">
-                Alterar senha
+            <form onSubmit={handleChangePassword} className="mt-6 space-y-4">
+              {passwordFeedback && (
+                <p
+                  className={`rounded-lg px-4 py-2.5 text-sm font-medium ${
+                    passwordFeedback.type === "success"
+                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                      : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
+                  }`}
+                >
+                  {passwordFeedback.message}
+                </p>
+              )}
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="currentPassword"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Senha atual
+                </label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="newPassword"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Nova senha
+                </label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mín. 8 chars, maiúscula, número"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Confirmar nova senha
+                </label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repita a nova senha"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSavingPassword}
+              >
+                {isSavingPassword ? "Alterando..." : "Alterar senha"}
               </Button>
-              <Button variant="outline" className="w-full">
-                Gerenciar dispositivos
-              </Button>
-            </div>
+            </form>
           </div>
         </div>
       </section>
