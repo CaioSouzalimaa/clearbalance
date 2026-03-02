@@ -9,7 +9,7 @@ import { LucideIcon, IconNode } from "@/components/dashboard/sidebar";
 import {
   TransactionModal,
   TransactionFormState,
-  defaultTransactionFormState,
+  createDefaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 import { MonthSelector } from "@/components/dashboard/month-selector";
@@ -265,7 +265,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
   const editingFormState = useMemo<TransactionFormState>(() => {
     if (!editingTransaction) {
-      return defaultTransactionFormState;
+      return createDefaultTransactionFormState();
     }
 
     return {

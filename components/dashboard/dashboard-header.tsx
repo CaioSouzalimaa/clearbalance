@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   TransactionModal,
   TransactionFormState,
-  defaultTransactionFormState,
+  createDefaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
 
 export const DashboardHeader = () => {
@@ -65,7 +65,7 @@ export const DashboardHeader = () => {
         title="Nova transação"
         subtitle="Adicione os detalhes da movimentação financeira."
         submitLabel={isSubmitting ? "Salvando…" : "Salvar transação"}
-        initialState={defaultTransactionFormState}
+        initialState={createDefaultTransactionFormState()}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
       />

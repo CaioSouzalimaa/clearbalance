@@ -25,10 +25,10 @@ export interface TransactionFormState {
   paymentDate: string;
 }
 
-export const defaultTransactionFormState: TransactionFormState = {
+export const createDefaultTransactionFormState = (): TransactionFormState => ({
   description: "",
   category: "",
-  date: "",
+  date: new Date().toISOString().split("T")[0],
   amount: "",
   type: "entrada",
   recurrenceMode: "nao_recorrente",
@@ -37,7 +37,7 @@ export const defaultTransactionFormState: TransactionFormState = {
   billingDay: "",
   isSettled: false,
   paymentDate: "",
-};
+});
 
 // will be loaded from server when modal opens
 interface CategoryOption {
@@ -68,6 +68,8 @@ export const TransactionModal = ({
 }: TransactionModalProps) => {
   const [formState, setFormState] = useState<TransactionFormState>(initialState);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [validationError, setValidationError] = useState<string>("");
+  const [submitted, setSubmitted] = useState(false);
 
   // load categories when modal opens
   useEffect(() => {
@@ -98,6 +100,8 @@ export const TransactionModal = ({
   useEffect(() => {
     if (isOpen) {
       setFormState(initialState);
+      setSubmitted(false);
+      setValidationError("");
     }
   }, [initialState, isOpen]);
 
@@ -139,6 +143,12 @@ export const TransactionModal = ({
     if (formState.isSettled && !formState.paymentDate) return false;
     return hasDescription && hasCategory && hasDate && hasAmount;
   }, [formState]);
+
+  useEffect(() => {
+    if (isValid) {
+      setValidationError("");
+    }
+  }, [isValid]);
 
   if (!isOpen) {
     return null;
@@ -182,10 +192,19 @@ export const TransactionModal = ({
           className="mt-6 space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
-            if (!isValid) return;
+            setSubmitted(true);
+            if (!isValid) {
+              setValidationError("Por favor, preencha todos os campos obrigatórios.");
+              return;
+            }
             onSubmit(formState);
           }}
         >
+          {validationError ? (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {validationError}
+            </div>
+          ) : null}
           <div className="space-y-2">
             <label
               htmlFor={`${dialogId}-descricao`}
@@ -204,6 +223,7 @@ export const TransactionModal = ({
                   description: event.target.value,
                 }))
               }
+              className={submitted && !formState.description.trim() ? "border-red-500 focus-visible:ring-red-500" : ""}
             />
           </div>
 
@@ -231,7 +251,7 @@ export const TransactionModal = ({
                       amount: formatCurrencyBRL(event.target.value),
                     }))
                   }
-                  className="pl-9 text-right"
+                  className={`pl-9 text-right${submitted && Number(formState.amount.replace(/\D/g, "")) === 0 ? " border-red-500 focus-visible:ring-red-500" : ""}`}
                 />
               </div>
             </div>
@@ -245,7 +265,7 @@ export const TransactionModal = ({
               <select
                 id={`${dialogId}-categoria`}
                 name="categoria"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none"
+                className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ${submitted && !formState.category.trim() ? "border-red-500" : "border-input"}`}
                 value={formState.category}
                 onChange={(event) =>
                   setFormState((prev) => ({ ...prev, category: event.target.value }))
@@ -310,6 +330,7 @@ export const TransactionModal = ({
                     date: event.target.value,
                   }))
                 }
+                className={submitted && !/^\d{4}-\d{2}-\d{2}$/.test(formState.date) ? "border-red-500 focus-visible:ring-red-500" : ""}
               />
             </div>
           </div>
@@ -543,7 +564,7 @@ export const TransactionModal = ({
                         paymentDate: event.target.value,
                       }))
                     }
-                    className="h-8 w-full px-2 py-1 text-xs sm:w-auto"
+                    className={`h-8 w-full px-2 py-1 text-xs sm:w-auto${submitted && formState.isSettled && !formState.paymentDate ? " border-red-500 focus-visible:ring-red-500" : ""}`}
                   />
                 </label>
               ) : null}
@@ -554,7 +575,7 @@ export const TransactionModal = ({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={!isValid}>
+            <Button type="submit">
               {submitLabel}
             </Button>
           </div>
