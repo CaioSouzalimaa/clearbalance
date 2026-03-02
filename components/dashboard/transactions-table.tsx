@@ -26,6 +26,7 @@ interface Transaction {
   recurrenceKind?: "fixa" | "variavel";
   recurrenceFrequency?: "mensal" | "semanal" | "anual";
   billingDay?: string;
+  recurrenceEndDate?: string;
   isSettled: boolean;
   paymentDate?: string;
   isVirtual?: boolean;
@@ -278,6 +279,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       recurrenceKind: editingTransaction.recurrenceKind ?? "fixa",
       recurrenceFrequency: editingTransaction.recurrenceFrequency ?? "mensal",
       billingDay: editingTransaction.billingDay ?? "",
+      recurrenceEndDate: editingTransaction.recurrenceEndDate ?? "",
       isSettled: editingTransaction.isSettled,
       paymentDate:
         editingTransaction.paymentDate ??

@@ -118,6 +118,7 @@ model Transaction {
   recurrenceMode      RecurrenceMode       @default(NONE)
   recurrenceFrequency RecurrenceFrequency?
   billingDay          Int?
+  recurrenceEndDate   DateTime?
 
   categoryId String
   userId     String

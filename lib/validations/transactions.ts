@@ -10,6 +10,7 @@ export const transactionFormSchema = z.object({
   recurrenceKind: z.enum(["fixa", "variavel"]),
   recurrenceFrequency: z.enum(["mensal", "semanal", "anual"]),
   billingDay: z.string(),
+  recurrenceEndDate: z.string().optional(),
   isSettled: z.boolean(),
   paymentDate: z.string(),
 });

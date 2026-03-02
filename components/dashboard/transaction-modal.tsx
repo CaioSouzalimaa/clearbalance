@@ -21,6 +21,7 @@ export interface TransactionFormState {
   recurrenceKind: RecurrenceKind;
   recurrenceFrequency: RecurrenceFrequency;
   billingDay: string;
+  recurrenceEndDate: string;
   isSettled: boolean;
   paymentDate: string;
 }
@@ -35,6 +36,7 @@ export const createDefaultTransactionFormState = (): TransactionFormState => ({
   recurrenceKind: "fixa",
   recurrenceFrequency: "mensal",
   billingDay: "",
+  recurrenceEndDate: "",
   isSettled: false,
   paymentDate: "",
 });
@@ -496,6 +498,31 @@ export const TransactionModal = ({
                   />
                 )}
               </div>
+              {formState.recurrenceKind === "variavel" ? (
+                <div className="space-y-2 md:col-span-2">
+                  <label
+                    htmlFor={`${dialogId}-recurrence-end-date`}
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Data final da recorrência
+                  </label>
+                  <Input
+                    id={`${dialogId}-recurrence-end-date`}
+                    name="recurrenceEndDate"
+                    type="date"
+                    value={formState.recurrenceEndDate}
+                    onChange={(event) =>
+                      setFormState((prev) => ({
+                        ...prev,
+                        recurrenceEndDate: event.target.value,
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Esta recorrência será gerada até a data especificada.
+                  </p>
+                </div>
+              ) : null}
               <p className="text-xs text-muted-foreground md:col-span-2">
                 Lançamentos recorrentes são gerados automaticamente.
               </p>
