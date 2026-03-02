@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { registerSchema } from "@/lib/validations/auth";
+import { seedDefaultCategories } from "@/lib/categories";
 import { ZodError } from "zod";
 
 export async function POST(req: Request) {
@@ -34,6 +35,13 @@ export async function POST(req: Request) {
         passwordHash,
       },
     });
+
+    // Criar categorias padrão (não bloqueia o registro em caso de falha)
+    try {
+      await seedDefaultCategories(user.id);
+    } catch (seedError) {
+      console.warn("[register] Falha ao criar categorias padrão:", seedError);
+    }
 
     // Retornar sucesso (sem senha)
     return NextResponse.json(
