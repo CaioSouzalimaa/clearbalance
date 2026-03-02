@@ -1,4 +1,9 @@
-import { Prisma, RecurrenceFrequency, RecurrenceMode, TransactionType } from "@prisma/client";
+import {
+  Prisma,
+  RecurrenceFrequency,
+  RecurrenceMode,
+  TransactionType,
+} from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { TransactionFormData } from "@/lib/validations/transactions";
 
@@ -37,7 +42,7 @@ export interface ChartPoint {
 
 export interface CategoryPoint {
   label: string;
-  value: number;  // percentage (0-100)
+  value: number; // percentage (0-100)
   amount: number; // BRL total
   color: string;
 }
@@ -52,6 +57,7 @@ export interface DashboardData {
   transactions: UITransaction[];
   incomeVariation: ChartPoint[];
   expenseVariation: ChartPoint[];
+  incomeDistribution: CategoryPoint[];
   categoryDistribution: CategoryPoint[];
   goalsProgress: GoalPoint[];
 }
@@ -60,12 +66,32 @@ export interface DashboardData {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const PT_MONTHS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+const PT_MONTHS = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 const CATEGORY_COLORS = [
-  "#69b3a2", "#8fc1a9", "#f2cc8f", "#f4a261",
-  "#e9c46a", "#264653", "#2a9d8f", "#e76f51",
-  "#a8dadc", "#457b9d",
+  "#69b3a2",
+  "#8fc1a9",
+  "#f2cc8f",
+  "#f4a261",
+  "#e9c46a",
+  "#264653",
+  "#2a9d8f",
+  "#e76f51",
+  "#a8dadc",
+  "#457b9d",
 ];
 
 /** Parse a formatted Brazilian currency string like "R$ 8.500,00" or "8.500,00" */
@@ -101,12 +127,15 @@ function formatIso(date: Date): string {
 // DB ↔ UI mapping
 // ---------------------------------------------------------------------------
 
-type PrismaTransaction = Awaited<ReturnType<typeof prisma.transaction.findFirst>> & {
+type PrismaTransaction = Awaited<
+  ReturnType<typeof prisma.transaction.findFirst>
+> & {
   category: { name: string };
 };
 
 function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
-  const type: UITransaction["type"] = tx.type === TransactionType.INCOME ? "entrada" : "saida";
+  const type: UITransaction["type"] =
+    tx.type === TransactionType.INCOME ? "entrada" : "saida";
   const prefix = type === "entrada" ? "+" : "-";
   const amount = `${prefix} ${formatCurrencyBRL(tx.amount)}`;
 
@@ -116,11 +145,15 @@ function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
 
   if (tx.recurrenceMode !== RecurrenceMode.NONE) {
     recurrenceMode = "recorrente";
-    recurrenceKind = tx.recurrenceMode === RecurrenceMode.FIXED ? "fixa" : "variavel";
+    recurrenceKind =
+      tx.recurrenceMode === RecurrenceMode.FIXED ? "fixa" : "variavel";
   }
 
   if (tx.recurrenceFrequency) {
-    const freqMap: Record<RecurrenceFrequency, UITransaction["recurrenceFrequency"]> = {
+    const freqMap: Record<
+      RecurrenceFrequency,
+      UITransaction["recurrenceFrequency"]
+    > = {
       WEEKLY: "semanal",
       MONTHLY: "mensal",
       YEARLY: "anual",
@@ -140,9 +173,13 @@ function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
     recurrenceKind,
     recurrenceFrequency,
     billingDay: tx.billingDay != null ? String(tx.billingDay) : undefined,
-    recurrenceEndDate: tx.recurrenceEndDate ? tx.recurrenceEndDate.toISOString().split("T")[0] : undefined,
+    recurrenceEndDate: tx.recurrenceEndDate
+      ? tx.recurrenceEndDate.toISOString().split("T")[0]
+      : undefined,
     isSettled: tx.isSettled,
-    paymentDate: tx.paymentDate ? new Date(tx.paymentDate).toISOString().split("T")[0] : undefined,
+    paymentDate: tx.paymentDate
+      ? new Date(tx.paymentDate).toISOString().split("T")[0]
+      : undefined,
   };
 }
 
@@ -162,10 +199,11 @@ type FormDbPayload = {
 
 async function formToDbPayload(
   userId: string,
-  data: TransactionFormData
+  data: TransactionFormData,
 ): Promise<FormDbPayload> {
   const amount = new Prisma.Decimal(parseCurrencyBRL(data.amount));
-  const type = data.type === "entrada" ? TransactionType.INCOME : TransactionType.EXPENSE;
+  const type =
+    data.type === "entrada" ? TransactionType.INCOME : TransactionType.EXPENSE;
   const date = new Date(data.date);
 
   let recurrenceMode: RecurrenceMode = RecurrenceMode.NONE;
@@ -174,9 +212,15 @@ async function formToDbPayload(
   let recurrenceEndDate: Date | null = null;
 
   if (data.recurrenceMode === "recorrente") {
-    recurrenceMode = data.recurrenceKind === "fixa" ? RecurrenceMode.FIXED : RecurrenceMode.VARIABLE;
+    recurrenceMode =
+      data.recurrenceKind === "fixa"
+        ? RecurrenceMode.FIXED
+        : RecurrenceMode.VARIABLE;
 
-    const freqMap: Record<TransactionFormData["recurrenceFrequency"], RecurrenceFrequency> = {
+    const freqMap: Record<
+      TransactionFormData["recurrenceFrequency"],
+      RecurrenceFrequency
+    > = {
       mensal: RecurrenceFrequency.MONTHLY,
       semanal: RecurrenceFrequency.WEEKLY,
       anual: RecurrenceFrequency.YEARLY,
@@ -204,7 +248,8 @@ async function formToDbPayload(
     type,
     date,
     isSettled: data.isSettled,
-    paymentDate: data.isSettled && data.paymentDate ? new Date(data.paymentDate) : null,
+    paymentDate:
+      data.isSettled && data.paymentDate ? new Date(data.paymentDate) : null,
     recurrenceMode,
     recurrenceFrequency,
     billingDay,
@@ -225,7 +270,7 @@ async function formToDbPayload(
 function expandRecurringForMonth(
   recurringRecords: NonNullable<PrismaTransaction>[],
   year: number,
-  month: number // 0-indexed
+  month: number, // 0-indexed
 ): UITransaction[] {
   const results: UITransaction[] = [];
   const monthEnd = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59));
@@ -236,19 +281,33 @@ function expandRecurringForMonth(
     const txStart = new Date(tx.date);
     if (txStart > monthEnd) continue;
     // The origin month already has a real DB entry — skip virtual for it
-    if (txStart.getUTCFullYear() === year && txStart.getUTCMonth() === month) continue;
+    if (txStart.getUTCFullYear() === year && txStart.getUTCMonth() === month)
+      continue;
 
     const base = mapDbToUI(tx);
     const freq = tx.recurrenceFrequency;
-    const endDate = tx.recurrenceEndDate ? new Date(tx.recurrenceEndDate) : null;
+    const endDate = tx.recurrenceEndDate
+      ? new Date(tx.recurrenceEndDate)
+      : null;
 
-    if (!freq || freq === RecurrenceFrequency.MONTHLY || freq === RecurrenceFrequency.DAILY) {
+    if (
+      !freq ||
+      freq === RecurrenceFrequency.MONTHLY ||
+      freq === RecurrenceFrequency.DAILY
+    ) {
       const day = tx.billingDay ?? txStart.getUTCDate();
       const actualDay = Math.min(day, daysInMonth);
       const occDate = new Date(Date.UTC(year, month, actualDay));
       // Skip if occurrence is after recurrence end date
       if (endDate && occDate > endDate) continue;
-      results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+      results.push({
+        ...base,
+        id: `virtual-${tx.id}-${formatIso(occDate)}`,
+        date: formatDate(occDate),
+        isSettled: false,
+        paymentDate: undefined,
+        isVirtual: true,
+      });
     } else if (freq === RecurrenceFrequency.WEEKLY) {
       const targetWeekday = txStart.getUTCDay();
       for (let d = 1; d <= daysInMonth; d++) {
@@ -256,7 +315,14 @@ function expandRecurringForMonth(
         if (occDate.getUTCDay() === targetWeekday) {
           // Skip if occurrence is after recurrence end date
           if (endDate && occDate > endDate) continue;
-          results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+          results.push({
+            ...base,
+            id: `virtual-${tx.id}-${formatIso(occDate)}`,
+            date: formatDate(occDate),
+            isSettled: false,
+            paymentDate: undefined,
+            isVirtual: true,
+          });
         }
       }
     } else if (freq === RecurrenceFrequency.YEARLY) {
@@ -264,7 +330,14 @@ function expandRecurringForMonth(
         const occDate = new Date(Date.UTC(year, month, txStart.getUTCDate()));
         // Skip if occurrence is after recurrence end date
         if (endDate && occDate > endDate) continue;
-        results.push({ ...base, id: `virtual-${tx.id}-${formatIso(occDate)}`, date: formatDate(occDate), isSettled: false, paymentDate: undefined, isVirtual: true });
+        results.push({
+          ...base,
+          id: `virtual-${tx.id}-${formatIso(occDate)}`,
+          date: formatDate(occDate),
+          isSettled: false,
+          paymentDate: undefined,
+          isVirtual: true,
+        });
       }
     }
   }
@@ -280,7 +353,7 @@ function expandRecurringForMonth(
 export async function getUserTransactions(
   userId: string,
   year?: number,
-  month?: number // 0-indexed
+  month?: number, // 0-indexed
 ): Promise<UITransaction[]> {
   const now = new Date();
   const y = year ?? now.getFullYear();
@@ -304,7 +377,8 @@ export async function getUserTransactions(
   const virtual = expandRecurringForMonth(recurringRecords, y, m);
   // Sort combined list by date descending
   return [...real, ...virtual].sort((a, b) => {
-    const parse = (s: string) => new Date(s.split(" ").reverse().join("-")).getTime();
+    const parse = (s: string) =>
+      new Date(s.split(" ").reverse().join("-")).getTime();
     return parse(b.date) - parse(a.date);
   });
 }
@@ -312,7 +386,7 @@ export async function getUserTransactions(
 /** Create a new transaction */
 export async function createTransaction(
   userId: string,
-  data: TransactionFormData
+  data: TransactionFormData,
 ): Promise<UITransaction> {
   const payload = await formToDbPayload(userId, data);
   const record = await prisma.transaction.create({
@@ -326,7 +400,7 @@ export async function createTransaction(
 export async function updateTransaction(
   id: string,
   userId: string,
-  data: TransactionFormData
+  data: TransactionFormData,
 ): Promise<UITransaction> {
   const payload = await formToDbPayload(userId, data);
   const record = await prisma.transaction.update({
@@ -338,14 +412,17 @@ export async function updateTransaction(
 }
 
 /** Delete a transaction (must belong to userId) */
-export async function deleteTransaction(id: string, userId: string): Promise<void> {
+export async function deleteTransaction(
+  id: string,
+  userId: string,
+): Promise<void> {
   await prisma.transaction.delete({ where: { id, userId } });
 }
 
 /** Toggle the isSettled flag for a transaction */
 export async function toggleTransactionSettlement(
   id: string,
-  userId: string
+  userId: string,
 ): Promise<UITransaction> {
   const existing = await prisma.transaction.findUnique({
     where: { id, userId },
@@ -372,14 +449,16 @@ export async function toggleTransactionSettlement(
 export async function getDashboardData(
   userId: string,
   year?: number,
-  month?: number // 0-indexed
+  month?: number, // 0-indexed
 ): Promise<DashboardData> {
   const now = new Date();
   const currentYear = year ?? now.getFullYear();
   const currentMonth = month ?? now.getMonth();
 
   const monthStart = new Date(Date.UTC(currentYear, currentMonth, 1));
-  const monthEnd = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59));
+  const monthEnd = new Date(
+    Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59),
+  );
 
   // ── Current month real transactions + all recurring records ──────────────
   const [currentMonthTxs, recurringRecords] = await Promise.all([
@@ -408,7 +487,11 @@ export async function getDashboardData(
   }
 
   // Generate virtual transactions and sum them too
-  const virtualTxs = expandRecurringForMonth(recurringRecords, currentYear, currentMonth);
+  const virtualTxs = expandRecurringForMonth(
+    recurringRecords,
+    currentYear,
+    currentMonth,
+  );
   for (const vtx of virtualTxs) {
     const amount = new Prisma.Decimal(parseCurrencyBRL(vtx.amount));
     if (vtx.type === "entrada") {
@@ -439,42 +522,81 @@ export async function getDashboardData(
   ];
 
   // ── Transactions list: real + virtual recurring, sorted by date desc ─────
-  const transactions = [...currentMonthTxs.map(mapDbToUI), ...virtualTxs].sort((a, b) => {
-    const parse = (s: string) => {
-      const parts = s.split(" "); // ["05", "Mar", "2025"]
-      return new Date(`${parts[1]} ${parts[0]} ${parts[2]}`).getTime();
-    };
-    return parse(b.date) - parse(a.date);
-  });
+  const transactions = [...currentMonthTxs.map(mapDbToUI), ...virtualTxs].sort(
+    (a, b) => {
+      const parse = (s: string) => {
+        const parts = s.split(" "); // ["05", "Mar", "2025"]
+        return new Date(`${parts[1]} ${parts[0]} ${parts[2]}`).getTime();
+      };
+      return parse(b.date) - parse(a.date);
+    },
+  );
 
   // ── Category distribution (expenses this month, including virtual) ────────
-  const expenseTxs = currentMonthTxs.filter((tx) => tx.type === TransactionType.EXPENSE);
-  const byCategoryMap = new Map<string, Prisma.Decimal>();
+  const expenseTxs = currentMonthTxs.filter(
+    (tx) => tx.type === TransactionType.EXPENSE,
+  );
+  const expenseByCategoryMap = new Map<string, Prisma.Decimal>();
   for (const tx of expenseTxs) {
-    const prev = byCategoryMap.get(tx.category.name) ?? new Prisma.Decimal(0);
-    byCategoryMap.set(tx.category.name, prev.add(tx.amount));
+    const prev =
+      expenseByCategoryMap.get(tx.category.name) ?? new Prisma.Decimal(0);
+    expenseByCategoryMap.set(tx.category.name, prev.add(tx.amount));
   }
   // Add virtual expense transactions to category distribution
   for (const vtx of virtualTxs) {
     if (vtx.type === "saida") {
       const amount = new Prisma.Decimal(parseCurrencyBRL(vtx.amount));
-      const prev = byCategoryMap.get(vtx.category) ?? new Prisma.Decimal(0);
-      byCategoryMap.set(vtx.category, prev.add(amount));
+      const prev =
+        expenseByCategoryMap.get(vtx.category) ?? new Prisma.Decimal(0);
+      expenseByCategoryMap.set(vtx.category, prev.add(amount));
     }
   }
 
   const totalExpenseForDist = totalExpense.isZero()
     ? new Prisma.Decimal(1)
     : totalExpense;
-  let colorIndex = 0;
-  const categoryDistribution: CategoryPoint[] = Array.from(byCategoryMap.entries()).map(
-    ([label, value]) => ({
-      label,
-      value: parseFloat(value.div(totalExpenseForDist).mul(100).toFixed(1)),
-      amount: parseFloat(value.toFixed(2)),
-      color: CATEGORY_COLORS[colorIndex++ % CATEGORY_COLORS.length],
-    })
+  let expenseColorIndex = 0;
+  const categoryDistribution: CategoryPoint[] = Array.from(
+    expenseByCategoryMap.entries(),
+  ).map(([label, value]) => ({
+    label,
+    value: parseFloat(value.div(totalExpenseForDist).mul(100).toFixed(1)),
+    amount: parseFloat(value.toFixed(2)),
+    color: CATEGORY_COLORS[expenseColorIndex++ % CATEGORY_COLORS.length],
+  }));
+
+  // ── Category distribution (incomes this month, including virtual) ─────────
+  const incomeTxs = currentMonthTxs.filter(
+    (tx) => tx.type === TransactionType.INCOME,
   );
+  const incomeByCategoryMap = new Map<string, Prisma.Decimal>();
+  for (const tx of incomeTxs) {
+    const prev =
+      incomeByCategoryMap.get(tx.category.name) ?? new Prisma.Decimal(0);
+    incomeByCategoryMap.set(tx.category.name, prev.add(tx.amount));
+  }
+  // Add virtual income transactions to category distribution
+  for (const vtx of virtualTxs) {
+    if (vtx.type === "entrada") {
+      const amount = new Prisma.Decimal(parseCurrencyBRL(vtx.amount));
+      const prev =
+        incomeByCategoryMap.get(vtx.category) ?? new Prisma.Decimal(0);
+      incomeByCategoryMap.set(vtx.category, prev.add(amount));
+    }
+  }
+
+  const totalIncomeForDist = totalIncome.isZero()
+    ? new Prisma.Decimal(1)
+    : totalIncome;
+  let incomeColorIndex = 0;
+  const incomeDistribution: CategoryPoint[] = Array.from(
+    incomeByCategoryMap.entries(),
+  ).map(([label, value]) => ({
+    label,
+    value: parseFloat(value.div(totalIncomeForDist).mul(100).toFixed(1)),
+    amount: parseFloat(value.toFixed(2)),
+    color: CATEGORY_COLORS[incomeColorIndex++ % CATEGORY_COLORS.length],
+  }));
 
   // ── 6-month variation ─────────────────────────────────────────────────────
   const sixMonthsAgo = new Date(Date.UTC(currentYear, currentMonth - 5, 1));
@@ -504,8 +626,14 @@ export async function getDashboardData(
     const d = new Date(Date.UTC(currentYear, currentMonth - i, 1));
     const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
     const month = PT_MONTHS[d.getUTCMonth()];
-    incomeVariation.push({ month, value: parseFloat((incomeByMonth.get(key) ?? 0).toFixed(2)) });
-    expenseVariation.push({ month, value: parseFloat((expenseByMonth.get(key) ?? 0).toFixed(2)) });
+    incomeVariation.push({
+      month,
+      value: parseFloat((incomeByMonth.get(key) ?? 0).toFixed(2)),
+    });
+    expenseVariation.push({
+      month,
+      value: parseFloat((expenseByMonth.get(key) ?? 0).toFixed(2)),
+    });
   }
 
   // ── Goals progress ────────────────────────────────────────────────────────
@@ -516,10 +644,9 @@ export async function getDashboardData(
 
   const goalsProgress: GoalPoint[] = goals.map((g) => ({
     label: g.name,
-    value:
-      g.targetAmount.isZero()
-        ? 0
-        : parseFloat(g.currentAmount.div(g.targetAmount).mul(100).toFixed(0)),
+    value: g.targetAmount.isZero()
+      ? 0
+      : parseFloat(g.currentAmount.div(g.targetAmount).mul(100).toFixed(0)),
   }));
 
   return {
@@ -527,6 +654,7 @@ export async function getDashboardData(
     transactions,
     incomeVariation,
     expenseVariation,
+    incomeDistribution,
     categoryDistribution,
     goalsProgress,
   };

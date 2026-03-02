@@ -40,6 +40,7 @@ export default async function DashboardPage({
     transactions,
     incomeVariation,
     expenseVariation,
+    incomeDistribution,
     categoryDistribution,
     goalsProgress,
   } = await getDashboardData(session.user.id, year, month);
@@ -57,12 +58,20 @@ export default async function DashboardPage({
           ))}
         </section>
 
-        <section className="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
+        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <CategoryDistributionChart
-            title="Distribuição por categoria"
-            subtitle="Suas principais categorias no mês atual."
+            title="Distribuição de entradas"
+            subtitle="Suas principais categorias de entradas no mês."
+            data={incomeDistribution}
+          />
+          <CategoryDistributionChart
+            title="Distribuição de saídas"
+            subtitle="Suas principais categorias de saídas no mês."
             data={categoryDistribution}
           />
+        </section>
+
+        <section className="grid gap-4 sm:gap-6">
           <GoalsProgressChart
             title="Metas do mês"
             subtitle="Progresso das suas metas financeiras."
@@ -93,9 +102,12 @@ export default async function DashboardPage({
           month={month}
         />
 
-        <TransactionsTable transactions={transactions} year={year} month={month} />
+        <TransactionsTable
+          transactions={transactions}
+          year={year}
+          month={month}
+        />
       </SidebarShell>
     </>
   );
 }
-
