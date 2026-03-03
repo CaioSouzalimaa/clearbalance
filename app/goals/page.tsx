@@ -206,6 +206,7 @@ export default function GoalsPage() {
     {},
   );
   const [contributingId, setContributingId] = useState<string | null>(null);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
@@ -318,6 +319,43 @@ export default function GoalsPage() {
       showFeedback("Erro ao registrar aporte.");
     } finally {
       setContributingId(null);
+    }
+  };
+
+  const handleWithdrawal = async (goalId: string) => {
+    const rawValue = contributions[goalId]?.trim() ?? "";
+    if (!rawValue) return;
+
+    const amount = parseBRL(rawValue);
+    if (amount <= 0) {
+      showFeedback("Informe um valor válido.");
+      return;
+    }
+
+    setWithdrawingId(goalId);
+    try {
+      const res = await fetch(`/api/goals/${goalId}/withdraw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showFeedback(
+          (data as { error?: string })?.error ?? "Erro ao registrar retirada.",
+        );
+        return;
+      }
+
+      const updated: Goal = await res.json();
+      setGoals((prev) => prev.map((g) => (g.id === goalId ? updated : g)));
+      setContributions((prev) => ({ ...prev, [goalId]: "" }));
+      showFeedback("Retirada registrada com sucesso!");
+    } catch {
+      showFeedback("Erro ao registrar retirada.");
+    } finally {
+      setWithdrawingId(null);
     }
   };
 
@@ -521,7 +559,7 @@ export default function GoalsPage() {
                         htmlFor={`aporte-${goal.id}`}
                         className="text-xs font-medium text-muted-foreground"
                       >
-                        Registrar aporte
+                        Registrar aporte ou retirada
                       </label>
                       <Input
                         id={`aporte-${goal.id}`}
@@ -532,18 +570,29 @@ export default function GoalsPage() {
                         onChange={(event) =>
                           handleContributionChange(goal.id, event.target.value)
                         }
-                        disabled={isContributing}
+                        disabled={isContributing || withdrawingId === goal.id}
                       />
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-border"
-                      onClick={() => handleAddContribution(goal.id)}
-                      disabled={isContributing}
-                    >
-                      {isContributing ? "Registrando…" : "Registrar"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-border"
+                        onClick={() => handleAddContribution(goal.id)}
+                        disabled={isContributing || withdrawingId === goal.id}
+                      >
+                        {isContributing ? "Registrando…" : "Aporte"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-rose-300 text-rose-500 hover:bg-rose-500/10"
+                        onClick={() => handleWithdrawal(goal.id)}
+                        disabled={isContributing || withdrawingId === goal.id}
+                      >
+                        {withdrawingId === goal.id ? "Retirando…" : "Retirar"}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );

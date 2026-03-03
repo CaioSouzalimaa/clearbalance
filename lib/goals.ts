@@ -85,11 +85,11 @@ export async function deleteGoal(id: string, userId: string): Promise<void> {
     const goal = await tx.goal.findUnique({ where: { id, userId } });
     if (!goal) throw new Error("Meta não encontrada");
 
-    // 2. Delete all contribution transactions for this goal
+    // 2. Delete all contribution and withdrawal transactions for this goal
     await tx.transaction.deleteMany({
       where: {
         userId,
-        description: `Aporte - ${goal.name}`,
+        description: { in: [`Aporte - ${goal.name}`, `Retirada - ${goal.name}`] },
       },
     });
 
@@ -152,3 +152,62 @@ export async function addContribution(
     return mapDbToUI(updatedGoal);
   });
 }
+
+/**
+ * Remove an amount from a goal (withdrawal). Floors currentAmount at 0.
+ * Creates a corresponding income transaction to reflect the reversal.
+ */
+export async function withdrawFromGoal(
+  id: string,
+  userId: string,
+  data: ContributionInput,
+): Promise<UIGoal> {
+  const amount = new Prisma.Decimal(data.amount);
+
+  return await prisma.$transaction(async (tx) => {
+    // 1. Get the goal
+    const goal = await tx.goal.findUnique({ where: { id, userId } });
+    if (!goal) throw new Error("Meta não encontrada");
+
+    // 2. Calculate new current amount, floored at 0
+    const newCurrent = Prisma.Decimal.max(
+      Prisma.Decimal.sub(goal.currentAmount, amount),
+      new Prisma.Decimal(0),
+    );
+
+    // 3. Update the goal
+    const updatedGoal = await tx.goal.update({
+      where: { id, userId },
+      data: { currentAmount: newCurrent },
+    });
+
+    // 4. Find or create a "Metas" category
+    let category = await tx.category.findFirst({
+      where: { userId, name: "Metas" },
+    });
+
+    if (!category) {
+      category = await tx.category.create({
+        data: { userId, name: "Metas", icon: "flag" },
+      });
+    }
+
+    // 5. Create an income transaction for the withdrawal
+    await tx.transaction.create({
+      data: {
+        userId,
+        categoryId: category.id,
+        description: `Retirada - ${goal.name}`,
+        amount,
+        date: new Date(),
+        type: TransactionType.INCOME,
+        recurrenceMode: RecurrenceMode.NONE,
+        isSettled: true,
+        paymentDate: new Date(),
+      },
+    });
+
+    return mapDbToUI(updatedGoal);
+  });
+}
+
