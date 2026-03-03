@@ -49,7 +49,10 @@ export interface CategoryPoint {
 
 export interface GoalPoint {
   label: string;
-  value: number;
+  value: number; // percentage, may exceed 100
+  currentAmount: number;
+  targetAmount: number;
+  deadline: string | null;
 }
 
 export interface DashboardData {
@@ -664,7 +667,10 @@ export async function getDashboardData(
     label: g.name,
     value: g.targetAmount.isZero()
       ? 0
-      : parseFloat(g.currentAmount.div(g.targetAmount).mul(100).toFixed(0)),
+      : parseFloat(g.currentAmount.div(g.targetAmount).mul(100).toFixed(1)),
+    currentAmount: g.currentAmount.toNumber(),
+    targetAmount: g.targetAmount.toNumber(),
+    deadline: g.deadline ? g.deadline.toISOString().split("T")[0] : null,
   }));
 
   return {

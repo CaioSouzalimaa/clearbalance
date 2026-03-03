@@ -25,6 +25,19 @@ interface GoalModalProps {
   onSave: (goal: Goal) => void;
 }
 
+function formatBRL(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  return (Number(digits) / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+}
+
+function parseBRL(formatted: string): number {
+  return Number(formatted.replace(/\D/g, "")) / 100;
+}
+
 function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   const [formName, setFormName] = useState("");
   const [formTarget, setFormTarget] = useState("");
@@ -36,7 +49,9 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
     if (isOpen) {
       if (editingGoal) {
         setFormName(editingGoal.name);
-        setFormTarget(editingGoal.targetAmount.toString());
+        setFormTarget(
+          formatBRL(String(Math.round(editingGoal.targetAmount * 100))),
+        );
         setFormDeadline(editingGoal.deadline ?? "");
       } else {
         setFormName("");
@@ -50,7 +65,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = formName.trim();
-    const targetAmount = Number(formTarget);
+    const targetAmount = parseBRL(formTarget);
 
     if (!name) {
       setFormError("Informe o nome da meta.");
@@ -139,17 +154,14 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
               htmlFor="goal-target"
               className="text-sm font-medium text-foreground"
             >
-              Valor da meta (R$)
+              Valor da meta
             </label>
             <Input
               id="goal-target"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              placeholder="Ex.: 10000"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
               value={formTarget}
-              onChange={(e) => setFormTarget(e.target.value)}
+              onChange={(e) => setFormTarget(formatBRL(e.target.value))}
             />
           </div>
 
@@ -269,20 +281,15 @@ export default function GoalsPage() {
   ];
 
   const handleContributionChange = (goalId: string, value: string) => {
-    // Allow only numbers, comma, and dot
-    const sanitized = value.replace(/[^\d,\.]/g, "");
-    setContributions((prev) => ({ ...prev, [goalId]: sanitized }));
+    setContributions((prev) => ({ ...prev, [goalId]: formatBRL(value) }));
   };
 
   const handleAddContribution = async (goalId: string) => {
     const rawValue = contributions[goalId]?.trim() ?? "";
-    if (!rawValue) {
-      return;
-    }
+    if (!rawValue) return;
 
-    const normalized = rawValue.replace(/\./g, "").replace(",", ".");
-    const amount = Number(normalized);
-    if (Number.isNaN(amount) || amount <= 0) {
+    const amount = parseBRL(rawValue);
+    if (amount <= 0) {
       showFeedback("Informe um valor válido.");
       return;
     }
@@ -516,8 +523,8 @@ export default function GoalsPage() {
                       <Input
                         id={`aporte-${goal.id}`}
                         name={`aporte-${goal.id}`}
-                        inputMode="decimal"
-                        placeholder="Ex.: 250,00"
+                        inputMode="numeric"
+                        placeholder="R$ 0,00"
                         value={contributions[goal.id] ?? ""}
                         onChange={(event) =>
                           handleContributionChange(goal.id, event.target.value)
