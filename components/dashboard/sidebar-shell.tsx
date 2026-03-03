@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,21 +10,36 @@ interface SidebarShellProps {
   children: ReactNode;
 }
 
+const STORAGE_KEY = "sidebar-collapsed";
 const mobileNavItems = navItems.filter((item) => item.href !== "#");
 
 export const SidebarShell = ({ children }: SidebarShellProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
+  // Restore from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) setIsCollapsed(stored === "true");
+  }, []);
+
+  const handleToggle = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(STORAGE_KEY, String(next));
+      return next;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         <Sidebar
           isCollapsed={isCollapsed}
-          onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
+          onToggleCollapse={handleToggle}
           pathname={pathname}
         />
-        <main className="flex flex-1 flex-col gap-8 bg-background px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-10 md:pb-10">
+        <main className="flex min-w-0 flex-1 flex-col gap-8 bg-background px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-10 md:pb-10">
           {children}
         </main>
       </div>

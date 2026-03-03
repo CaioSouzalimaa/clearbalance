@@ -4,13 +4,11 @@ import { createElement } from "react";
 import Image from "next/image";
 import icon from "@/app/icon.png";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
 import {
   ChevronLeft,
   ChevronRight,
   Goal,
   LayoutDashboard,
-  LogOut,
   Settings,
   Tags,
 } from "lucide";
@@ -63,11 +61,12 @@ interface SidebarProps {
 export const Sidebar = ({ isCollapsed, onToggleCollapse, pathname = "" }: SidebarProps) => {
   return (
     <aside
-      className={`sticky top-0 hidden h-screen flex-col gap-8 overflow-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
+      className={`sticky top-0 hidden h-screen flex-col gap-8 overflow-x-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
         isCollapsed ? "w-20 px-4" : "w-65 px-6"
       }`}
     >
-      <div
+      <Link
+        href="/dashboard"
         className={`flex w-full items-center gap-3 ${
           isCollapsed ? "justify-center" : ""
         }`}
@@ -89,7 +88,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse, pathname = "" }: Sideba
             className="object-contain"
           />
         )}
-      </div>
+      </Link>
       <nav className="flex flex-1 flex-col gap-2 text-sm font-medium text-muted-foreground">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -117,26 +116,7 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse, pathname = "" }: Sideba
           );
         })}
       </nav>
-      <div className="mt-auto flex flex-col gap-4">
-        {/* Logout Button */}
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-500 ${
-            isCollapsed ? "justify-center" : ""
-          }`}
-        >
-          <LucideIcon icon={LogOut} className="h-5 w-5" aria-hidden />
-          <span className={isCollapsed ? "sr-only" : ""}>Sair</span>
-        </button>
-
-        {!isCollapsed ? (
-          <div className="rounded-2xl bg-primary/10 p-4 text-sm text-muted-foreground">
-            <p className="font-semibold text-foreground">Dica rápida</p>
-            <p className="mt-2">
-              Categorize seus lançamentos para visualizar seus maiores gastos.
-            </p>
-          </div>
-        ) : null}
+      <div className="mt-auto">
         <Button
           type="button"
           variant="outline"
