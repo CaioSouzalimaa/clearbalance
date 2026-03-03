@@ -57,6 +57,7 @@ export interface GoalPoint {
 
 export interface DashboardData {
   summaryCards: SummaryCardData[];
+  cumulativeBalance: string;
   transactions: UITransaction[];
   incomeVariation: ChartPoint[];
   expenseVariation: ChartPoint[];
@@ -464,7 +465,7 @@ export async function getDashboardData(
   );
 
   // ── Current month real transactions + all recurring records ──────────────
-  const [currentMonthTxs, recurringRecords] = await Promise.all([
+  const [currentMonthTxs, recurringRecords, historicalTxs] = await Promise.all([
     prisma.transaction.findMany({
       where: { userId, date: { gte: monthStart, lte: monthEnd } },
       include: { category: true },
@@ -473,6 +474,10 @@ export async function getDashboardData(
     prisma.transaction.findMany({
       where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
       include: { category: true },
+    }),
+    prisma.transaction.findMany({
+      where: { userId, date: { lt: monthStart } },
+      select: { type: true, amount: true },
     }),
   ]);
 
@@ -496,7 +501,7 @@ export async function getDashboardData(
     currentMonth,
   );
   for (const vtx of virtualTxs) {
-    const amount = new Prisma.Decimal(parseCurrencyBRL(vtx.amount));
+    const amount = new Prisma.Decimal(Math.abs(parseCurrencyBRL(vtx.amount)));
     if (vtx.type === "entrada") {
       totalIncome = totalIncome.add(amount);
     } else {
@@ -505,6 +510,45 @@ export async function getDashboardData(
   }
 
   const balance = totalIncome.sub(totalExpense);
+
+  // compute cumulative: real past transactions + virtual recurring past months
+  let historicalIncome = new Prisma.Decimal(0);
+  let historicalExpense = new Prisma.Decimal(0);
+  for (const tx of historicalTxs) {
+    if (tx.type === TransactionType.INCOME) {
+      historicalIncome = historicalIncome.add(tx.amount);
+    } else {
+      historicalExpense = historicalExpense.add(tx.amount);
+    }
+  }
+
+  // Add virtual recurring expansions for each past month (origin already in historicalTxs)
+  if (recurringRecords.length > 0) {
+    const earliest = recurringRecords.reduce((min, tx) => {
+      const d = new Date(tx.date);
+      return d < min ? d : min;
+    }, new Date(recurringRecords[0].date));
+
+    let iterY = earliest.getUTCFullYear();
+    let iterM = earliest.getUTCMonth() + 1; // skip origin month (real tx in historicalTxs)
+    if (iterM > 11) { iterY++; iterM = 0; }
+
+    while (iterY < currentYear || (iterY === currentYear && iterM < currentMonth)) {
+      const vTxs = expandRecurringForMonth(recurringRecords, iterY, iterM);
+      for (const vtx of vTxs) {
+        const amt = new Prisma.Decimal(Math.abs(parseCurrencyBRL(vtx.amount)));
+        if (vtx.type === "entrada") {
+          historicalIncome = historicalIncome.add(amt);
+        } else {
+          historicalExpense = historicalExpense.add(amt);
+        }
+      }
+      iterM++;
+      if (iterM > 11) { iterY++; iterM = 0; }
+    }
+  }
+
+  const cumulativeBalance = historicalIncome.sub(historicalExpense).add(balance);
 
   const summaryCards: SummaryCardData[] = [
     {
@@ -675,6 +719,7 @@ export async function getDashboardData(
 
   return {
     summaryCards,
+    cumulativeBalance: formatCurrencyBRL(cumulativeBalance),
     transactions,
     incomeVariation,
     expenseVariation,

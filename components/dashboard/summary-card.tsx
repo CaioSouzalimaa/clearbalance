@@ -4,12 +4,16 @@ interface SummaryCardProps {
   title: string;
   value: string;
   helper: string;
+  subValue?: string;
+  subHelper?: string;
 }
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({
   title,
   value,
   helper,
+  subValue,
+  subHelper,
 }) => {
   return (
     <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
@@ -20,6 +24,12 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           {helper}
         </span>
       </div>
+      {subValue && (
+        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+          <p className="text-xs text-muted-foreground">{subHelper}</p>
+          <p className="text-sm font-semibold text-foreground">{subValue}</p>
+        </div>
+      )}
     </div>
   );
 };

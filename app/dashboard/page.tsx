@@ -37,6 +37,7 @@ export default async function DashboardPage({
 
   const {
     summaryCards,
+    cumulativeBalance,
     transactions,
     incomeVariation,
     expenseVariation,
@@ -54,7 +55,13 @@ export default async function DashboardPage({
 
         <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
           {summaryCards.map((card) => (
-            <SummaryCard key={card.title} {...card} />
+            <SummaryCard
+              key={card.title}
+              {...card}
+              {...(card.title === "Saldo"
+                ? { subValue: cumulativeBalance, subHelper: "Montante acumulado" }
+                : {})}
+            />
           ))}
         </section>
 
