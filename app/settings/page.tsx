@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -258,6 +259,23 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium text-foreground">Tema</p>
                 <ThemeToggle />
               </div>
+            </div>
+          </div>
+
+          {/* ── Conta ── */}
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">Conta</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Gerencie sua sessão e acesso ao sistema.
+            </p>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+              >
+                Sair da conta
+              </button>
             </div>
           </div>
 

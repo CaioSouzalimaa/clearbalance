@@ -11,10 +11,8 @@ import {
   Goal,
   LayoutDashboard,
   LogOut,
-  Receipt,
   Settings,
   Tags,
-  Wallet,
 } from "lucide";
 
 import { Button } from "@/components/ui/button";
@@ -22,8 +20,6 @@ import { Button } from "@/components/ui/button";
 export const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Categorias", href: "/categories", icon: Tags },
-  { label: "Carteiras", href: "#", icon: Wallet },
-  { label: "Lançamentos", href: "#", icon: Receipt },
   { label: "Metas", href: "/goals", icon: Goal },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
@@ -61,9 +57,10 @@ export const LucideIcon = ({ icon, className, ...props }: LucideIconProps) => {
 interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  pathname?: string;
 }
 
-export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
+export const Sidebar = ({ isCollapsed, onToggleCollapse, pathname = "" }: SidebarProps) => {
   return (
     <aside
       className={`sticky top-0 hidden h-screen flex-col gap-8 overflow-hidden border-r border-border bg-surface py-8 transition-all duration-200 md:flex ${
@@ -96,12 +93,21 @@ export const Sidebar = ({ isCollapsed, onToggleCollapse }: SidebarProps) => {
       <nav className="flex flex-1 flex-col gap-2 text-sm font-medium text-muted-foreground">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const isActive =
+            item.href !== "#" &&
+            (item.href === "/dashboard"
+              ? pathname === item.href
+              : pathname.startsWith(item.href));
           return (
             <Link
               key={item.label}
               href={item.href}
               aria-label={item.label}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-primary/10 hover:text-primary ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-primary/10 hover:text-primary"
+              } ${
                 isCollapsed ? "justify-center" : ""
               }`}
             >
