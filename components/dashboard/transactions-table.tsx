@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Download } from "lucide";
 import { LucideIcon, IconNode } from "@/components/dashboard/sidebar";
 import {
   TransactionModal,
@@ -60,7 +61,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     "todos" | "pendente" | "liquidado"
   >("todos");
   const [typeFilter, setTypeFilter] = useState<"todos" | "entrada" | "saida">(
-    "todos"
+    "todos",
   );
   const [recurrenceFilter, setRecurrenceFilter] = useState<
     "todos" | "recorrente" | "nao_recorrente"
@@ -119,7 +120,10 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   };
 
   const formatBillingLabel = (transaction: Transaction) => {
-    if (transaction.recurrenceMode !== "recorrente" || !transaction.billingDay) {
+    if (
+      transaction.recurrenceMode !== "recorrente" ||
+      !transaction.billingDay
+    ) {
       return "";
     }
 
@@ -191,8 +195,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               isSettled: formState.isSettled,
               paymentDate: formState.isSettled ? formState.paymentDate : "",
             }
-          : item
-      )
+          : item,
+      ),
     );
     setEditingTransaction(null);
     setSaveFeedback("Alterações salvas com sucesso.");
@@ -224,7 +228,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             ? item.paymentDate || new Date().toISOString().split("T")[0]
             : "",
         };
-      })
+      }),
     );
 
     try {
@@ -251,8 +255,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         statusFilter === "todos"
           ? true
           : statusFilter === "liquidado"
-          ? item.isSettled
-          : !item.isSettled;
+            ? item.isSettled
+            : !item.isSettled;
       const matchesType =
         typeFilter === "todos" ? true : item.type === typeFilter;
       const matchesRecurrence =
@@ -263,6 +267,85 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       return matchesSearch && matchesStatus && matchesType && matchesRecurrence;
     });
   }, [recurrenceFilter, rows, searchTerm, statusFilter, typeFilter]);
+
+  const PT_MONTHS_NAMES = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+
+  function exportToCsv() {
+    const PT_MONTHS_MAP: Record<string, string> = {
+      Jan: "01",
+      Fev: "02",
+      Mar: "03",
+      Abr: "04",
+      Mai: "05",
+      Jun: "06",
+      Jul: "07",
+      Ago: "08",
+      Set: "09",
+      Out: "10",
+      Nov: "11",
+      Dez: "12",
+    };
+    const headers = [
+      "Data",
+      "Descrição",
+      "Categoria",
+      "Tipo",
+      "Valor",
+      "Status",
+      "Data Pagamento",
+      "Recorrência",
+    ];
+    const csvRows = filteredRows.map((tx) => {
+      const parts = tx.date.split(" ");
+      const isoDate =
+        parts.length === 3
+          ? `${parts[2]}-${PT_MONTHS_MAP[parts[1]] ?? "00"}-${parts[0].padStart(2, "0")}`
+          : tx.date;
+      const rawAmount = tx.amount
+        .replace(/^[+\-]\s*/, "")
+        .replace(/R\$\s*/, "")
+        .trim();
+      const tipo = tx.type === "entrada" ? "Entrada" : "Saída";
+      const status = tx.isSettled ? "Liquidado" : "Pendente";
+      const recorrencia =
+        tx.recurrenceMode === "recorrente"
+          ? `Recorrente (${tx.recurrenceKind === "fixa" ? "Fixa" : "Variável"})`
+          : "Não recorrente";
+      return [
+        isoDate,
+        `"${tx.description.replace(/"/g, '""')}"`,
+        `"${tx.category.replace(/"/g, '""')}"`,
+        tipo,
+        rawAmount,
+        status,
+        tx.paymentDate ?? "",
+        recorrencia,
+      ].join(",");
+    });
+    const csv = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `lancamentos-${PT_MONTHS_NAMES[month]}-${year}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   const editingFormState = useMemo<TransactionFormState>(() => {
     if (!editingTransaction) {
@@ -294,7 +377,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Lançamentos</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              Lançamentos
+            </h2>
             <p className="text-sm text-muted-foreground">
               Confira suas movimentações recentes.
             </p>
@@ -304,6 +389,15 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               {filteredRows.length} de {rows.length} itens
             </span>
+            <Button
+              variant="outline"
+              className="flex items-center gap-1.5 h-8 px-3 text-xs"
+              onClick={exportToCsv}
+              title="Exportar lançamentos filtrados como CSV"
+            >
+              <LucideIcon icon={Download} className="h-3.5 w-3.5" />
+              Exportar CSV
+            </Button>
           </div>
         </div>
         <div className="border-b border-border bg-muted/20 px-6 py-4">
@@ -319,7 +413,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 value={statusFilter}
                 onChange={(event) =>
                   setStatusFilter(
-                    event.target.value as "todos" | "pendente" | "liquidado"
+                    event.target.value as "todos" | "pendente" | "liquidado",
                   )
                 }
                 className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-44"
@@ -332,7 +426,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 value={typeFilter}
                 onChange={(event) =>
                   setTypeFilter(
-                    event.target.value as "todos" | "entrada" | "saida"
+                    event.target.value as "todos" | "entrada" | "saida",
                   )
                 }
                 className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-36"
@@ -349,7 +443,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   event.target.value as
                     | "todos"
                     | "recorrente"
-                    | "nao_recorrente"
+                    | "nao_recorrente",
                 )
               }
               className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-52"
@@ -422,8 +516,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         {item.recurrenceFrequency === "mensal"
                           ? "Mensal"
                           : item.recurrenceFrequency === "semanal"
-                          ? "Semanal"
-                          : "Anual"}
+                            ? "Semanal"
+                            : "Anual"}
                         {formatBillingLabel(item)}
                       </span>
                     ) : null}
@@ -452,8 +546,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         {item.isSettled
                           ? "Marcar como pendente"
                           : item.type === "entrada"
-                          ? "Marcar como recebido"
-                          : "Marcar como pago"}
+                            ? "Marcar como recebido"
+                            : "Marcar como pago"}
                       </button>
                     )}
                   </div>
@@ -557,8 +651,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             {item.recurrenceFrequency === "mensal"
                               ? "Mensal"
                               : item.recurrenceFrequency === "semanal"
-                              ? "Semanal"
-                              : "Anual"}
+                                ? "Semanal"
+                                : "Anual"}
                             {formatBillingLabel(item)}
                           </span>
                         ) : null}
@@ -594,8 +688,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                           {item.isSettled
                             ? "Marcar como pendente"
                             : item.type === "entrada"
-                            ? "Marcar como recebido"
-                            : "Marcar como pago"}
+                              ? "Marcar como recebido"
+                              : "Marcar como pago"}
                         </button>
                       </div>
                     </td>
