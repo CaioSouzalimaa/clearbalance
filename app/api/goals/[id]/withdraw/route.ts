@@ -29,9 +29,11 @@ export async function POST(req: NextRequest, context: RouteContext) {
     return NextResponse.json(goal);
   } catch (error) {
     console.error(`[POST /api/goals/${id}/withdraw]`, error);
+    const message = error instanceof Error ? error.message : "Erro interno do servidor";
+    const isValidation = message.startsWith("O valor");
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
-      { status: 500 },
+      { error: message },
+      { status: isValidation ? 400 : 500 },
     );
   }
 }

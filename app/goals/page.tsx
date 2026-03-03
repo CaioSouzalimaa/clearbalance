@@ -332,6 +332,12 @@ export default function GoalsPage() {
       return;
     }
 
+    const goal = goals.find((g) => g.id === goalId);
+    if (goal && amount > goal.currentAmount) {
+      showFeedback("O valor da retirada não pode ser maior que o saldo da meta.");
+      return;
+    }
+
     setWithdrawingId(goalId);
     try {
       const res = await fetch(`/api/goals/${goalId}/withdraw`, {
@@ -583,15 +589,17 @@ export default function GoalsPage() {
                       >
                         {isContributing ? "Registrando…" : "Aporte"}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="border-rose-300 text-rose-500 hover:bg-rose-500/10"
-                        onClick={() => handleWithdrawal(goal.id)}
-                        disabled={isContributing || withdrawingId === goal.id}
-                      >
-                        {withdrawingId === goal.id ? "Retirando…" : "Retirar"}
-                      </Button>
+                      {goal.currentAmount > 0 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-rose-300 text-rose-500 hover:bg-rose-500/10"
+                          onClick={() => handleWithdrawal(goal.id)}
+                          disabled={isContributing || withdrawingId === goal.id}
+                        >
+                          {withdrawingId === goal.id ? "Retirando…" : "Retirar"}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

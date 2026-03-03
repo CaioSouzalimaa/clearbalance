@@ -169,6 +169,11 @@ export async function withdrawFromGoal(
     const goal = await tx.goal.findUnique({ where: { id, userId } });
     if (!goal) throw new Error("Meta não encontrada");
 
+    // Guard: cannot withdraw more than the current balance
+    if (amount.greaterThan(goal.currentAmount)) {
+      throw new Error("O valor da retirada não pode ser maior que o saldo da meta.");
+    }
+
     // 2. Calculate new current amount, floored at 0
     const newCurrent = Prisma.Decimal.max(
       Prisma.Decimal.sub(goal.currentAmount, amount),
