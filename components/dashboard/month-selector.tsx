@@ -22,14 +22,14 @@ export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
     const next = new Date(year, month + delta, 1);
     const y = next.getFullYear();
     const m = String(next.getMonth() + 1).padStart(2, "0");
-    router.push(`/dashboard?month=${y}-${m}`);
+    router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
   };
 
   const goToToday = () => {
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, "0");
-    router.push(`/dashboard?month=${y}-${m}`);
+    router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
   };
 
   const now = new Date();

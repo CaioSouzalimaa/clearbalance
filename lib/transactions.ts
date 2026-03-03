@@ -608,6 +608,7 @@ export async function getDashboardData(
   const incomeByMonth = new Map<string, number>();
   const expenseByMonth = new Map<string, number>();
 
+  // Real transactions
   for (const tx of allSixMonthTxs) {
     const d = new Date(tx.date);
     const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
@@ -616,6 +617,23 @@ export async function getDashboardData(
       incomeByMonth.set(key, (incomeByMonth.get(key) ?? 0) + amount);
     } else {
       expenseByMonth.set(key, (expenseByMonth.get(key) ?? 0) + amount);
+    }
+  }
+
+  // Virtual (recurring) transactions per month
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(Date.UTC(currentYear, currentMonth - i, 1));
+    const vy = d.getUTCFullYear();
+    const vm = d.getUTCMonth();
+    const key = `${vy}-${vm}`;
+    const vTxs = expandRecurringForMonth(recurringRecords, vy, vm);
+    for (const vtx of vTxs) {
+      const amount = Math.abs(parseCurrencyBRL(vtx.amount));
+      if (vtx.type === "entrada") {
+        incomeByMonth.set(key, (incomeByMonth.get(key) ?? 0) + amount);
+      } else {
+        expenseByMonth.set(key, (expenseByMonth.get(key) ?? 0) + amount);
+      }
     }
   }
 

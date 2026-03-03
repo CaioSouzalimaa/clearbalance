@@ -89,6 +89,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
                 ticks: { color: "#6b7280", font: { size: 10 } },
               },
               y: {
+                min: 0,
                 grid: { color: "#e9ecef" },
                 ticks: {
                   color: "#6b7280",
