@@ -503,14 +503,17 @@ export default function GoalsPage() {
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Progresso</span>
-                      <span>{goal.progress}%</span>
+                      <span className={goal.progress > 100 ? "font-semibold text-emerald-500" : ""}>{goal.progress}%</span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${goal.progress}%` }}
+                        className={`h-full rounded-full transition-all ${goal.progress > 100 ? "bg-emerald-500" : "bg-primary"}`}
+                        style={{ width: `${Math.min(goal.progress, 100)}%` }}
                       />
                     </div>
+                    {goal.progress > 100 && (
+                      <p className="mt-1 text-xs font-medium text-emerald-500">✔ Meta atingida!</p>
+                    )}
                   </div>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1">

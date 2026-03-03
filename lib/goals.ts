@@ -23,7 +23,7 @@ function mapDbToUI(goal: {
   const target = Number(goal.targetAmount);
   const current = Number(goal.currentAmount);
   const progress =
-    target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+    target > 0 ? Math.round((current / target) * 100) : 0;
 
   return {
     id: goal.id,
@@ -114,11 +114,8 @@ export async function addContribution(
     const goal = await tx.goal.findUnique({ where: { id, userId } });
     if (!goal) throw new Error("Meta não encontrada");
 
-    // 2. Calculate new current amount (capped at target)
-    const newCurrent = Prisma.Decimal.min(
-      Prisma.Decimal.add(goal.currentAmount, amount),
-      goal.targetAmount,
-    );
+    // 2. Calculate new current amount (no cap — contributions beyond target are allowed)
+    const newCurrent = Prisma.Decimal.add(goal.currentAmount, amount);
 
     // 3. Update the goal
     const updatedGoal = await tx.goal.update({
