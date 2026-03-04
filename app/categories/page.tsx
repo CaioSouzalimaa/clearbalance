@@ -252,7 +252,10 @@ const resolveIcon = (iconId: string | null) =>
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState<{
+    msg: string;
+    type: "success" | "error";
+  } | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
@@ -299,9 +302,9 @@ export default function CategoriesPage() {
     setIconSearch("");
   };
 
-  const showFeedback = (msg: string) => {
-    setFeedback(msg);
-    setTimeout(() => setFeedback(""), 3000);
+  const showFeedback = (msg: string, type: "success" | "error" = "success") => {
+    setFeedback({ msg, type });
+    setTimeout(() => setFeedback(null), 4000);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -333,10 +336,10 @@ export default function CategoriesPage() {
         setCategories((prev) =>
           prev.map((c) => (c.id === editingId ? saved : c)),
         );
-        showFeedback("Categoria atualizada com sucesso.");
+        showFeedback("Categoria atualizada com sucesso.", "success");
       } else {
         setCategories((prev) => [...prev, saved]);
-        showFeedback("Categoria criada com sucesso.");
+        showFeedback("Categoria criada com sucesso.", "success");
       }
       cancelEdit();
     } finally {
@@ -353,10 +356,13 @@ export default function CategoriesPage() {
       });
       if (res.ok || res.status === 204) {
         setCategories((prev) => prev.filter((c) => c.id !== pendingDeleteId));
-        showFeedback("Categoria excluída.");
+        showFeedback("Categoria excluída.", "success");
       } else {
         const data = await res.json().catch(() => ({}));
-        showFeedback((data as { error?: string })?.error ?? "Erro ao excluir.");
+        showFeedback(
+          (data as { error?: string })?.error ?? "Erro ao excluir.",
+          "error",
+        );
       }
     } finally {
       setIsDeleting(false);
@@ -398,8 +404,14 @@ export default function CategoriesPage() {
       </header>
 
       {feedback && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
-          {feedback}
+        <div
+          className={
+            feedback.type === "error"
+              ? "rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400"
+              : "rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
+          }
+        >
+          {feedback.msg}
         </div>
       )}
 
@@ -472,13 +484,16 @@ export default function CategoriesPage() {
                         type="button"
                         variant="outline"
                         className="border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
-                        onClick={() => setPendingDeleteId(category.id)}
-                        disabled={category.transactionCount > 0}
-                        title={
-                          category.transactionCount > 0
-                            ? "Há lançamentos vinculados"
-                            : undefined
-                        }
+                        onClick={() => {
+                          if (category.transactionCount > 0) {
+                            showFeedback(
+                              `Não é possível excluir "${category.name}" pois ${category.transactionCount} lançamento${category.transactionCount !== 1 ? "s usam" : " usa"} esta categoria.`,
+                              "error",
+                            );
+                            return;
+                          }
+                          setPendingDeleteId(category.id);
+                        }}
                       >
                         Excluir
                       </Button>

@@ -178,7 +178,7 @@ export const TransactionModal = ({
         }
       }}
     >
-      <div className="relative w-full max-w-xl rounded-xl bg-background shadow-lg max-h-[90vh]">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-xl bg-background shadow-lg max-h-[90vh]">
         {/* close button fixed top-right */}
         <button
           type="button"
@@ -190,7 +190,7 @@ export const TransactionModal = ({
         </button>
 
         {/* scrolling wrapper containing header + body */}
-        <div className="modal-scroll overflow-y-auto max-h-[90vh] p-6">
+        <div className="modal-scroll overflow-y-auto p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2
