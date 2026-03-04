@@ -9,6 +9,7 @@ import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 
 interface Goal {
   id: string;
@@ -215,18 +216,16 @@ export default function GoalsPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [feedback, setFeedback] = useState("");
+  const { toast } = useToast();
+
+  const showFeedback = (msg: string, type: "success" | "error" = "success") =>
+    toast(msg, type);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(value);
-
-  const showFeedback = (msg: string) => {
-    setFeedback(msg);
-    setTimeout(() => setFeedback(""), 3000);
-  };
 
   const loadGoals = async () => {
     try {
@@ -292,7 +291,7 @@ export default function GoalsPage() {
 
     const amount = parseBRL(rawValue);
     if (amount <= 0) {
-      showFeedback("Informe um valor válido.");
+      showFeedback("Informe um valor válido.", "error");
       return;
     }
 
@@ -308,6 +307,7 @@ export default function GoalsPage() {
         const data = await res.json().catch(() => ({}));
         showFeedback(
           (data as { error?: string })?.error ?? "Erro ao registrar aporte.",
+          "error",
         );
         return;
       }
@@ -317,7 +317,7 @@ export default function GoalsPage() {
       setContributions((prev) => ({ ...prev, [goalId]: "" }));
       showFeedback("Aporte registrado com sucesso!");
     } catch {
-      showFeedback("Erro ao registrar aporte.");
+      showFeedback("Erro ao registrar aporte.", "error");
     } finally {
       setContributingId(null);
     }
@@ -329,7 +329,7 @@ export default function GoalsPage() {
 
     const amount = parseBRL(rawValue);
     if (amount <= 0) {
-      showFeedback("Informe um valor válido.");
+      showFeedback("Informe um valor válido.", "error");
       return;
     }
 
@@ -337,6 +337,7 @@ export default function GoalsPage() {
     if (goal && amount > goal.currentAmount) {
       showFeedback(
         "O valor da retirada não pode ser maior que o saldo da meta.",
+        "error",
       );
       return;
     }
@@ -353,6 +354,7 @@ export default function GoalsPage() {
         const data = await res.json().catch(() => ({}));
         showFeedback(
           (data as { error?: string })?.error ?? "Erro ao registrar retirada.",
+          "error",
         );
         return;
       }
@@ -362,7 +364,7 @@ export default function GoalsPage() {
       setContributions((prev) => ({ ...prev, [goalId]: "" }));
       showFeedback("Retirada registrada com sucesso!");
     } catch {
-      showFeedback("Erro ao registrar retirada.");
+      showFeedback("Erro ao registrar retirada.", "error");
     } finally {
       setWithdrawingId(null);
     }
@@ -397,10 +399,11 @@ export default function GoalsPage() {
         const data = await res.json().catch(() => ({}));
         showFeedback(
           (data as { error?: string })?.error ?? "Erro ao excluir meta.",
+          "error",
         );
       }
     } catch {
-      showFeedback("Erro ao excluir meta.");
+      showFeedback("Erro ao excluir meta.", "error");
     } finally {
       setIsDeleting(false);
       setPendingDeleteId(null);
@@ -444,12 +447,6 @@ export default function GoalsPage() {
           Nova meta
         </Button>
       </header>
-
-      {feedback && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary">
-          {feedback}
-        </div>
-      )}
 
       <section className="grid gap-4 lg:grid-cols-3">
         {highlights.map((highlight) => (

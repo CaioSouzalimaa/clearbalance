@@ -116,6 +116,7 @@ import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 
 const iconOptions = [
   // Finanças
@@ -252,10 +253,7 @@ const resolveIcon = (iconId: string | null) =>
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [feedback, setFeedback] = useState<{
-    msg: string;
-    type: "success" | "error";
-  } | null>(null);
+  const { toast } = useToast();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
@@ -302,10 +300,8 @@ export default function CategoriesPage() {
     setIconSearch("");
   };
 
-  const showFeedback = (msg: string, type: "success" | "error" = "success") => {
-    setFeedback({ msg, type });
-    setTimeout(() => setFeedback(null), 4000);
-  };
+  const showFeedback = (msg: string, type: "success" | "error" = "success") =>
+    toast(msg, type);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -402,18 +398,6 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-semibold text-foreground">Categorias</h1>
         </div>
       </header>
-
-      {feedback && (
-        <div
-          className={
-            feedback.type === "error"
-              ? "rounded-lg border border-rose-300 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-400"
-              : "rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-medium text-primary"
-          }
-        >
-          {feedback.msg}
-        </div>
-      )}
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">

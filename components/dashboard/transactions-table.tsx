@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download } from "lucide";
+import { useToast } from "@/components/ui/toast";
 import { LucideIcon, IconNode } from "@/components/dashboard/sidebar";
 import {
   TransactionModal,
@@ -48,7 +49,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [rows, setRows] = useState<Transaction[]>(transactions);
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
-  const [saveFeedback, setSaveFeedback] = useState("");
+  const { toast } = useToast();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -157,9 +158,11 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     try {
       const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("delete failed");
+      toast("Transação excluída.", "success");
       router.refresh();
     } catch (err) {
       console.error(err);
+      toast("Erro ao excluir transação.", "error");
       setRows(transactions);
     }
   };
@@ -199,8 +202,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       ),
     );
     setEditingTransaction(null);
-    setSaveFeedback("Alterações salvas com sucesso.");
-    window.setTimeout(() => setSaveFeedback(""), 3000);
+    toast("Alterações salvas com sucesso.", "success");
 
     try {
       const res = await fetch(`/api/transactions/${id}`, {
@@ -454,11 +456,6 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </select>
           </div>
         </div>
-        {saveFeedback ? (
-          <div className="border-b border-border bg-primary/5 px-6 py-3 text-sm font-medium text-primary">
-            {saveFeedback}
-          </div>
-        ) : null}
         <div className="block md:hidden">
           <div className="space-y-4 px-6 py-4">
             {filteredRows.length === 0 ? (

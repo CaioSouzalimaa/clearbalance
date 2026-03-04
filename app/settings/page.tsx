@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 
 interface UserProfile {
   id: string;
@@ -15,26 +16,19 @@ interface UserProfile {
   createdAt: string;
 }
 
-interface Feedback {
-  type: "success" | "error";
-  message: string;
-}
-
 export default function SettingsPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [profileFeedback, setProfileFeedback] = useState<Feedback | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
-  const [passwordFeedback, setPasswordFeedback] = useState<Feedback | null>(
-    null,
-  );
+
+  const { toast } = useToast();
 
   useEffect(() => {
     async function loadProfile() {
@@ -46,10 +40,7 @@ export default function SettingsPage() {
         setName(data.name ?? "");
         setEmail(data.email);
       } catch {
-        setProfileFeedback({
-          type: "error",
-          message: "Erro ao carregar informações do perfil.",
-        });
+        toast("Erro ao carregar informações do perfil.", "error");
       } finally {
         setIsLoadingProfile(false);
       }
@@ -60,7 +51,6 @@ export default function SettingsPage() {
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
     setIsSavingProfile(true);
-    setProfileFeedback(null);
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
@@ -69,19 +59,13 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setProfileFeedback({
-          type: "error",
-          message: data.error ?? "Erro ao salvar.",
-        });
+        toast(data.error ?? "Erro ao salvar.", "error");
       } else {
         setProfile(data);
-        setProfileFeedback({
-          type: "success",
-          message: "Perfil atualizado com sucesso!",
-        });
+        toast("Perfil atualizado com sucesso!", "success");
       }
     } catch {
-      setProfileFeedback({ type: "error", message: "Erro de conexão." });
+      toast("Erro de conexão.", "error");
     } finally {
       setIsSavingProfile(false);
     }
@@ -89,41 +73,25 @@ export default function SettingsPage() {
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
-    setPasswordFeedback(null);
 
     if (newPassword.length < 8) {
-      setPasswordFeedback({
-        type: "error",
-        message: "A nova senha deve ter pelo menos 8 caracteres.",
-      });
+      toast("A nova senha deve ter pelo menos 8 caracteres.", "error");
       return;
     }
     if (!/[A-Z]/.test(newPassword)) {
-      setPasswordFeedback({
-        type: "error",
-        message: "A nova senha deve conter pelo menos uma letra maiúscula.",
-      });
+      toast("A nova senha deve conter pelo menos uma letra maiúscula.", "error");
       return;
     }
     if (!/[a-z]/.test(newPassword)) {
-      setPasswordFeedback({
-        type: "error",
-        message: "A nova senha deve conter pelo menos uma letra minúscula.",
-      });
+      toast("A nova senha deve conter pelo menos uma letra minúscula.", "error");
       return;
     }
     if (!/[0-9]/.test(newPassword)) {
-      setPasswordFeedback({
-        type: "error",
-        message: "A nova senha deve conter pelo menos um número.",
-      });
+      toast("A nova senha deve conter pelo menos um número.", "error");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordFeedback({
-        type: "error",
-        message: "As senhas não coincidem.",
-      });
+      toast("As senhas não coincidem.", "error");
       return;
     }
 
@@ -136,21 +104,15 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setPasswordFeedback({
-          type: "error",
-          message: data.error ?? "Erro ao alterar senha.",
-        });
+        toast(data.error ?? "Erro ao alterar senha.", "error");
       } else {
-        setPasswordFeedback({
-          type: "success",
-          message: "Senha alterada com sucesso!",
-        });
+        toast("Senha alterada com sucesso!", "success");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       }
     } catch {
-      setPasswordFeedback({ type: "error", message: "Erro de conexão." });
+      toast("Erro de conexão.", "error");
     } finally {
       setIsSavingPassword(false);
     }
@@ -191,18 +153,6 @@ export default function SettingsPage() {
             </div>
           ) : (
             <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
-              {profileFeedback && (
-                <p
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium ${
-                    profileFeedback.type === "success"
-                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                      : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                  }`}
-                >
-                  {profileFeedback.message}
-                </p>
-              )}
-
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label
@@ -298,18 +248,6 @@ export default function SettingsPage() {
             </p>
 
             <form onSubmit={handleChangePassword} className="mt-6 space-y-4">
-              {passwordFeedback && (
-                <p
-                  className={`rounded-lg px-4 py-2.5 text-sm font-medium ${
-                    passwordFeedback.type === "success"
-                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                      : "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                  }`}
-                >
-                  {passwordFeedback.message}
-                </p>
-              )}
-
               <div className="space-y-2">
                 <label
                   htmlFor="currentPassword"

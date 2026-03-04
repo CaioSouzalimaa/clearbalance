@@ -190,7 +190,7 @@ export const TransactionModal = ({
         </button>
 
         {/* scrolling wrapper containing header + body */}
-        <div className="modal-scroll overflow-y-auto p-6">
+        <div className="modal-scroll overflow-y-auto p-6 max-h-[90vh]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2

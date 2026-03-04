@@ -9,9 +9,11 @@ import {
   TransactionFormState,
   createDefaultTransactionFormState,
 } from "@/components/dashboard/transaction-modal";
+import { useToast } from "@/components/ui/toast";
 
 export const DashboardHeader = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,13 +27,15 @@ export const DashboardHeader = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        console.error("Erro ao salvar transação:", data);
+        toast((data as { error?: string })?.error ?? "Erro ao salvar transação.", "error");
         return;
       }
+      toast("Transação criada com sucesso.", "success");
       setIsModalOpen(false);
       router.refresh();
     } catch (err) {
       console.error("Erro ao salvar transação:", err);
+      toast("Erro ao salvar transação. Tente novamente.", "error");
     } finally {
       setIsSubmitting(false);
     }

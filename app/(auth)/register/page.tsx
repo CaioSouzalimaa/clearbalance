@@ -12,7 +12,7 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/toast";
 import {
   Form,
   FormControl,
@@ -24,7 +24,7 @@ import {
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState<string>("");
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<RegisterInput>({
@@ -39,7 +39,6 @@ export default function RegisterPage() {
 
   async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
-    setError("");
 
     try {
       // Criar conta via API
@@ -52,7 +51,7 @@ export default function RegisterPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || "Erro ao criar conta");
+        toast(result.error || "Erro ao criar conta", "error");
         return;
       }
 
@@ -64,8 +63,9 @@ export default function RegisterPage() {
       });
 
       if (signInResult?.error) {
-        setError(
+        toast(
           "Conta criada, mas erro ao fazer login. Tente fazer login manualmente.",
+          "error",
         );
         return;
       }
@@ -74,7 +74,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Erro ao criar conta. Tente novamente.");
+      toast("Erro ao criar conta. Tente novamente.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -104,12 +104,6 @@ export default function RegisterPage() {
             Comece a organizar suas finanças hoje
           </p>
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

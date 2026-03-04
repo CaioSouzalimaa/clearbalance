@@ -12,7 +12,7 @@ import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/toast";
 import {
   Form,
   FormControl,
@@ -24,7 +24,7 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState<string>("");
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginInput>({
@@ -37,7 +37,6 @@ export default function LoginPage() {
 
   async function onSubmit(data: LoginInput) {
     setIsLoading(true);
-    setError("");
 
     try {
       const result = await signIn("credentials", {
@@ -47,7 +46,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Email ou senha inválidos");
+        toast("Email ou senha inválidos", "error");
         return;
       }
 
@@ -55,7 +54,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Erro ao fazer login. Tente novamente.");
+      toast("Erro ao fazer login. Tente novamente.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -86,11 +85,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
