@@ -185,7 +185,7 @@ export default function RegisterPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Spinner className="mr-2" />
+                  <Spinner />
                   Criando conta…
                 </>
               ) : (

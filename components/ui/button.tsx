@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <button
       className={cn(
-        "py-2 px-6 rounded-md font-medium transition-all active:scale-[0.98]",
+        "inline-flex items-center justify-center gap-2 py-2 px-6 rounded-md font-medium transition-all active:scale-[0.98]",
         variants[variant],
         className
       )}

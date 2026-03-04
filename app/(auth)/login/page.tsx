@@ -128,7 +128,7 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Spinner className="mr-2" />
+                  <Spinner />
                   Entrando…
                 </>
               ) : (
