@@ -6,6 +6,7 @@ import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { ThemeToggle } from "@/components/settings/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
   id: string;
@@ -177,7 +178,17 @@ export default function SettingsPage() {
           </p>
 
           {isLoadingProfile ? (
-            <p className="mt-6 text-sm text-muted-foreground">Carregando...</p>
+            <div className="mt-6 space-y-5">
+              <div className="grid gap-4 md:grid-cols-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+              <Skeleton className="h-9 w-36 rounded-md" />
+            </div>
           ) : (
             <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
               {profileFeedback && (

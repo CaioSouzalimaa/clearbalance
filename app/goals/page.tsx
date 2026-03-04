@@ -8,6 +8,7 @@ import { LucideIcon } from "@/components/dashboard/sidebar";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Goal {
   id: string;
@@ -334,7 +335,9 @@ export default function GoalsPage() {
 
     const goal = goals.find((g) => g.id === goalId);
     if (goal && amount > goal.currentAmount) {
-      showFeedback("O valor da retirada não pode ser maior que o saldo da meta.");
+      showFeedback(
+        "O valor da retirada não pode ser maior que o saldo da meta.",
+      );
       return;
     }
 
@@ -487,7 +490,37 @@ export default function GoalsPage() {
 
         <div className="mt-6 space-y-4">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando…</p>
+            <>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-border px-4 py-4 space-y-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-3 w-8" />
+                    </div>
+                    <Skeleton className="h-2.5 w-full rounded-full" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 flex-1 rounded-md" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                    <Skeleton className="h-8 w-24 rounded-md" />
+                  </div>
+                </div>
+              ))}
+            </>
           ) : goals.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Nenhuma meta criada ainda. Clique em "Nova meta" para começar!
@@ -547,7 +580,15 @@ export default function GoalsPage() {
                   <div className="mt-4">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Progresso</span>
-                      <span className={goal.progress > 100 ? "font-semibold text-emerald-500" : ""}>{goal.progress}%</span>
+                      <span
+                        className={
+                          goal.progress > 100
+                            ? "font-semibold text-emerald-500"
+                            : ""
+                        }
+                      >
+                        {goal.progress}%
+                      </span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-muted">
                       <div
@@ -556,7 +597,9 @@ export default function GoalsPage() {
                       />
                     </div>
                     {goal.progress > 100 && (
-                      <p className="mt-1 text-xs font-medium text-emerald-500">✔ Meta atingida!</p>
+                      <p className="mt-1 text-xs font-medium text-emerald-500">
+                        ✔ Meta atingida!
+                      </p>
                     )}
                   </div>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">

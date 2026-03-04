@@ -11,6 +11,7 @@ import Link from "next/link";
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
@@ -188,7 +189,14 @@ export default function RegisterPage() {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Criando conta..." : "Criar conta"}
+              {isLoading ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Criando conta…
+                </>
+              ) : (
+                "Criar conta"
+              )}
             </Button>
           </form>
         </Form>

@@ -115,6 +115,7 @@ import { LucideIcon } from "@/components/dashboard/sidebar";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const iconOptions = [
   // Finanças
@@ -412,7 +413,22 @@ export default function CategoriesPage() {
           </p>
           <div className="mt-6 space-y-3">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando…</p>
+              <>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 rounded-xl border border-border px-4 py-3"
+                  >
+                    <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                    <Skeleton className="h-7 w-14 rounded-md" />
+                    <Skeleton className="h-7 w-14 rounded-md" />
+                  </div>
+                ))}
+              </>
             ) : categories.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Nenhuma categoria. Crie a primeira!

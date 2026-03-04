@@ -11,6 +11,7 @@ import Link from "next/link";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
@@ -131,7 +132,14 @@ export default function LoginPage() {
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? (
+                <>
+                  <Spinner className="mr-2" />
+                  Entrando…
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
         </Form>
