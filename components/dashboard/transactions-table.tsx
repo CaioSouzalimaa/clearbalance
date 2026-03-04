@@ -149,27 +149,27 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
   const confirmDelete = async () => {
     if (!pendingDeleteId) return;
-    setIsDeleting(true);
-    // Optimistic removal
-    setRows((prev) => prev.filter((item) => item.id !== pendingDeleteId));
     const id = pendingDeleteId;
-    setPendingDeleteId(null);
-    setIsDeleting(false);
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("delete failed");
+      setRows((prev) => prev.filter((item) => item.id !== id));
       toast("Transação excluída.", "success");
       router.refresh();
     } catch (err) {
       console.error(err);
       toast("Erro ao excluir transação.", "error");
-      setRows(transactions);
+    } finally {
+      setIsDeleting(false);
+      setPendingDeleteId(null);
     }
   };
 
   const handleSave = async (formState: TransactionFormState) => {
     if (!editingTransaction) return;
     const id = editingTransaction.id;
+    const previousRows = rows;
 
     // Optimistic update
     setRows((prev) =>
@@ -202,7 +202,6 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       ),
     );
     setEditingTransaction(null);
-    toast("Alterações salvas com sucesso.", "success");
 
     try {
       const res = await fetch(`/api/transactions/${id}`, {
@@ -211,9 +210,12 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         body: JSON.stringify(formState),
       });
       if (!res.ok) throw new Error("update failed");
+      toast("Alterações salvas com sucesso.", "success");
       router.refresh();
     } catch (err) {
       console.error(err);
+      setRows(previousRows);
+      toast("Erro ao salvar alterações.", "error");
     }
   };
 

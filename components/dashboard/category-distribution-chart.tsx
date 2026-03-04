@@ -28,6 +28,9 @@ export const CategoryDistributionChart = ({
     <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
       <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+      {data.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
+      ) : (
       <div className="mt-6 grid gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
         <div className="mx-auto h-48 w-full max-w-[220px] lg:mx-0">
           <Doughnut
@@ -86,7 +89,6 @@ export const CategoryDistributionChart = ({
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </div>      )}    </div>
   );
 };

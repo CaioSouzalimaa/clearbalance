@@ -274,7 +274,13 @@ export default function CategoriesPage() {
   const loadCategories = async () => {
     try {
       const res = await fetch("/api/categories");
-      if (res.ok) setCategories(await res.json());
+      if (res.ok) {
+        setCategories(await res.json());
+      } else {
+        toast("Erro ao carregar categorias.", "error");
+      }
+    } catch {
+      toast("Erro ao carregar categorias.", "error");
     } finally {
       setIsLoading(false);
     }

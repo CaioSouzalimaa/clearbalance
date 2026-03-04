@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,8 @@ import { useToast } from "@/components/ui/toast";
 export const DashboardHeader = () => {
   const router = useRouter();
   const { toast } = useToast();
+  const { data: session } = useSession();
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,20 +48,14 @@ export const DashboardHeader = () => {
     <>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">
-            Bem-vinda de volta
+          <p className="text-sm font-medium text-muted-foreground">
+            Boas-vindas de volta{firstName ? `, ${firstName}` : ""}!
           </p>
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-          {/* <Button
-            variant="outline"
-            className="w-full border-border text-foreground sm:w-auto"
-          >
-            Exportar
-          </Button> */}
           <Button
             className="w-full sm:w-auto"
             onClick={() => setIsModalOpen(true)}

@@ -69,6 +69,9 @@ export const VariationChart: React.FC<VariationChartProps> = ({
           {formatBRL(data[data.length - 1]?.value ?? 0)}
         </span>
       </div>
+      {data.length === 0 ? (
+        <p className="mt-6 text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
+      ) : (
       <div className="mt-6 h-32">
         <Line
           data={chartData}
@@ -102,6 +105,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
           }}
         />
       </div>
+      )}
     </div>
   );
 };

@@ -116,7 +116,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={onClose}
+      onClick={() => { if (!isSaving) onClose(); }}
     >
       <div
         className="w-full max-w-md rounded-xl bg-surface p-4 sm:p-6 shadow-lg"
@@ -232,7 +232,11 @@ export default function GoalsPage() {
       const res = await fetch("/api/goals");
       if (res.ok) {
         setGoals(await res.json());
+      } else {
+        toast("Erro ao carregar metas.", "error");
       }
+    } catch {
+      toast("Erro ao carregar metas.", "error");
     } finally {
       setIsLoading(false);
     }
