@@ -28,6 +28,12 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<"password" | "confirm">("password");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,11 +85,17 @@ export default function SettingsPage() {
       return;
     }
     if (!/[A-Z]/.test(newPassword)) {
-      toast("A nova senha deve conter pelo menos uma letra maiúscula.", "error");
+      toast(
+        "A nova senha deve conter pelo menos uma letra maiúscula.",
+        "error",
+      );
       return;
     }
     if (!/[a-z]/.test(newPassword)) {
-      toast("A nova senha deve conter pelo menos uma letra minúscula.", "error");
+      toast(
+        "A nova senha deve conter pelo menos uma letra minúscula.",
+        "error",
+      );
       return;
     }
     if (!/[0-9]/.test(newPassword)) {
@@ -308,8 +320,182 @@ export default function SettingsPage() {
               </Button>
             </form>
           </div>
+
+          {/* ── Zona de Perigo ── */}
+          <div className="rounded-2xl border border-red-200 bg-surface p-6 shadow-sm dark:border-red-800/40">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+              Zona de perigo
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ações irreversíveis sobre sua conta.
+            </p>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setDeleteStep("password");
+                  setDeletePassword("");
+                  setDeleteConfirmText("");
+                  setIsDeleteModalOpen(true);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+              >
+                Excluir minha conta
+              </button>
+            </div>
+          </div>
         </div>
       </section>
+
+      {/* ── Modal de confirmação de exclusão ── */}
+      {isDeleteModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeletingAccount) {
+              setIsDeleteModalOpen(false);
+              setDeletePassword("");
+              setDeleteConfirmText("");
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-xl">
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+              Excluir conta permanentemente
+            </h2>
+
+            {deleteStep === "password" ? (
+              <>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Para continuar, confirme sua senha atual.
+                </p>
+                <div className="mt-4 space-y-2">
+                  <label
+                    htmlFor="deletePassword"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Senha
+                  </label>
+                  <Input
+                    id="deletePassword"
+                    type="password"
+                    placeholder="••••••••"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    autoComplete="current-password"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && deletePassword.trim()) {
+                        setDeleteStep("confirm");
+                      }
+                    }}
+                  />
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setDeletePassword("");
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1 bg-red-600 text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                    disabled={!deletePassword.trim()}
+                    onClick={() => setDeleteStep("confirm")}
+                  >
+                    Continuar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Seus dados serão{" "}
+                  <strong className="text-foreground">apagados permanentemente</strong>.
+                  Esta ação é irreversível.
+                </p>
+                <p className="mt-4 text-sm text-foreground">
+                  Para confirmar, digite exatamente:{" "}
+                  <strong className="font-mono text-red-600 dark:text-red-400">
+                    EXCLUIR MINHA CONTA
+                  </strong>
+                </p>
+                <Input
+                  className="mt-3"
+                  placeholder="EXCLUIR MINHA CONTA"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <div className="mt-6 flex gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setDeletePassword("");
+                      setDeleteConfirmText("");
+                    }}
+                    disabled={isDeletingAccount}
+                  >
+                    Cancelar
+                  </Button>
+                  <button
+                    type="button"
+                    disabled={
+                      deleteConfirmText !== "EXCLUIR MINHA CONTA" ||
+                      isDeletingAccount
+                    }
+                    onClick={async () => {
+                      if (deleteConfirmText !== "EXCLUIR MINHA CONTA") return;
+                      setIsDeletingAccount(true);
+                      try {
+                        const res = await fetch("/api/settings/delete-account", {
+                          method: "DELETE",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ password: deletePassword }),
+                        });
+                        if (!res.ok) {
+                          const data = await res.json().catch(() => ({}));
+                          toast(
+                            (data as { error?: string })?.error ??
+                              "Erro ao excluir conta.",
+                            "error",
+                          );
+                          if (
+                            (data as { error?: string })?.error === "Senha incorreta"
+                          ) {
+                            setDeleteStep("password");
+                            setDeletePassword("");
+                            setDeleteConfirmText("");
+                          }
+                          return;
+                        }
+                        toast("Conta excluída com sucesso.", "success");
+                        await signOut({ callbackUrl: "/login" });
+                      } catch {
+                        toast("Erro de conexão.", "error");
+                      } finally {
+                        setIsDeletingAccount(false);
+                      }
+                    }}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-700 dark:hover:bg-red-800"
+                  >
+                    {isDeletingAccount ? "Excluindo…" : "Excluir minha conta"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </SidebarShell>
   );
 }
