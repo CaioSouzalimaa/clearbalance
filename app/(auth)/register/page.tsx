@@ -95,9 +95,9 @@ export default function RegisterPage() {
       </div>
 
       {/* Card */}
-      <div className="bg-surface rounded-xl shadow-xl shadow-black/10 p-8 border border-border">
+      <div className="bg-surface rounded-xl shadow-xl shadow-black/10 p-6 sm:p-8 border border-border">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground mb-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
             Criar conta
           </h1>
           <p className="text-sm text-muted-foreground">

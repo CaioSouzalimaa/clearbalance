@@ -395,13 +395,13 @@ export default function CategoriesPage() {
           <p className="text-sm font-medium text-muted-foreground">
             Personalize sua organização
           </p>
-          <h1 className="text-2xl font-semibold text-foreground">Categorias</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Categorias</h1>
         </div>
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">
+        <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">
             Suas categorias
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -490,10 +490,10 @@ export default function CategoriesPage() {
         </div>
 
         <form
-          className="rounded-2xl border border-border bg-surface p-6 shadow-sm"
+          className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm"
           onSubmit={handleSubmit}
         >
-          <h2 className="text-lg font-semibold text-foreground">{formTitle}</h2>
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">{formTitle}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Defina um nome e escolha um ícone para identificar seus gastos.
           </p>

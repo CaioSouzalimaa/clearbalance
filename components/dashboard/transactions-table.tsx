@@ -377,9 +377,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   return (
     <>
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Lançamentos
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -402,7 +402,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </Button>
           </div>
         </div>
-        <div className="border-b border-border bg-muted/20 px-6 py-4">
+        <div className="border-b border-border bg-muted/20 px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:flex lg:items-center">
               <Input
@@ -457,7 +457,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
           </div>
         </div>
         <div className="block md:hidden">
-          <div className="space-y-4 px-6 py-4">
+          <div className="space-y-4 px-4 py-3 sm:px-6 sm:py-4">
             {filteredRows.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground">
                 Nenhum lançamento encontrado com os filtros atuais.

@@ -119,10 +119,10 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-xl bg-surface p-6 shadow-lg"
+        className="w-full max-w-md rounded-xl bg-surface p-4 sm:p-6 shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-base sm:text-lg font-semibold text-foreground">
           {editingGoal ? "Editar meta" : "Nova meta"}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -440,7 +440,7 @@ export default function GoalsPage() {
           <p className="text-sm font-medium text-muted-foreground">
             Acompanhe o progresso das suas metas
           </p>
-          <h1 className="text-2xl font-semibold text-foreground">Metas</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Metas</h1>
         </div>
         <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
           <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
@@ -452,7 +452,7 @@ export default function GoalsPage() {
         {highlights.map((highlight) => (
           <div
             key={highlight.id}
-            className="rounded-2xl border border-border bg-surface p-5 shadow-sm"
+            className="rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-muted-foreground">
@@ -466,17 +466,17 @@ export default function GoalsPage() {
                 />
               </span>
             </div>
-            <p className="mt-4 text-2xl font-semibold text-foreground">
+            <p className="mt-4 text-xl sm:text-2xl font-semibold text-foreground">
               {highlight.value}
             </p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <section className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Metas em andamento
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">

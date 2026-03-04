@@ -48,7 +48,7 @@ export const DashboardHeader = () => {
           <p className="text-sm font-medium text-gray-500">
             Bem-vinda de volta
           </p>
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
         </div>

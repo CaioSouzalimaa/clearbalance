@@ -23,8 +23,8 @@ export const GoalsProgressChart = ({
   data,
 }: GoalsProgressChartProps) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+      <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
 
       {data.length === 0 ? (

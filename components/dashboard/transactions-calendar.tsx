@@ -118,8 +118,8 @@ export const TransactionsCalendar = ({
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <div className="min-w-105">
-          <div className="grid grid-cols-7 gap-1 text-xs text-muted-foreground sm:gap-2">
+        <div className="sm:min-w-105">
+          <div className="grid grid-cols-7 gap-0.5 text-xs text-muted-foreground sm:gap-2">
             {weekDays.map((day) => (
               <span key={day} className="text-center font-medium py-1">
                 {day}
@@ -127,10 +127,10 @@ export const TransactionsCalendar = ({
             ))}
           </div>
 
-          <div className="mt-1 grid grid-cols-7 gap-1 sm:gap-2">
+          <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-2">
             {days.map((day, index) => {
               if (!day) {
-                return <div key={`empty-${index}`} className="h-20 sm:h-24" />;
+                return <div key={`empty-${index}`} className="aspect-square sm:aspect-auto sm:h-24" />;
               }
 
               const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -162,13 +162,13 @@ export const TransactionsCalendar = ({
                 <div
                   key={dateKey}
                   title={tooltipText}
-                  className="flex h-20 cursor-default flex-col justify-between rounded-lg border border-border bg-background p-1.5 sm:h-24 sm:p-2"
+                  className="flex aspect-square cursor-default flex-col justify-between rounded-md border border-border bg-background p-0.5 sm:aspect-auto sm:h-24 sm:rounded-lg sm:p-2"
                 >
                   {/* Day number + count badge */}
                   <div className="flex items-start justify-between gap-0.5">
-                    <span className="text-xs font-semibold text-foreground">{day}</span>
+                    <span className="text-[9px] font-semibold text-foreground sm:text-xs">{day}</span>
                     {dayTransactions.length > 0 && (
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold leading-none text-muted-foreground">
+                      <span className="rounded-full bg-muted px-1 py-0.5 text-[7px] font-semibold leading-none text-muted-foreground sm:px-1.5 sm:text-[9px]">
                         {dayTransactions.length}
                       </span>
                     )}
@@ -180,7 +180,7 @@ export const TransactionsCalendar = ({
                       {visibleDots.map((t) => (
                         <span
                           key={t.id}
-                          className={`inline-block h-2 w-2 rounded-full ${
+                          className={`inline-block h-1 w-1 rounded-full sm:h-2 sm:w-2 ${
                             t.isVirtual ? "opacity-35" : ""
                           } ${
                             t.type === "entrada" ? "bg-emerald-500" : "bg-rose-500"
@@ -198,7 +198,7 @@ export const TransactionsCalendar = ({
                   {/* Net total */}
                   {dayTransactions.length > 0 && (
                     <span
-                      className={`truncate text-[10px] font-semibold leading-none ${
+                      className={`truncate text-[7px] font-semibold leading-none sm:text-[10px] ${
                         net >= 0 ? "text-emerald-600" : "text-rose-500"
                       }`}
                     >

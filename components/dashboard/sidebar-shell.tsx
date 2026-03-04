@@ -39,7 +39,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
           onToggleCollapse={handleToggle}
           pathname={pathname}
         />
-        <main className="flex min-w-0 flex-1 flex-col gap-8 bg-background px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-10 md:pb-10">
+        <main className="flex min-w-0 flex-1 flex-col gap-4 md:gap-8 bg-background px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-10 md:pb-10">
           {children}
         </main>
       </div>

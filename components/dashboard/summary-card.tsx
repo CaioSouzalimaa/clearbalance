@@ -16,10 +16,10 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   subHelper,
 }) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
       <div className="mt-3 flex items-end justify-between">
-        <p className="text-2xl font-semibold text-foreground">{value}</p>
+        <p className="text-xl sm:text-2xl font-semibold text-foreground">{value}</p>
         <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           {helper}
         </span>

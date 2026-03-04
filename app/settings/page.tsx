@@ -133,7 +133,7 @@ export default function SettingsPage() {
   return (
     <SidebarShell>
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
           Configurações
         </h1>
         <p className="text-sm text-muted-foreground">
@@ -143,8 +143,8 @@ export default function SettingsPage() {
 
       <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
         {/* ── Perfil ── */}
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-foreground">
+        <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+          <h2 className="text-base sm:text-lg font-semibold text-foreground">
             Informações do perfil
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -219,8 +219,8 @@ export default function SettingsPage() {
 
         <div className="flex flex-col gap-6">
           {/* ── Preferências ── */}
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground">
+          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Preferências
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -236,8 +236,8 @@ export default function SettingsPage() {
           </div>
 
           {/* ── Conta ── */}
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground">Conta</h2>
+          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">Conta</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Gerencie sua sessão e acesso ao sistema.
             </p>
@@ -253,8 +253,8 @@ export default function SettingsPage() {
           </div>
 
           {/* ── Segurança / Alterar senha ── */}
-          <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-foreground">Segurança</h2>
+          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">Segurança</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Altere sua senha de acesso.
             </p>
@@ -322,8 +322,8 @@ export default function SettingsPage() {
           </div>
 
           {/* ── Zona de Perigo ── */}
-          <div className="rounded-2xl border border-red-200 bg-surface p-6 shadow-sm dark:border-red-800/40">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+          <div className="rounded-2xl border border-red-200 bg-surface p-4 sm:p-6 shadow-sm dark:border-red-800/40">
+            <h2 className="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
               Zona de perigo
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -359,8 +359,8 @@ export default function SettingsPage() {
             }
           }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-xl">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-xl">
+            <h2 className="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
               Excluir conta permanentemente
             </h2>
 

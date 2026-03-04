@@ -25,11 +25,11 @@ export const CategoryDistributionChart = ({
   data,
 }: CategoryDistributionChartProps) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+      <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       <div className="mt-6 grid gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
-        <div className="h-48 w-full max-w-[220px]">
+        <div className="mx-auto h-48 w-full max-w-[220px] lg:mx-0">
           <Doughnut
             data={{
               labels: data.map((item) => item.label),

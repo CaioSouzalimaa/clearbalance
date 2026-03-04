@@ -59,7 +59,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   const chartData = buildDataset(data, accentColor);
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-semibold text-foreground">{title}</h3>
