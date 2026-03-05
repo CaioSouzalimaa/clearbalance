@@ -26,20 +26,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const themeScript = `
-    const storedTheme = localStorage.getItem('clearbalance-theme');
-    if (storedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (storedTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-    }
+    (function() {
+      const storedTheme = localStorage.getItem('clearbalance-theme');
+      if (storedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.body.style.backgroundColor = '#0f172a';
+      } else if (storedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.body.style.backgroundColor = '#f8f9fa';
+      } else {
+        // Default to light if no preference
+        document.body.style.backgroundColor = '#f8f9fa';
+      }
+    })();
   `;
 
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <SessionProvider>
           <ToastProvider>{children}</ToastProvider>
         </SessionProvider>

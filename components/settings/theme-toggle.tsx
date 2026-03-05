@@ -24,6 +24,9 @@ export const ThemeToggle = () => {
     setTheme(value);
     localStorage.setItem(THEME_STORAGE_KEY, value);
     document.documentElement.classList.toggle("dark", value === "dark");
+    // Apply background immediately to prevent flash
+    document.body.style.backgroundColor =
+      value === "dark" ? "#0f172a" : "#f8f9fa";
   };
 
   return (
@@ -35,9 +38,7 @@ export const ThemeToggle = () => {
         aria-pressed={theme === "light"}
         className={cn(
           "border-border",
-          theme === "light"
-            ? "bg-primary/10 text-primary"
-            : "text-foreground"
+          theme === "light" ? "bg-primary/10 text-primary" : "text-foreground",
         )}
       >
         Tema claro
@@ -49,9 +50,7 @@ export const ThemeToggle = () => {
         aria-pressed={theme === "dark"}
         className={cn(
           "border-border",
-          theme === "dark"
-            ? "bg-primary/10 text-primary"
-            : "text-foreground"
+          theme === "dark" ? "bg-primary/10 text-primary" : "text-foreground",
         )}
       >
         Tema escuro

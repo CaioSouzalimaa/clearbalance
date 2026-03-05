@@ -123,7 +123,9 @@ export const Sidebar = ({
           );
         })}
       </nav>
-      <div className="mt-auto flex flex-col gap-2">
+      <div
+        className={`mt-auto flex flex-col gap-2 ${isCollapsed ? "items-center" : ""}`}
+      >
         <HelpButton isCollapsed={isCollapsed} />
         <Button
           type="button"
@@ -131,9 +133,7 @@ export const Sidebar = ({
           onClick={onToggleCollapse}
           aria-label={isCollapsed ? "Expandir menu" : "Recolher menu"}
           aria-expanded={!isCollapsed}
-          className={`flex h-9 w-9 items-center justify-center px-0 ${
-            isCollapsed ? "self-center" : ""
-          }`}
+          className="flex h-9 w-9 items-center justify-center px-0"
         >
           {isCollapsed ? (
             <LucideIcon icon={ChevronRight} className="h-4 w-4" aria-hidden />
