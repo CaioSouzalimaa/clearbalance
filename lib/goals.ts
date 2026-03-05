@@ -22,8 +22,7 @@ function mapDbToUI(goal: {
 }): UIGoal {
   const target = Number(goal.targetAmount);
   const current = Number(goal.currentAmount);
-  const progress =
-    target > 0 ? Math.round((current / target) * 100) : 0;
+  const progress = target > 0 ? Math.round((current / target) * 100) : 0;
 
   return {
     id: goal.id,
@@ -54,7 +53,7 @@ export async function createGoal(
       userId,
       name: data.name,
       targetAmount: new Prisma.Decimal(data.targetAmount),
-      currentAmount: new Prisma.Decimal(0),
+      currentAmount: new Prisma.Decimal(data.initialAmount ?? 0),
       deadline: data.deadline ? new Date(data.deadline) : null,
     },
   });
@@ -67,13 +66,20 @@ export async function updateGoal(
   userId: string,
   data: GoalInput,
 ): Promise<UIGoal> {
+  const updateData: Prisma.GoalUpdateInput = {
+    name: data.name,
+    targetAmount: new Prisma.Decimal(data.targetAmount),
+    deadline: data.deadline ? new Date(data.deadline) : null,
+  };
+
+  // Allow manual adjustment of current amount if initialAmount is provided
+  if (data.initialAmount !== undefined) {
+    updateData.currentAmount = new Prisma.Decimal(data.initialAmount);
+  }
+
   const record = await prisma.goal.update({
     where: { id, userId },
-    data: {
-      name: data.name,
-      targetAmount: new Prisma.Decimal(data.targetAmount),
-      deadline: data.deadline ? new Date(data.deadline) : null,
-    },
+    data: updateData,
   });
 
   return mapDbToUI(record);
@@ -89,7 +95,9 @@ export async function deleteGoal(id: string, userId: string): Promise<void> {
     await tx.transaction.deleteMany({
       where: {
         userId,
-        description: { in: [`Aporte - ${goal.name}`, `Retirada - ${goal.name}`] },
+        description: {
+          in: [`Aporte - ${goal.name}`, `Retirada - ${goal.name}`],
+        },
       },
     });
 
@@ -171,7 +179,9 @@ export async function withdrawFromGoal(
 
     // Guard: cannot withdraw more than the current balance
     if (amount.greaterThan(goal.currentAmount)) {
-      throw new Error("O valor da retirada não pode ser maior que o saldo da meta.");
+      throw new Error(
+        "O valor da retirada não pode ser maior que o saldo da meta.",
+      );
     }
 
     // 2. Calculate new current amount, floored at 0
@@ -215,4 +225,3 @@ export async function withdrawFromGoal(
     return mapDbToUI(updatedGoal);
   });
 }
-

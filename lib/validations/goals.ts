@@ -3,6 +3,10 @@ import { z } from "zod";
 export const goalInputSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   targetAmount: z.number().positive("O valor da meta deve ser positivo"),
+  initialAmount: z
+    .number()
+    .nonnegative("O valor inicial não pode ser negativo")
+    .optional(),
   deadline: z.string().optional(),
 });
 

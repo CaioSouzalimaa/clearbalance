@@ -43,6 +43,7 @@ function parseBRL(formatted: string): number {
 function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   const [formName, setFormName] = useState("");
   const [formTarget, setFormTarget] = useState("");
+  const [formInitial, setFormInitial] = useState("");
   const [formDeadline, setFormDeadline] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -54,10 +55,14 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
         setFormTarget(
           formatBRL(String(Math.round(editingGoal.targetAmount * 100))),
         );
+        setFormInitial(
+          formatBRL(String(Math.round(editingGoal.currentAmount * 100))),
+        );
         setFormDeadline(editingGoal.deadline ?? "");
       } else {
         setFormName("");
         setFormTarget("");
+        setFormInitial("");
         setFormDeadline("");
       }
       setFormError("");
@@ -68,6 +73,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
     e.preventDefault();
     const name = formName.trim();
     const targetAmount = parseBRL(formTarget);
+    const initialAmount = formInitial ? parseBRL(formInitial) : undefined;
 
     if (!name) {
       setFormError("Informe o nome da meta.");
@@ -75,6 +81,14 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
     }
     if (!formTarget || targetAmount <= 0) {
       setFormError("Informe um valor válido para a meta.");
+      return;
+    }
+    if (initialAmount !== undefined && initialAmount < 0) {
+      setFormError("O valor inicial não pode ser negativo.");
+      return;
+    }
+    if (initialAmount !== undefined && initialAmount > targetAmount) {
+      setFormError("O valor inicial não pode ser maior que a meta.");
       return;
     }
 
@@ -91,6 +105,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
         body: JSON.stringify({
           name,
           targetAmount,
+          initialAmount,
           deadline: formDeadline || undefined,
         }),
       });
@@ -116,7 +131,9 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={() => { if (!isSaving) onClose(); }}
+      onClick={() => {
+        if (!isSaving) onClose();
+      }}
     >
       <div
         className="w-full max-w-md rounded-xl bg-surface p-4 sm:p-6 shadow-lg"
@@ -165,6 +182,27 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
               value={formTarget}
               onChange={(e) => setFormTarget(formatBRL(e.target.value))}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="goal-initial"
+              className="text-sm font-medium text-foreground"
+            >
+              Valor inicial {editingGoal ? "(Saldo atual)" : "(opcional)"}
+            </label>
+            <Input
+              id="goal-initial"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
+              value={formInitial}
+              onChange={(e) => setFormInitial(formatBRL(e.target.value))}
+            />
+            <p className="text-xs text-muted-foreground">
+              {editingGoal
+                ? "Ajuste manualmente o saldo da meta (não afeta lançamentos)"
+                : "Quanto você já possui guardado para esta meta"}
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -444,7 +482,9 @@ export default function GoalsPage() {
           <p className="text-sm font-medium text-muted-foreground">
             Acompanhe o progresso das suas metas
           </p>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Metas</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+            Metas
+          </h1>
         </div>
         <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
           <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
