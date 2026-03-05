@@ -158,11 +158,14 @@ export const GuidedTour = ({ hasSeenTour }: GuidedTourProps) => {
     registerStartTour(startTour);
   }, [registerStartTour, startTour]);
 
-  // Auto-start for first-time users
+  // Check if tour should start after redirect or for first-time users
   useEffect(() => {
-    if (!hasSeenTour) {
-      const timer = setTimeout(() => startTour(), 800);
-      return () => clearTimeout(timer);
+    const shouldStartTour = sessionStorage.getItem("clearbalance-start-tour");
+    if (shouldStartTour === "true") {
+      sessionStorage.removeItem("clearbalance-start-tour");
+      startTour();
+    } else if (!hasSeenTour) {
+      startTour();
     }
   }, [hasSeenTour, startTour]);
 
