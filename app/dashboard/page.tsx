@@ -2,10 +2,12 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/transactions";
 import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { GoalsProgressChart } from "@/components/dashboard/goals-progress-chart";
+import { GuidedTour } from "@/components/dashboard/guided-tour";
 import { MonthSelector } from "@/components/dashboard/month-selector";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
@@ -35,6 +37,14 @@ export default async function DashboardPage({
     }
   }
 
+  const [userPrefs, dashboardData] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { hasSeenTour: true },
+    }),
+    getDashboardData(session.user.id, year, month),
+  ]);
+
   const {
     summaryCards,
     cumulativeBalance,
@@ -44,28 +54,43 @@ export default async function DashboardPage({
     incomeDistribution,
     categoryDistribution,
     goalsProgress,
-  } = await getDashboardData(session.user.id, year, month);
+  } = dashboardData;
+
+  const hasSeenTour = userPrefs?.hasSeenTour ?? false;
 
   return (
     <>
       <SidebarShell>
+        <GuidedTour hasSeenTour={hasSeenTour} />
+
         <DashboardHeader />
 
-        <MonthSelector year={year} month={month} />
+        <div data-tour="month-selector">
+          <MonthSelector year={year} month={month} />
+        </div>
 
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
+        <section
+          data-tour="summary-cards"
+          className="grid gap-4 sm:gap-6 md:grid-cols-3"
+        >
           {summaryCards.map((card) => (
             <SummaryCard
               key={card.title}
               {...card}
               {...(card.title === "Saldo"
-                ? { subValue: cumulativeBalance, subHelper: "Montante acumulado" }
+                ? {
+                    subValue: cumulativeBalance,
+                    subHelper: "Montante acumulado",
+                  }
                 : {})}
             />
           ))}
         </section>
 
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
+        <section
+          data-tour="charts"
+          className="grid gap-4 sm:gap-6 md:grid-cols-2"
+        >
           <CategoryDistributionChart
             title="Distribuição de entradas"
             subtitle="Suas principais categorias de entradas no mês."
@@ -78,7 +103,7 @@ export default async function DashboardPage({
           />
         </section>
 
-        <section className="grid gap-4 sm:gap-6">
+        <section data-tour="goals-chart" className="grid gap-4 sm:gap-6">
           <GoalsProgressChart
             title="Metas do mês"
             subtitle="Progresso das suas metas financeiras."
@@ -86,7 +111,10 @@ export default async function DashboardPage({
           />
         </section>
 
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
+        <section
+          data-tour="variation-charts"
+          className="grid gap-4 sm:gap-6 md:grid-cols-2"
+        >
           <VariationChart
             title="Variação de entradas"
             subtitle="Últimos 6 meses"
@@ -103,17 +131,21 @@ export default async function DashboardPage({
           />
         </section>
 
-        <TransactionsCalendar
-          transactions={transactions}
-          year={year}
-          month={month}
-        />
+        <div data-tour="calendar">
+          <TransactionsCalendar
+            transactions={transactions}
+            year={year}
+            month={month}
+          />
+        </div>
 
-        <TransactionsTable
-          transactions={transactions}
-          year={year}
-          month={month}
-        />
+        <div data-tour="transactions-table">
+          <TransactionsTable
+            transactions={transactions}
+            year={year}
+            month={month}
+          />
+        </div>
       </SidebarShell>
     </>
   );

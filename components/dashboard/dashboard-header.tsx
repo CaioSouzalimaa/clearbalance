@@ -30,7 +30,10 @@ export const DashboardHeader = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast((data as { error?: string })?.error ?? "Erro ao salvar transação.", "error");
+        toast(
+          (data as { error?: string })?.error ?? "Erro ao salvar transação.",
+          "error",
+        );
         return;
       }
       toast("Transação criada com sucesso.", "success");
@@ -57,6 +60,7 @@ export const DashboardHeader = () => {
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <Button
+            data-tour="new-transaction"
             className="w-full sm:w-auto"
             onClick={() => setIsModalOpen(true)}
           >
