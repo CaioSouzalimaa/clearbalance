@@ -136,23 +136,23 @@ export default function SettingsPage() {
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
           Configurações
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Atualize seu perfil e personalize suas preferências.
         </p>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <section className="grid gap-3 sm:gap-6 lg:grid-cols-[2fr_1fr]">
         {/* ── Perfil ── */}
-        <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+        <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
           <h2 className="text-base sm:text-lg font-semibold text-foreground">
             Informações do perfil
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Mantenha seus dados sempre atualizados.
           </p>
 
           {isLoadingProfile ? (
-            <div className="mt-6 space-y-5">
+            <div className="mt-4 sm:mt-6 space-y-4 sm:space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="space-y-2">
@@ -164,12 +164,12 @@ export default function SettingsPage() {
               <Skeleton className="h-9 w-36 rounded-md" />
             </div>
           ) : (
-            <form onSubmit={handleSaveProfile} className="mt-6 space-y-4">
+            <form onSubmit={handleSaveProfile} className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label
                     htmlFor="nome"
-                    className="text-sm font-medium text-foreground"
+                    className="text-xs sm:text-sm font-medium text-foreground"
                   >
                     Nome completo
                   </label>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
-                    className="text-sm font-medium text-foreground"
+                    className="text-xs sm:text-sm font-medium text-foreground"
                   >
                     Email
                   </label>
@@ -217,35 +217,35 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3 sm:gap-6">
           {/* ── Preferências ── */}
-          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Preferências
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Personalize sua experiência no ClearBalance.
             </p>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Tema</p>
+                <p className="text-xs sm:text-sm font-medium text-foreground">Tema</p>
                 <ThemeToggle />
               </div>
             </div>
           </div>
 
           {/* ── Conta ── */}
-          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">Conta</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Gerencie sua sessão e acesso ao sistema.
             </p>
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 Sair da conta
               </button>
@@ -253,17 +253,17 @@ export default function SettingsPage() {
           </div>
 
           {/* ── Segurança / Alterar senha ── */}
-          <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+          <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">Segurança</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Altere sua senha de acesso.
             </p>
 
-            <form onSubmit={handleChangePassword} className="mt-6 space-y-4">
+            <form onSubmit={handleChangePassword} className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="currentPassword"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xs sm:text-sm font-medium text-foreground"
                 >
                   Senha atual
                 </label>
@@ -280,7 +280,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <label
                   htmlFor="newPassword"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xs sm:text-sm font-medium text-foreground"
                 >
                   Nova senha
                 </label>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <label
                   htmlFor="confirmPassword"
-                  className="text-sm font-medium text-foreground"
+                  className="text-xs sm:text-sm font-medium text-foreground"
                 >
                   Confirmar nova senha
                 </label>
@@ -322,14 +322,14 @@ export default function SettingsPage() {
           </div>
 
           {/* ── Zona de Perigo ── */}
-          <div className="rounded-2xl border border-red-200 bg-surface p-4 sm:p-6 shadow-sm dark:border-red-800/40">
+          <div className="rounded-xl sm:rounded-2xl border border-red-200 bg-surface p-3 sm:p-6 shadow-sm dark:border-red-800/40">
             <h2 className="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
               Zona de perigo
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Ações irreversíveis sobre sua conta.
             </p>
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <button
                 type="button"
                 onClick={() => {
@@ -338,7 +338,7 @@ export default function SettingsPage() {
                   setDeleteConfirmText("");
                   setIsDeleteModalOpen(true);
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-red-600 transition-colors hover:bg-red-100 dark:border-red-800/40 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40"
               >
                 Excluir minha conta
               </button>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
             }
           }}
         >
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-xl">
             <h2 className="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
               Excluir conta permanentemente
             </h2>

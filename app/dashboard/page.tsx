@@ -71,7 +71,7 @@ export default async function DashboardPage({
 
         <section
           data-tour="summary-cards"
-          className="grid gap-4 sm:gap-6 md:grid-cols-3"
+          className="grid grid-cols-3 gap-2 sm:gap-6"
         >
           {summaryCards.map((card) => (
             <SummaryCard
@@ -89,7 +89,7 @@ export default async function DashboardPage({
 
         <section
           data-tour="charts"
-          className="grid gap-4 sm:gap-6 md:grid-cols-2"
+          className="grid gap-3 sm:gap-6 md:grid-cols-2"
         >
           <CategoryDistributionChart
             title="Distribuição de entradas"
@@ -103,7 +103,7 @@ export default async function DashboardPage({
           />
         </section>
 
-        <section data-tour="goals-chart" className="grid gap-4 sm:gap-6">
+        <section data-tour="goals-chart" className="grid gap-3 sm:gap-6">
           <GoalsProgressChart
             title="Metas do mês"
             subtitle="Progresso das suas metas financeiras."
@@ -113,7 +113,7 @@ export default async function DashboardPage({
 
         <section
           data-tour="variation-charts"
-          className="grid gap-4 sm:gap-6 md:grid-cols-2"
+          className="grid gap-3 sm:gap-6 md:grid-cols-2"
         >
           <VariationChart
             title="Variação de entradas"

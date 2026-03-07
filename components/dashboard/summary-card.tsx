@@ -16,18 +16,16 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   subHelper,
 }) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
-      <p className="text-sm font-medium text-muted-foreground">{title}</p>
-      <div className="mt-3 flex items-end justify-between">
-        <p className="text-xl sm:text-2xl font-semibold text-foreground">{value}</p>
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {helper}
-        </span>
-      </div>
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-2 sm:p-6 shadow-sm min-w-0">
+      <p className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+      <p className="mt-1 sm:mt-3 text-xs sm:text-2xl font-semibold text-foreground truncate">{value}</p>
+      <span className="mt-1 sm:mt-2 inline-block rounded-full bg-primary/10 px-1 py-0.5 sm:px-3 sm:py-1 text-[8px] sm:text-xs font-semibold text-primary max-w-full truncate">
+        {helper}
+      </span>
       {subValue && (
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-          <p className="text-xs text-muted-foreground">{subHelper}</p>
-          <p className="text-sm font-semibold text-foreground">{subValue}</p>
+        <div className="mt-1.5 sm:mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between border-t border-border pt-1.5 sm:pt-3 gap-0.5">
+          <p className="text-[8px] sm:text-xs text-muted-foreground truncate">{subHelper}</p>
+          <p className="text-[9px] sm:text-sm font-semibold text-foreground truncate">{subValue}</p>
         </div>
       )}
     </div>

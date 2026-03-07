@@ -59,20 +59,20 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   const chartData = buildDataset(data, accentColor);
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground">{title}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
         </div>
         <span className={`text-xs font-semibold ${accentClassName}`}>
           {formatBRL(data[data.length - 1]?.value ?? 0)}
         </span>
       </div>
       {data.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
       ) : (
-      <div className="mt-6 h-32">
+      <div className="mt-3 sm:mt-6 h-28 sm:h-32">
         <Line
           data={chartData}
           options={{

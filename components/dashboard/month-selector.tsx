@@ -46,7 +46,7 @@ export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
         >
           <LucideIcon icon={ChevronLeft} className="h-4 w-4" aria-hidden />
         </button>
-        <span className="min-w-36 text-center text-sm font-semibold capitalize text-foreground">
+        <span className="min-w-28 sm:min-w-36 text-center text-xs sm:text-sm font-semibold capitalize text-foreground">
           {PT_MONTHS_FULL[month]} {year}
         </span>
         <button

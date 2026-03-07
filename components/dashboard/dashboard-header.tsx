@@ -49,16 +49,16 @@ export const DashboardHeader = () => {
 
   return (
     <>
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-2 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">
             Boas-vindas de volta{firstName ? `, ${firstName}` : ""}!
           </p>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+          <h1 className="text-lg sm:text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+        <div className="flex w-full sm:w-auto sm:flex-row sm:items-center">
           <Button
             data-tour="new-transaction"
             className="w-full sm:w-auto"

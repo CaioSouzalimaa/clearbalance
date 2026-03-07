@@ -25,14 +25,14 @@ export const CategoryDistributionChart = ({
   data,
 }: CategoryDistributionChartProps) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
-      <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
+      <h2 className="text-sm sm:text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
       {data.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
       ) : (
-      <div className="mt-6 grid gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
-        <div className="mx-auto h-48 w-full max-w-[220px] lg:mx-0">
+      <div className="mt-3 sm:mt-6 grid gap-3 sm:gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
+        <div className="mx-auto h-36 sm:h-48 w-full max-w-[180px] sm:max-w-[220px] lg:mx-0">
           <Doughnut
             data={{
               labels: data.map((item) => item.label),
@@ -64,11 +64,11 @@ export const CategoryDistributionChart = ({
             }}
           />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2 sm:space-y-4">
           {data.map((item) => (
             <div
               key={item.label}
-              className="flex items-center justify-between text-sm"
+              className="flex items-center justify-between text-xs sm:text-sm"
             >
               <div className="flex items-center gap-2">
                 <span

@@ -190,7 +190,7 @@ export const TransactionModal = ({
         </button>
 
         {/* scrolling wrapper containing header + body */}
-        <div className="modal-scroll overflow-y-auto p-6 max-h-[90vh]">
+        <div className="modal-scroll overflow-y-auto p-4 sm:p-6 max-h-[90vh]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2
@@ -204,7 +204,7 @@ export const TransactionModal = ({
           </div>
 
           {/* body content */}
-          <div className="px-6 py-5">
+          <div className="sm:px-6 py-4 sm:py-5">
             <form
               className="space-y-4"
               onSubmit={(event) => {

@@ -396,32 +396,32 @@ export default function CategoriesPage() {
         onCancel={() => setPendingDeleteId(null)}
       />
 
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">
             Personalize sua organização
           </p>
           <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Categorias</h1>
         </div>
       </header>
 
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+      <section className="grid gap-3 sm:gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
           <h2 className="text-base sm:text-lg font-semibold text-foreground">
             Suas categorias
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Gerencie as categorias que aparecem nos lançamentos.
           </p>
-          <div className="mt-6 space-y-3">
+          <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
             {isLoading ? (
               <>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 rounded-xl border border-border px-4 py-3"
+                    className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 sm:px-4 sm:py-3"
                   >
-                    <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                    <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full" />
                     <div className="flex-1 space-y-1.5">
                       <Skeleton className="h-4 w-32" />
                       <Skeleton className="h-3 w-20" />
@@ -441,13 +441,13 @@ export default function CategoriesPage() {
                 return (
                   <div
                     key={category.id}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-border px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5 sm:px-4 sm:py-3"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                      <span className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
                         <LucideIcon
                           icon={Icon}
-                          className="h-5 w-5"
+                          className="h-4 w-4 sm:h-5 sm:w-5"
                           aria-hidden
                         />
                       </span>
@@ -496,15 +496,15 @@ export default function CategoriesPage() {
         </div>
 
         <form
-          className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm"
+          className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm"
           onSubmit={handleSubmit}
         >
           <h2 className="text-base sm:text-lg font-semibold text-foreground">{formTitle}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Defina um nome e escolha um ícone para identificar seus gastos.
           </p>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <label
                 htmlFor="categoria-nome"
@@ -549,7 +549,7 @@ export default function CategoriesPage() {
                 onChange={(e) => setIconSearch(e.target.value)}
                 className="h-9 text-sm"
               />
-              <div className="max-h-52 overflow-y-auto rounded-lg border border-border p-2">
+              <div className="max-h-40 sm:max-h-52 overflow-y-auto rounded-lg border border-border p-2">
                 {filteredIcons.length === 0 ? (
                   <p className="py-4 text-center text-xs text-muted-foreground">
                     Nenhum ícone encontrado.
@@ -564,7 +564,7 @@ export default function CategoriesPage() {
                           type="button"
                           title={option.label}
                           onClick={() => setFormIconId(option.id)}
-                          className={`flex h-9 w-full items-center justify-center rounded-lg border transition ${
+                          className={`flex h-8 sm:h-9 w-full items-center justify-center rounded-lg border transition ${
                             isSelected
                               ? "border-primary bg-primary/10 text-primary"
                               : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"

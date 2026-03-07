@@ -42,7 +42,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
             onToggleCollapse={handleToggle}
             pathname={pathname}
           />
-          <main className="flex min-w-0 flex-1 flex-col gap-4 md:gap-8 bg-background px-4 py-6 pb-24 sm:px-6 md:px-8 md:py-10 md:pb-10">
+          <main className="flex min-w-0 flex-1 flex-col gap-3 md:gap-8 bg-background px-3 py-4 pb-20 sm:px-6 md:px-8 md:py-10 md:pb-10">
             {children}
           </main>
         </div>
@@ -57,7 +57,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex flex-1 flex-col items-center gap-1 py-3 text-center text-[11px] font-medium transition-colors ${
+                  className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-center text-[10px] font-medium transition-colors ${
                     isActive
                       ? "text-primary"
                       : "text-muted-foreground hover:text-primary"
@@ -65,7 +65,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
                 >
                   <LucideIcon
                     icon={item.icon}
-                    className={`h-5 w-5 ${isActive ? "stroke-primary" : ""}`}
+                    className={`h-4 w-4 ${isActive ? "stroke-primary" : ""}`}
                     aria-hidden
                   />
                   <span>{item.label}</span>
@@ -81,13 +81,13 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
                   .querySelector<HTMLButtonElement>('[data-tour="help-button"]')
                   ?.click()
               }
-              className="flex flex-1 flex-col items-center gap-1 py-3 text-center text-[11px] font-medium text-muted-foreground transition-colors hover:text-primary"
+              className="flex flex-1 flex-col items-center gap-0.5 py-2 text-center text-[10px] font-medium text-muted-foreground transition-colors hover:text-primary"
               aria-label="Tour guiado"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

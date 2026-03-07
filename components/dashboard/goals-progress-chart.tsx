@@ -23,14 +23,14 @@ export const GoalsProgressChart = ({
   data,
 }: GoalsProgressChartProps) => {
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
-      <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+    <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
+      <h2 className="text-sm sm:text-lg font-semibold text-foreground">{title}</h2>
+      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
 
       {data.length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">Nenhuma meta cadastrada.</p>
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Nenhuma meta cadastrada.</p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-3 sm:mt-6 grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((goal) => {
             const pct = goal.value;
             const exceeded = pct > 100;
@@ -39,7 +39,7 @@ export const GoalsProgressChart = ({
             return (
               <div
                 key={goal.label}
-                className="flex flex-col gap-3 rounded-xl border border-border bg-background p-4"
+                className="flex flex-col gap-2 sm:gap-3 rounded-lg sm:rounded-xl border border-border bg-background p-2.5 sm:p-4"
               >
                 {/* Name + badge */}
                 <div className="flex items-start justify-between gap-2">

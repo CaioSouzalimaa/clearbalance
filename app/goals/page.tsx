@@ -477,65 +477,67 @@ export default function GoalsPage() {
         onSave={handleSaveGoal}
       />
 
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">
+      <header className="flex flex-col gap-2 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">
             Acompanhe o progresso das suas metas
           </p>
-          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
+          <h1 className="text-lg sm:text-2xl font-semibold text-foreground">
             Metas
           </h1>
         </div>
-        <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
-          <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
-          Nova meta
-        </Button>
+        <div className="flex w-full sm:w-auto">
+          <Button className="w-full sm:w-auto gap-2" onClick={() => setIsModalOpen(true)}>
+            <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
+            Nova meta
+          </Button>
+        </div>
       </header>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
         {highlights.map((highlight) => (
           <div
             key={highlight.id}
-            className="rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-sm"
+            className="rounded-xl sm:rounded-2xl border border-border bg-surface p-2 sm:p-5 shadow-sm min-w-0"
           >
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-[10px] sm:text-sm font-medium text-muted-foreground truncate">
                 {highlight.label}
               </p>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <span className="flex h-6 w-6 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <LucideIcon
                   icon={highlight.icon}
-                  className="h-4 w-4"
+                  className="h-3 w-3 sm:h-4 sm:w-4"
                   aria-hidden
                 />
               </span>
             </div>
-            <p className="mt-4 text-xl sm:text-2xl font-semibold text-foreground">
+            <p className="mt-1 sm:mt-4 text-xs sm:text-2xl font-semibold text-foreground truncate">
               {highlight.value}
             </p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-2xl border border-border bg-surface p-4 sm:p-6 shadow-sm">
+      <section className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Metas em andamento
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Visão geral dos objetivos que você está construindo.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
           {isLoading ? (
             <>
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-xl border border-border px-4 py-4 space-y-4"
+                  className="rounded-xl border border-border px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex-1 space-y-1.5">
@@ -572,7 +574,7 @@ export default function GoalsPage() {
               return (
                 <div
                   key={goal.id}
-                  className="rounded-xl border border-border px-4 py-4"
+                  className="rounded-xl border border-border px-3 py-3 sm:px-4 sm:py-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -589,24 +591,24 @@ export default function GoalsPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-8 px-2"
+                        className="h-7 px-1.5 sm:h-8 sm:px-2"
                         onClick={() => handleEditGoal(goal)}
                       >
                         <LucideIcon
                           icon={Edit}
-                          className="h-3.5 w-3.5"
+                          className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                           aria-hidden
                         />
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-8 px-2 text-rose-500 hover:bg-rose-500/10"
+                        className="h-7 px-1.5 sm:h-8 sm:px-2 text-rose-500 hover:bg-rose-500/10"
                         onClick={() => setPendingDeleteId(goal.id)}
                       >
                         <LucideIcon
                           icon={Trash2}
-                          className="h-3.5 w-3.5"
+                          className="h-3 w-3 sm:h-3.5 sm:w-3.5"
                           aria-hidden
                         />
                       </Button>
@@ -618,7 +620,7 @@ export default function GoalsPage() {
                       <p>de {formatCurrency(goal.targetAmount)}</p>
                     </div>
                   </div>
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>Progresso</span>
                       <span
@@ -631,7 +633,7 @@ export default function GoalsPage() {
                         {goal.progress}%
                       </span>
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-muted">
+                    <div className="mt-1.5 h-1.5 sm:h-2 rounded-full bg-muted">
                       <div
                         className={`h-full rounded-full transition-all ${goal.progress > 100 ? "bg-emerald-500" : "bg-primary"}`}
                         style={{ width: `${Math.min(goal.progress, 100)}%` }}
@@ -643,7 +645,7 @@ export default function GoalsPage() {
                       </p>
                     )}
                   </div>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <div className="mt-3 sm:mt-4 flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1">
                       <label
                         htmlFor={`aporte-${goal.id}`}
@@ -667,7 +669,7 @@ export default function GoalsPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="border-border"
+                        className="border-border h-8 text-xs sm:h-9 sm:text-sm"
                         onClick={() => handleAddContribution(goal.id)}
                         disabled={isContributing || withdrawingId === goal.id}
                       >
@@ -677,7 +679,7 @@ export default function GoalsPage() {
                         <Button
                           type="button"
                           variant="outline"
-                          className="border-rose-300 text-rose-500 hover:bg-rose-500/10"
+                          className="border-rose-300 text-rose-500 hover:bg-rose-500/10 h-8 text-xs sm:h-9 sm:text-sm"
                           onClick={() => handleWithdrawal(goal.id)}
                           disabled={isContributing || withdrawingId === goal.id}
                         >

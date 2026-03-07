@@ -404,14 +404,14 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </Button>
           </div>
         </div>
-        <div className="border-b border-border bg-muted/20 px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:flex lg:items-center">
+        <div className="border-b border-border bg-muted/20 px-3 py-2 sm:px-6 sm:py-4">
+          <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-3 lg:flex lg:items-center">
               <Input
-                placeholder="Pesquisar por descrição ou categoria"
+                placeholder="Pesquisar..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="sm:col-span-2 lg:max-w-sm"
+                className="col-span-2 lg:max-w-sm"
               />
               <select
                 value={statusFilter}
@@ -420,9 +420,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     event.target.value as "todos" | "pendente" | "liquidado",
                   )
                 }
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-44"
+                className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-44"
               >
-                <option value="todos">Todos os status</option>
+                <option value="todos">Status</option>
                 <option value="pendente">Pendentes</option>
                 <option value="liquidado">Liquidados</option>
               </select>
@@ -433,7 +433,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     event.target.value as "todos" | "entrada" | "saida",
                   )
                 }
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-36"
+                className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-36"
               >
                 <option value="todos">Todos os tipos</option>
                 <option value="entrada">Entradas</option>
@@ -450,46 +450,48 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     | "nao_recorrente",
                 )
               }
-              className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-52"
+              className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-52"
             >
-              <option value="todos">Todas as recorrências</option>
+              <option value="todos">Recorrências</option>
               <option value="nao_recorrente">Não recorrentes</option>
               <option value="recorrente">Recorrentes</option>
             </select>
           </div>
         </div>
         <div className="block md:hidden">
-          <div className="space-y-4 px-4 py-3 sm:px-6 sm:py-4">
+          <div className="space-y-2 px-3 py-2 sm:space-y-4 sm:px-6 sm:py-4">
             {filteredRows.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-xs sm:text-sm text-muted-foreground">
                 Nenhum lançamento encontrado com os filtros atuais.
               </p>
             ) : (
               filteredRows.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-border bg-background p-4 shadow-sm"
+                  className="rounded-lg border border-border bg-background p-2.5 shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-foreground truncate">
                         {item.description}
                       </p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         {item.categoryIcon ? (
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-foreground">
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
                             <LucideIcon
                               icon={item.categoryIcon}
-                              className="h-3 w-3"
+                              className="h-2.5 w-2.5"
                               aria-hidden
                             />
                           </span>
                         ) : null}
-                        <span>{item.category}</span>
+                        <span className="truncate">{item.category}</span>
+                        <span className="shrink-0 text-muted-foreground/50">·</span>
+                        <span className="shrink-0">{item.date}</span>
                       </div>
                     </div>
                     <span
-                      className={`text-sm font-semibold ${
+                      className={`shrink-0 text-xs font-semibold ${
                         item.type === "entrada"
                           ? "text-emerald-600"
                           : "text-rose-500"
@@ -499,32 +501,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     </span>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>{item.date}</span>
-                    <span>•</span>
-                    <span>
-                      {item.recurrenceMode === "recorrente"
-                        ? item.recurrenceKind === "fixa"
-                          ? "Recorrente fixa"
-                          : "Recorrente variável"
-                        : "Não recorrente"}
-                    </span>
-                    {item.recurrenceMode === "recorrente" &&
-                    item.recurrenceFrequency ? (
-                      <span>
-                        {item.recurrenceFrequency === "mensal"
-                          ? "Mensal"
-                          : item.recurrenceFrequency === "semanal"
-                            ? "Semanal"
-                            : "Anual"}
-                        {formatBillingLabel(item)}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                         item.isSettled
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-amber-100 text-amber-700"
@@ -536,34 +515,42 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                           : "Pago"
                         : "Pendente"}
                     </span>
+                    {item.recurrenceMode === "recorrente" && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {item.recurrenceKind === "fixa" ? "Rec. fixa" : "Rec. var."}
+                        {item.recurrenceFrequency ? (
+                          <>{" · "}{item.recurrenceFrequency === "mensal" ? "Mensal" : item.recurrenceFrequency === "semanal" ? "Semanal" : "Anual"}{formatBillingLabel(item)}</>
+                        ) : null}
+                      </span>
+                    )}
                     {!item.isVirtual && (
                       <button
                         type="button"
                         onClick={() => handleToggleSettlement(item.id)}
-                        className="text-xs font-medium text-primary transition hover:text-primary/80"
+                        className="ml-auto text-[10px] font-medium text-primary transition hover:text-primary/80"
                       >
                         {item.isSettled
-                          ? "Marcar como pendente"
+                          ? "Marcar pendente"
                           : item.type === "entrada"
-                            ? "Marcar como recebido"
-                            : "Marcar como pago"}
+                            ? "Marcar recebido"
+                            : "Marcar pago"}
                       </button>
                     )}
                   </div>
 
                   {item.isSettled && item.paymentDate ? (
-                    <p className="mt-2 text-xs text-muted-foreground">
+                    <p className="mt-1 text-[10px] text-muted-foreground">
                       Pago em {item.paymentDate}
                     </p>
                   ) : null}
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="mt-2 flex gap-2">
                     {!item.isVirtual && (
                       <>
                         <Button
                           type="button"
                           variant="outline"
-                          className="border-border text-xs"
+                          className="h-7 flex-1 border-border text-[10px]"
                           onClick={() => startEditing(item)}
                         >
                           Editar
@@ -571,7 +558,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         <Button
                           type="button"
                           variant="outline"
-                          className="border-border text-xs text-rose-500 hover:bg-rose-500/10"
+                          className="h-7 flex-1 border-border text-[10px] text-rose-500 hover:bg-rose-500/10"
                           onClick={() => handleDelete(item.id)}
                         >
                           Excluir
@@ -579,7 +566,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       </>
                     )}
                     {item.isVirtual && (
-                      <span className="col-span-2 text-center text-xs text-muted-foreground">
+                      <span className="w-full text-center text-[10px] text-muted-foreground">
                         Recorrência projetada
                       </span>
                     )}
