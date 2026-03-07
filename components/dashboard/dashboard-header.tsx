@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,13 @@ export const DashboardHeader = () => {
   const firstName = session?.user?.name?.split(" ")[0] ?? "";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFab, setShowFab] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowFab(window.scrollY > 300);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleSubmit = async (state: TransactionFormState) => {
     setIsSubmitting(true);
@@ -79,6 +87,17 @@ export const DashboardHeader = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
       />
+
+      <button
+        type="button"
+        aria-label="Nova transação"
+        onClick={() => setIsModalOpen(true)}
+        className={`fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 md:bottom-8 md:right-8 md:h-14 md:w-14 ${
+          showFab ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <Plus className="h-5 w-5 md:h-6 md:w-6" />
+      </button>
     </>
   );
 };
