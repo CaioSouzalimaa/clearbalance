@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { MonthSelector } from "@/components/dashboard/month-selector";
 
@@ -23,6 +23,15 @@ interface TransactionsCalendarProps {
   month: number; // 0-indexed
 }
 
+interface DayModalProps {
+  isOpen: boolean;
+  dateLabel: string;
+  transactions: Transaction[];
+  onClose: () => void;
+  formatBRL: (value: number) => string;
+  parseAmount: (amount: string) => number;
+}
+
 const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 /** Parse "05 Mar 2025" → UTC date key "2025-03-05" */
@@ -36,12 +45,92 @@ function parseDateKey(dateStr: string): string | null {
   return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${day}`;
 }
 
+const DayModal = ({ isOpen, dateLabel, transactions, onClose, formatBRL, parseAmount }: DayModalProps) => {
+  if (!isOpen) return null;
+
+  const totalEntrada = transactions
+    .filter((t) => t.type === "entrada")
+    .reduce((s, t) => s + parseAmount(t.amount), 0);
+  const totalSaida = transactions
+    .filter((t) => t.type === "saida")
+    .reduce((s, t) => s + parseAmount(t.amount), 0);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
+    >
+      <div
+        className="w-full max-w-md rounded-xl bg-background p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold capitalize text-foreground">{dateLabel}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Fechar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="mt-4 flex gap-4">
+          {totalEntrada > 0 && (
+            <div className="flex-1 rounded-lg bg-emerald-500/10 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Entradas</p>
+              <p className="font-semibold text-emerald-600">+{formatBRL(totalEntrada)}</p>
+            </div>
+          )}
+          {totalSaida > 0 && (
+            <div className="flex-1 rounded-lg bg-rose-500/10 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Saídas</p>
+              <p className="font-semibold text-rose-500">-{formatBRL(totalSaida)}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Transaction list */}
+        <ul className="mt-4 max-h-72 space-y-2 overflow-y-auto">
+          {transactions.map((t) => (
+            <li
+              key={t.id}
+              className={`flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm ${t.isVirtual ? "opacity-60" : ""}`}
+            >
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-medium text-foreground">{t.description}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t.category}
+                  {t.isVirtual && " · Recorrente"}
+                </span>
+              </div>
+              <span className={`ml-3 shrink-0 font-semibold ${t.type === "entrada" ? "text-emerald-600" : "text-rose-500"}`}>
+                {t.type === "entrada" ? "+" : "-"}{t.amount.replace(/^[+\-]\s*/, "")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 export const TransactionsCalendar = ({
   transactions,
   year,
   month,
 }: TransactionsCalendarProps) => {
-  const { days, transactionsByDay, monthLabel } = useMemo(() => {
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const { days, transactionsByDay } = useMemo(() => {
     const firstDay = new Date(Date.UTC(year, month, 1));
     const startWeekday = firstDay.getUTCDay();
     const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -87,130 +176,113 @@ export const TransactionsCalendar = ({
     });
   }
 
+  const selectedTransactions = selectedDay ? (transactionsByDay[selectedDay] ?? []) : [];
+  const selectedDateLabel = selectedDay
+    ? (() => {
+        const [y, m, d] = selectedDay.split("-");
+        return `${parseInt(d)} de ${PT_MONTHS_FULL[parseInt(m) - 1]} de ${y}`;
+      })()
+    : "";
+
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Calendário de lançamentos
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Visualize seus lançamentos por dia.
-          </p>
-        </div>
-        <MonthSelector year={year} month={month} />
-      </div>
+    <>
+      <DayModal
+        isOpen={!!selectedDay}
+        dateLabel={selectedDateLabel}
+        transactions={selectedTransactions}
+        onClose={() => setSelectedDay(null)}
+        formatBRL={formatBRL}
+        parseAmount={parseAmount}
+      />
 
-      {/* Legend */}
-      <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
-          Entrada
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
-          Saída
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-          Recorrente
-        </span>
-      </div>
-
-      <div className="mt-4 overflow-x-auto">
-        <div className="sm:min-w-105">
-          <div className="grid grid-cols-7 gap-0.5 text-xs text-muted-foreground sm:gap-2">
-            {weekDays.map((day) => (
-              <span key={day} className="text-center font-medium py-1">
-                {day}
-              </span>
-            ))}
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Calendário de lançamentos
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Clique em um dia para ver os lançamentos.
+            </p>
           </div>
+          <MonthSelector year={year} month={month} />
+        </div>
 
-          <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-2">
-            {days.map((day, index) => {
-              if (!day) {
-                return <div key={`empty-${index}`} className="aspect-square sm:aspect-auto sm:h-24" />;
-              }
+        {/* Legend */}
+        <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            Entrada
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-rose-500" />
+            Saída
+          </span>
+        </div>
 
-              const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-              const dayTransactions = transactionsByDay[dateKey] ?? [];
+        <div className="mt-4 overflow-x-auto">
+          <div className="sm:min-w-105">
+            <div className="grid grid-cols-7 gap-0.5 text-xs text-muted-foreground sm:gap-2">
+              {weekDays.map((day) => (
+                <span key={day} className="text-center font-medium py-1">
+                  {day}
+                </span>
+              ))}
+            </div>
 
-              const totalEntrada = dayTransactions
-                .filter((t) => t.type === "entrada")
-                .reduce((s, t) => s + parseAmount(t.amount), 0);
-              const totalSaida = dayTransactions
-                .filter((t) => t.type === "saida")
-                .reduce((s, t) => s + parseAmount(t.amount), 0);
-              const net = totalEntrada - totalSaida;
+            <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-2">
+              {days.map((day, index) => {
+                if (!day) {
+                  return <div key={`empty-${index}`} className="aspect-square sm:aspect-auto sm:h-24" />;
+                }
 
-              const MAX_DOTS = 7;
-              const visibleDots = dayTransactions.slice(0, MAX_DOTS);
-              const overflowCount = dayTransactions.length - MAX_DOTS;
+                const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                const dayTransactions = transactionsByDay[dateKey] ?? [];
 
-              const tooltipText =
-                dayTransactions.length > 0
-                  ? dayTransactions
-                      .map(
-                        (t) =>
-                          `${t.type === "entrada" ? "+" : "-"} ${t.description} (${t.amount})`
-                      )
-                      .join("\n")
-                  : undefined;
+                const totalEntrada = dayTransactions
+                  .filter((t) => t.type === "entrada")
+                  .reduce((s, t) => s + parseAmount(t.amount), 0);
+                const totalSaida = dayTransactions
+                  .filter((t) => t.type === "saida")
+                  .reduce((s, t) => s + parseAmount(t.amount), 0);
 
-              return (
-                <div
-                  key={dateKey}
-                  title={tooltipText}
-                  className="flex aspect-square cursor-default flex-col justify-between rounded-md border border-border bg-background p-0.5 sm:aspect-auto sm:h-24 sm:rounded-lg sm:p-2"
-                >
-                  {/* Day number + count badge */}
-                  <div className="flex items-start justify-between gap-0.5">
+                const hasTransactions = dayTransactions.length > 0;
+
+                return (
+                  <div
+                    key={dateKey}
+                    onClick={() => hasTransactions && setSelectedDay(dateKey)}
+                    className={`flex aspect-square flex-col justify-between rounded-md border border-border bg-background p-0.5 sm:aspect-auto sm:h-24 sm:rounded-lg sm:p-2 ${
+                      hasTransactions
+                        ? "cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                        : "cursor-default"
+                    }`}
+                  >
+                    {/* Day number */}
                     <span className="text-[9px] font-semibold text-foreground sm:text-xs">{day}</span>
-                    {dayTransactions.length > 0 && (
-                      <span className="rounded-full bg-muted px-1 py-0.5 text-[7px] font-semibold leading-none text-muted-foreground sm:px-1.5 sm:text-[9px]">
-                        {dayTransactions.length}
-                      </span>
+
+                    {/* Income + Expense totals */}
+                    {hasTransactions && (
+                      <div className="flex flex-col gap-0.5">
+                        {totalEntrada > 0 && (
+                          <span className="truncate text-[7px] font-semibold leading-none text-emerald-600 sm:text-[10px]">
+                            +{formatBRL(totalEntrada)}
+                          </span>
+                        )}
+                        {totalSaida > 0 && (
+                          <span className="truncate text-[7px] font-semibold leading-none text-rose-500 sm:text-[10px]">
+                            -{formatBRL(totalSaida)}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-
-                  {/* Dot indicators */}
-                  {dayTransactions.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-0.5">
-                      {visibleDots.map((t) => (
-                        <span
-                          key={t.id}
-                          className={`inline-block h-1 w-1 rounded-full sm:h-2 sm:w-2 ${
-                            t.isVirtual ? "opacity-35" : ""
-                          } ${
-                            t.type === "entrada" ? "bg-emerald-500" : "bg-rose-500"
-                          }`}
-                        />
-                      ))}
-                      {overflowCount > 0 && (
-                        <span className="text-[9px] font-semibold leading-none text-muted-foreground">
-                          +{overflowCount}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Net total */}
-                  {dayTransactions.length > 0 && (
-                    <span
-                      className={`truncate text-[7px] font-semibold leading-none sm:text-[10px] ${
-                        net >= 0 ? "text-emerald-600" : "text-rose-500"
-                      }`}
-                    >
-                      {net >= 0 ? "+" : ""}{formatBRL(net)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
