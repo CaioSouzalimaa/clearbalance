@@ -46,7 +46,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
             {children}
           </main>
         </div>
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface md:hidden">
+        <nav data-tour="sidebar-nav-mobile" className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface md:hidden">
           <div className="flex items-center justify-around">
             {mobileNavItems.map((item) => {
               const isActive =
@@ -74,6 +74,7 @@ export const SidebarShell = ({ children }: SidebarShellProps) => {
             })}
             {/* Mobile help button */}
             <button
+              data-tour="help-button-mobile"
               type="button"
               onClick={() =>
                 document
