@@ -391,13 +391,13 @@ export default function CategoriesPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm"
                       onClick={closeModal}
                       disabled={isSaving}
                     >
                       Cancelar
                     </Button>
-                    <Button type="submit" className="flex-1" disabled={isSaving}>
+                    <Button type="submit" className="flex-1 text-xs sm:text-sm" disabled={isSaving}>
                       {submitLabel}
                     </Button>
                   </div>
@@ -418,10 +418,9 @@ export default function CategoriesPage() {
             Categorias
           </h1>
         </div>
-        <Button onClick={openCreate} className="shrink-0 gap-1.5">
+        <Button onClick={openCreate} className="shrink-0 gap-1.5 text-xs sm:text-sm">
           <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
-          <span className="hidden sm:inline">Nova categoria</span>
-          <span className="sm:hidden">Nova</span>
+          Nova categoria
         </Button>
       </header>
 
