@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { DollarSign } from "lucide";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { LucideIcon } from "@/components/dashboard/sidebar";
 
 export type RecurrenceMode = "nao_recorrente" | "recorrente";
 export type RecurrenceKind = "fixa" | "variavel";
@@ -142,8 +140,9 @@ export const TransactionModal = ({
     const numberValue = Number(digits) / 100;
 
     return numberValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
   };
 
@@ -278,44 +277,45 @@ export const TransactionModal = ({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label
-                    htmlFor={`${dialogId}-valor`}
+                    htmlFor={`${dialogId}-tipo`}
                     className="text-sm font-medium text-foreground"
                   >
-                    Valor
+                    Tipo
                   </label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-                      <LucideIcon
-                        icon={DollarSign}
-                        className="h-4 w-4"
-                        aria-hidden
-                      />
-                    </span>
-                    <Input
-                      id={`${dialogId}-valor`}
-                      name="valor"
-                      inputMode="numeric"
-                      placeholder="0,00"
-                      value={formattedAmount}
-                      disabled={isSubmitting}
-                      onChange={(event) =>
-                        setFormState((prev) => ({
+                  <select
+                    id={`${dialogId}-tipo`}
+                    name="tipo"
+                    disabled={isSubmitting}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
+                    value={formState.type}
+                    onChange={(event) => {
+                      const newType = event.target.value as TransactionFormState["type"];
+                      setFormState((prev) => {
+                        // reset category if it doesn't match the new type
+                        const matching = categories.filter((c) => {
+                          if (newType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+                          return c.type === "EXPENSE" || c.type === "BOTH";
+                        });
+                        const currentStillValid = matching.some((c) => c.name === prev.category);
+                        return {
                           ...prev,
-                          amount: formatCurrencyBRL(event.target.value),
-                        }))
-                      }
-                      className={`pl-9 text-right${submitted && Number(formState.amount.replace(/\D/g, "")) === 0 ? " border-red-500 focus-visible:ring-red-500" : ""}`}
-                    />
-                  </div>
+                          type: newType,
+                          category: currentStillValid ? prev.category : (matching[0]?.name ?? ""),
+                        };
+                      });
+                    }}
+                  >
+                    <option value="entrada">Entrada</option>
+                    <option value="saida">Saída</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label
                     htmlFor={`${dialogId}-categoria`}
-                    className="flex items-center gap-1.5 text-sm font-medium text-foreground"
+                    className="text-sm font-medium text-foreground"
                   >
-                    Categoria
-                    {isLoadingCategories && (
-                      <Spinner className="h-3.5 w-3.5 text-muted-foreground" />
+                    Categoria{isLoadingCategories && (
+                      <Spinner className="ml-1.5 inline h-3.5 w-3.5 text-muted-foreground" />
                     )}
                   </label>
                   <select
@@ -351,37 +351,31 @@ export const TransactionModal = ({
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label
-                    htmlFor={`${dialogId}-tipo`}
+                    htmlFor={`${dialogId}-valor`}
                     className="text-sm font-medium text-foreground"
                   >
-                    Tipo
+                    Valor
                   </label>
-                  <select
-                    id={`${dialogId}-tipo`}
-                    name="tipo"
-                    disabled={isSubmitting}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
-                    value={formState.type}
-                    onChange={(event) => {
-                      const newType = event.target.value as TransactionFormState["type"];
-                      setFormState((prev) => {
-                        // reset category if it doesn't match the new type
-                        const matching = categories.filter((c) => {
-                          if (newType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
-                          return c.type === "EXPENSE" || c.type === "BOTH";
-                        });
-                        const currentStillValid = matching.some((c) => c.name === prev.category);
-                        return {
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
+                      R$
+                    </span>
+                    <Input
+                      id={`${dialogId}-valor`}
+                      name="valor"
+                      inputMode="numeric"
+                      placeholder="0,00"
+                      value={formattedAmount}
+                      disabled={isSubmitting}
+                      onChange={(event) =>
+                        setFormState((prev) => ({
                           ...prev,
-                          type: newType,
-                          category: currentStillValid ? prev.category : (matching[0]?.name ?? ""),
-                        };
-                      });
-                    }}
-                  >
-                    <option value="entrada">Entrada</option>
-                    <option value="saida">Saída</option>
-                  </select>
+                          amount: formatCurrencyBRL(event.target.value),
+                        }))
+                      }
+                      className={`pl-10 text-right${submitted && Number(formState.amount.replace(/\D/g, "")) === 0 ? " border-red-500 focus-visible:ring-red-500" : ""}`}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label
