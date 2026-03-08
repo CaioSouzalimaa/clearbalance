@@ -349,7 +349,7 @@ export const TransactionModal = ({
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label
                     htmlFor={`${dialogId}-valor`}
                     className="text-sm font-medium text-foreground"
@@ -377,7 +377,7 @@ export const TransactionModal = ({
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="min-w-0 space-y-2">
                   <label
                     htmlFor={`${dialogId}-data`}
                     className="text-sm font-medium text-foreground"
@@ -399,9 +399,10 @@ export const TransactionModal = ({
                       }))
                     }
                     className={
-                      submitted && !/^\d{4}-\d{2}-\d{2}$/.test(formState.date)
+                      `max-w-[200px] ` +
+                      (submitted && !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(formState.date)
                         ? "border-red-500 focus-visible:ring-red-500"
-                        : ""
+                        : "")
                     }
                   />
                 </div>
@@ -485,7 +486,7 @@ export const TransactionModal = ({
 
               {formState.recurrenceMode === "recorrente" ? (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <label
                       htmlFor={`${dialogId}-recurrence-frequency`}
                       className="text-sm font-medium text-foreground"
@@ -512,7 +513,7 @@ export const TransactionModal = ({
                       <option value="anual">Anual</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <label
                       htmlFor={`${dialogId}-billing-day`}
                       className="text-sm font-medium text-foreground"
@@ -553,6 +554,7 @@ export const TransactionModal = ({
                             billingDay: event.target.value,
                           }))
                         }
+                        className="max-w-[200px]"
                       />
                     ) : (
                       <Input
@@ -573,7 +575,7 @@ export const TransactionModal = ({
                     )}
                   </div>
                   {formState.recurrenceKind === "variavel" ? (
-                    <div className="space-y-2 md:col-span-2">
+                    <div className="min-w-0 space-y-2 md:col-span-2">
                       <label
                         htmlFor={`${dialogId}-recurrence-end-date`}
                         className="text-sm font-medium text-foreground"
@@ -591,6 +593,7 @@ export const TransactionModal = ({
                             recurrenceEndDate: event.target.value,
                           }))
                         }
+                        className="max-w-[200px]"
                       />
                       <p className="text-xs text-muted-foreground">
                         Esta recorrência será gerada até a data especificada.
@@ -665,7 +668,7 @@ export const TransactionModal = ({
                             paymentDate: event.target.value,
                           }))
                         }
-                        className={`h-8 w-full px-2 py-1 text-xs sm:w-auto${submitted && formState.isSettled && !formState.paymentDate ? " border-red-500 focus-visible:ring-red-500" : ""}`}
+                        className={`h-8 min-w-0 w-full px-2 py-1 text-xs sm:max-w-[160px]${submitted && formState.isSettled && !formState.paymentDate ? " border-red-500 focus-visible:ring-red-500" : ""}`}
                       />
                     </label>
                   ) : null}
