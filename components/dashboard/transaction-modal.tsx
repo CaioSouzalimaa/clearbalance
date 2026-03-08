@@ -46,6 +46,7 @@ export const createDefaultTransactionFormState = (): TransactionFormState => ({
 interface CategoryOption {
   id: string;
   name: string;
+  type: "INCOME" | "EXPENSE" | "BOTH";
 }
 
 interface TransactionModalProps {
@@ -91,9 +92,16 @@ export const TransactionModal = ({
         const data: CategoryOption[] = await res.json();
         if (cancelled) return;
         setCategories(data);
-        // if creating new and no category selected, default to first
-        if (!initialState.category && data.length > 0) {
-          setFormState((prev) => ({ ...prev, category: data[0].name }));
+        // if creating new and no category selected, default to first matching
+        if (!initialState.category) {
+          const txType = initialState.type ?? "entrada";
+          const filtered = data.filter((c) => {
+            if (txType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+            return c.type === "EXPENSE" || c.type === "BOTH";
+          });
+          if (filtered.length > 0) {
+            setFormState((prev) => ({ ...prev, category: filtered[0].name }));
+          }
         }
       } catch (err) {
         console.error("Failed to load categories", err);
@@ -116,6 +124,13 @@ export const TransactionModal = ({
   }, [initialState, isOpen]);
 
   const formattedAmount = useMemo(() => formState.amount, [formState.amount]);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((c) => {
+      if (formState.type === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+      return c.type === "EXPENSE" || c.type === "BOTH";
+    });
+  }, [categories, formState.type]);
 
   const formatCurrencyBRL = (value: string) => {
     const digits = value.replace(/\D/g, "");
@@ -316,14 +331,14 @@ export const TransactionModal = ({
                       }))
                     }
                   >
-                    {categories.length === 0 ? (
+                    {filteredCategories.length === 0 ? (
                       <option value="" disabled>
                         {isLoadingCategories
                           ? "Carregando categorias..."
                           : "Nenhuma categoria disponível"}
                       </option>
                     ) : (
-                      categories.map((c) => (
+                      filteredCategories.map((c) => (
                         <option key={c.id} value={c.name}>
                           {c.name}
                         </option>
@@ -347,13 +362,22 @@ export const TransactionModal = ({
                     disabled={isSubmitting}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
                     value={formState.type}
-                    onChange={(event) =>
-                      setFormState((prev) => ({
-                        ...prev,
-                        type: event.target
-                          .value as TransactionFormState["type"],
-                      }))
-                    }
+                    onChange={(event) => {
+                      const newType = event.target.value as TransactionFormState["type"];
+                      setFormState((prev) => {
+                        // reset category if it doesn't match the new type
+                        const matching = categories.filter((c) => {
+                          if (newType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+                          return c.type === "EXPENSE" || c.type === "BOTH";
+                        });
+                        const currentStillValid = matching.some((c) => c.name === prev.category);
+                        return {
+                          ...prev,
+                          type: newType,
+                          category: currentStillValid ? prev.category : (matching[0]?.name ?? ""),
+                        };
+                      });
+                    }}
                   >
                     <option value="entrada">Entrada</option>
                     <option value="saida">Saída</option>

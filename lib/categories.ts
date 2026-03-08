@@ -1,16 +1,24 @@
 import { prisma } from "@/lib/db";
 import { CategoryInput } from "@/lib/validations/categories";
 
-const DEFAULT_CATEGORIES: { name: string; iconId: string }[] = [
-  { name: "Alimentação", iconId: "utensils" },
-  { name: "Moradia", iconId: "home" },
-  { name: "Transporte", iconId: "bus" },
-  { name: "Saúde", iconId: "heart-pulse" },
-  { name: "Educação", iconId: "graduation-cap" },
-  { name: "Lazer", iconId: "music" },
-  { name: "Trabalho", iconId: "briefcase" },
-  { name: "Poupança", iconId: "piggy-bank" },
-  { name: "Outros", iconId: "tag" },
+const DEFAULT_CATEGORIES: {
+  name: string;
+  iconId: string;
+  type: "INCOME" | "EXPENSE";
+}[] = [
+  // Saídas
+  { name: "Alimentação",  iconId: "utensils",           type: "EXPENSE" },
+  { name: "Moradia",      iconId: "home",                type: "EXPENSE" },
+  { name: "Transporte",   iconId: "bus",                 type: "EXPENSE" },
+  { name: "Saúde",        iconId: "heart-pulse",         type: "EXPENSE" },
+  { name: "Educação",     iconId: "graduation-cap",      type: "EXPENSE" },
+  { name: "Lazer",        iconId: "music",               type: "EXPENSE" },
+  { name: "Poupança",     iconId: "piggy-bank",          type: "EXPENSE" },
+  { name: "Outros",       iconId: "tag",                 type: "EXPENSE" },
+  // Entradas
+  { name: "Salário",      iconId: "circle-dollar-sign",  type: "INCOME" },
+  { name: "Trabalho",     iconId: "briefcase",           type: "INCOME" },
+  { name: "Freelance",    iconId: "laptop",              type: "INCOME" },
 ];
 
 export async function seedDefaultCategories(userId: string): Promise<void> {
@@ -19,6 +27,7 @@ export async function seedDefaultCategories(userId: string): Promise<void> {
       userId,
       name: c.name,
       icon: c.iconId,
+      type: c.type,
     })),
     skipDuplicates: true,
   });
@@ -28,6 +37,7 @@ export interface UICategory {
   id: string;
   name: string;
   iconId: string | null;
+  type: "INCOME" | "EXPENSE" | "BOTH";
   transactionCount: number;
 }
 
@@ -42,6 +52,7 @@ export async function getUserCategories(userId: string): Promise<UICategory[]> {
     id: c.id,
     name: c.name,
     iconId: c.icon ?? null,
+    type: c.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: c._count.transactions,
   }));
 }
@@ -51,7 +62,7 @@ export async function createCategory(
   data: CategoryInput,
 ): Promise<UICategory> {
   const record = await prisma.category.create({
-    data: { userId, name: data.name, icon: data.iconId ?? null },
+    data: { userId, name: data.name, icon: data.iconId ?? null, type: data.type ?? "BOTH" },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -59,6 +70,7 @@ export async function createCategory(
     id: record.id,
     name: record.name,
     iconId: record.icon ?? null,
+    type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };
 }
@@ -70,7 +82,7 @@ export async function updateCategory(
 ): Promise<UICategory> {
   const record = await prisma.category.update({
     where: { id, userId },
-    data: { name: data.name, icon: data.iconId ?? null },
+    data: { name: data.name, icon: data.iconId ?? null, type: data.type ?? "BOTH" },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -78,6 +90,7 @@ export async function updateCategory(
     id: record.id,
     name: record.name,
     iconId: record.icon ?? null,
+    type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };
 }

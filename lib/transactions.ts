@@ -15,6 +15,7 @@ export interface UITransaction {
   id: string;
   description: string;
   category: string;
+  categoryIconId?: string | null;
   date: string;
   amount: string;
   type: "entrada" | "saida";
@@ -134,7 +135,7 @@ function formatIso(date: Date): string {
 type PrismaTransaction = Awaited<
   ReturnType<typeof prisma.transaction.findFirst>
 > & {
-  category: { name: string };
+  category: { name: string; icon: string | null };
 };
 
 function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
@@ -170,6 +171,7 @@ function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
     id: tx.id,
     description: tx.description,
     category: tx.category.name,
+    categoryIconId: tx.category.icon ?? null,
     date: formatDate(tx.date),
     amount,
     type,
@@ -368,12 +370,12 @@ export async function getUserTransactions(
   const [records, recurringRecords] = await Promise.all([
     prisma.transaction.findMany({
       where: { userId, date: { gte: monthStart, lte: monthEnd } },
-      include: { category: true },
+      include: { category: { select: { name: true, icon: true } } },
       orderBy: { date: "desc" },
     }),
     prisma.transaction.findMany({
       where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
-      include: { category: true },
+      include: { category: { select: { name: true, icon: true } } },
     }),
   ]);
 
@@ -395,7 +397,7 @@ export async function createTransaction(
   const payload = await formToDbPayload(userId, data);
   const record = await prisma.transaction.create({
     data: { ...payload, userId },
-    include: { category: true },
+    include: { category: { select: { name: true, icon: true } } },
   });
   return mapDbToUI(record);
 }
@@ -410,7 +412,7 @@ export async function updateTransaction(
   const record = await prisma.transaction.update({
     where: { id, userId },
     data: payload,
-    include: { category: true },
+    include: { category: { select: { name: true, icon: true } } },
   });
   return mapDbToUI(record);
 }
@@ -430,7 +432,7 @@ export async function toggleTransactionSettlement(
 ): Promise<UITransaction> {
   const existing = await prisma.transaction.findUnique({
     where: { id, userId },
-    include: { category: true },
+    include: { category: { select: { name: true, icon: true } } },
   });
   if (!existing) throw new Error("Transaction not found");
 
@@ -441,7 +443,7 @@ export async function toggleTransactionSettlement(
       isSettled: nextSettled,
       paymentDate: nextSettled ? (existing.paymentDate ?? new Date()) : null,
     },
-    include: { category: true },
+    include: { category: { select: { name: true, icon: true } } },
   });
   return mapDbToUI(updated);
 }
@@ -468,12 +470,12 @@ export async function getDashboardData(
   const [currentMonthTxs, recurringRecords, historicalTxs] = await Promise.all([
     prisma.transaction.findMany({
       where: { userId, date: { gte: monthStart, lte: monthEnd } },
-      include: { category: true },
+      include: { category: { select: { name: true, icon: true } } },
       orderBy: { date: "desc" },
     }),
     prisma.transaction.findMany({
       where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
-      include: { category: true },
+      include: { category: { select: { name: true, icon: true } } },
     }),
     prisma.transaction.findMany({
       where: { userId, date: { lt: monthStart } },

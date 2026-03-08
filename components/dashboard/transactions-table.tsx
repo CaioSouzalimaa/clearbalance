@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download } from "lucide";
+import { ChevronDown, ChevronUp, Download } from "lucide";
 import { useToast } from "@/components/ui/toast";
-import { LucideIcon, IconNode } from "@/components/dashboard/sidebar";
+import { LucideIcon } from "@/components/dashboard/sidebar";
+import { iconOptions } from "@/lib/icon-options";
 import {
   TransactionModal,
   TransactionFormState,
@@ -20,7 +21,7 @@ interface Transaction {
   id: string;
   description: string;
   category: string;
-  categoryIcon?: IconNode;
+  categoryIconId?: string | null;
   date: string;
   amount: string;
   type: "entrada" | "saida";
@@ -67,6 +68,20 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [recurrenceFilter, setRecurrenceFilter] = useState<
     "todos" | "recorrente" | "nao_recorrente"
   >("todos");
+
+  type SortKey = "description" | "category" | "date" | "amount";
+  type SortDir = "asc" | "desc";
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   const formatCurrencyBRL = (value: string) => {
     const digits = value.replace(/\D/g, "");
@@ -249,7 +264,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const filteredRows = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return rows.filter((item) => {
+    const filtered = rows.filter((item) => {
       const matchesSearch = normalizedSearch
         ? `${item.description} ${item.category}`
             .toLowerCase()
@@ -270,7 +285,33 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
       return matchesSearch && matchesStatus && matchesType && matchesRecurrence;
     });
-  }, [recurrenceFilter, rows, searchTerm, statusFilter, typeFilter]);
+
+    if (!sortKey) return filtered;
+
+    const PT_MONTH_IDX: Record<string, number> = {
+      Jan: 0, Fev: 1, Mar: 2, Abr: 3, Mai: 4, Jun: 5,
+      Jul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dez: 11,
+    };
+
+    const parseDate = (d: string) => {
+      const [day, mon, year] = d.split(" ");
+      return new Date(Number(year), PT_MONTH_IDX[mon] ?? 0, Number(day)).getTime();
+    };
+
+    const parseAmount = (a: string) => {
+      const cleaned = a.replace(/[^0-9,]/g, "").replace(",", ".");
+      return parseFloat(cleaned) || 0;
+    };
+
+    return [...filtered].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === "description") cmp = a.description.localeCompare(b.description, "pt-BR");
+      else if (sortKey === "category") cmp = a.category.localeCompare(b.category, "pt-BR");
+      else if (sortKey === "date") cmp = parseDate(a.date) - parseDate(b.date);
+      else if (sortKey === "amount") cmp = parseAmount(a.amount) - parseAmount(b.amount);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [recurrenceFilter, rows, searchTerm, statusFilter, typeFilter, sortKey, sortDir]);
 
   const PT_MONTHS_NAMES = [
     "Jan",
@@ -476,15 +517,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         {item.description}
                       </p>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                        {item.categoryIcon ? (
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
-                            <LucideIcon
-                              icon={item.categoryIcon}
-                              className="h-2.5 w-2.5"
-                              aria-hidden
-                            />
-                          </span>
-                        ) : null}
+                        {(() => {
+                          const iconEntry = item.categoryIconId
+                            ? iconOptions.find((o) => o.id === item.categoryIconId)
+                            : null;
+                          return iconEntry ? (
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                              <LucideIcon icon={iconEntry.icon} className="h-2.5 w-2.5" aria-hidden />
+                            </span>
+                          ) : null;
+                        })()}
                         <span className="truncate">{item.category}</span>
                         <span className="shrink-0 text-muted-foreground/50">·</span>
                         <span className="shrink-0">{item.date}</span>
@@ -580,12 +622,32 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
           <table className="min-w-full text-sm">
             <thead className="bg-background text-left text-muted-foreground">
               <tr>
-                <th className="px-6 py-3 font-semibold">Descrição</th>
-                <th className="px-6 py-3 font-semibold">Categoria</th>
-                <th className="px-6 py-3 font-semibold">Data</th>
+                <th className="px-6 py-3 font-semibold">
+                  <button type="button" onClick={() => handleSort("description")} className="inline-flex items-center gap-1 hover:text-foreground transition">
+                    Descrição
+                    {sortKey === "description" ? (sortDir === "asc" ? <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5" /> : <LucideIcon icon={ChevronDown} className="h-3.5 w-3.5" />) : <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5 opacity-20" />}
+                  </button>
+                </th>
+                <th className="px-6 py-3 font-semibold">
+                  <button type="button" onClick={() => handleSort("category")} className="inline-flex items-center gap-1 hover:text-foreground transition">
+                    Categoria
+                    {sortKey === "category" ? (sortDir === "asc" ? <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5" /> : <LucideIcon icon={ChevronDown} className="h-3.5 w-3.5" />) : <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5 opacity-20" />}
+                  </button>
+                </th>
+                <th className="px-6 py-3 font-semibold">
+                  <button type="button" onClick={() => handleSort("date")} className="inline-flex items-center gap-1 hover:text-foreground transition">
+                    Data
+                    {sortKey === "date" ? (sortDir === "asc" ? <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5" /> : <LucideIcon icon={ChevronDown} className="h-3.5 w-3.5" />) : <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5 opacity-20" />}
+                  </button>
+                </th>
                 <th className="px-6 py-3 font-semibold">Recorrência</th>
                 <th className="px-6 py-3 font-semibold">Status</th>
-                <th className="px-6 py-3 font-semibold text-right">Valor</th>
+                <th className="px-6 py-3 font-semibold text-right">
+                  <button type="button" onClick={() => handleSort("amount")} className="inline-flex items-center gap-1 hover:text-foreground transition ml-auto">
+                    Valor
+                    {sortKey === "amount" ? (sortDir === "asc" ? <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5" /> : <LucideIcon icon={ChevronDown} className="h-3.5 w-3.5" />) : <LucideIcon icon={ChevronUp} className="h-3.5 w-3.5 opacity-20" />}
+                  </button>
+                </th>
                 <th className="px-6 py-3 text-right font-semibold">Ações</th>
               </tr>
             </thead>
@@ -607,15 +669,16 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        {item.categoryIcon ? (
-                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
-                            <LucideIcon
-                              icon={item.categoryIcon}
-                              className="h-4 w-4"
-                              aria-hidden
-                            />
-                          </span>
-                        ) : null}
+                        {(() => {
+                          const iconEntry = item.categoryIconId
+                            ? iconOptions.find((o) => o.id === item.categoryIconId)
+                            : null;
+                          return iconEntry ? (
+                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
+                              <LucideIcon icon={iconEntry.icon} className="h-4 w-4" aria-hidden />
+                            </span>
+                          ) : null;
+                        })()}
                         <span>{item.category}</span>
                       </div>
                     </td>

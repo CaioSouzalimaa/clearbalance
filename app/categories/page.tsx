@@ -1,115 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Activity,
-  Apple,
-  Archive,
-  Baby,
-  Banknote,
-  BarChart2,
-  Battery,
-  Beer,
-  Bell,
-  Bike,
-  Bluetooth,
-  Bookmark,
-  BookOpen,
-  Briefcase,
-  Building,
-  Building2,
-  Bus,
-  BusFront,
-  Calendar,
-  Camera,
-  Car,
-  Carrot,
-  ChefHat,
-  Clipboard,
-  Clock,
-  Cloud,
-  Coffee,
-  Coins,
-  Cpu,
-  CreditCard,
-  Dumbbell,
-  FileText,
-  Film,
-  Flag,
-  Flower2,
-  Folder,
-  Fuel,
-  Gamepad2,
-  Gift,
-  Globe,
-  GraduationCap,
-  Hammer,
-  HardDrive,
-  Headphones,
-  Heart,
-  HeartPulse,
-  Home,
-  Key,
-  Lamp,
-  Laptop,
-  Leaf,
-  Lightbulb,
-  Lock,
-  Mail,
-  MapPin,
-  Medal,
-  MessageSquare,
-  Microscope,
-  Monitor,
-  Moon,
-  Music,
-  Navigation,
-  Package,
-  PartyPopper,
-  PawPrint,
-  Pencil,
-  Percent,
-  Phone,
-  PiggyBank,
-  Pill,
-  Pizza,
-  Plane,
-  Plug,
-  Printer,
-  Receipt,
-  Sandwich,
-  School,
-  Scissors,
-  Ship,
-  ShoppingBag,
-  ShoppingCart,
-  Smartphone,
-  Sofa,
-  Star,
-  Stethoscope,
-  Store,
-  Sun,
-  Tablet,
-  Tag,
-  Tags,
-  Train,
-  TrendingDown,
-  TrendingUp,
-  TreePine,
-  Trophy,
-  Truck,
-  Tv,
-  Umbrella,
-  User,
-  Users,
-  Utensils,
-  UtensilsCrossed,
-  Wallet,
-  Wifi,
-  Wine,
-  Wrench,
-} from "lucide";
 
+import { iconOptions, resolveIcon } from "@/lib/icon-options";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 import { LucideIcon } from "@/components/dashboard/sidebar";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
@@ -118,137 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 
-const iconOptions = [
-  // Finanças
-  { id: "wallet", label: "Carteira", icon: Wallet },
-  { id: "credit-card", label: "Cartão de crédito", icon: CreditCard },
-  { id: "dollar-sign", label: "Dinheiro", icon: Banknote },
-  { id: "coins", label: "Moedas", icon: Coins },
-  { id: "receipt", label: "Recibo", icon: Receipt },
-  { id: "piggy-bank", label: "Poupança", icon: PiggyBank },
-  { id: "trending-up", label: "Crescimento", icon: TrendingUp },
-  { id: "trending-down", label: "Queda", icon: TrendingDown },
-  { id: "bar-chart", label: "Gráfico", icon: BarChart2 },
-  { id: "percent", label: "Porcentagem", icon: Percent },
-  { id: "tag", label: "Tag", icon: Tag },
-  { id: "tags", label: "Tags", icon: Tags },
-  // Compras
-  { id: "shopping-cart", label: "Mercado", icon: ShoppingCart },
-  { id: "shopping-bag", label: "Compras", icon: ShoppingBag },
-  { id: "store", label: "Loja", icon: Store },
-  { id: "gift", label: "Presente", icon: Gift },
-  { id: "package", label: "Pacote", icon: Package },
-  // Casa
-  { id: "home", label: "Casa", icon: Home },
-  { id: "building", label: "Prédio", icon: Building },
-  { id: "building2", label: "Condomínio", icon: Building2 },
-  { id: "sofa", label: "Móveis", icon: Sofa },
-  { id: "lamp", label: "Iluminação", icon: Lamp },
-  { id: "lightbulb", label: "Energia", icon: Lightbulb },
-  { id: "plug", label: "Eletricidade", icon: Plug },
-  { id: "wrench", label: "Manutenção", icon: Wrench },
-  { id: "hammer", label: "Reforma", icon: Hammer },
-  { id: "key", label: "Aluguel", icon: Key },
-  { id: "lock", label: "Segurança", icon: Lock },
-  { id: "scissors", label: "Serviços", icon: Scissors },
-  // Alimentação
-  { id: "utensils", label: "Alimentação", icon: Utensils },
-  { id: "utensils-crossed", label: "Restaurante", icon: UtensilsCrossed },
-  { id: "coffee", label: "Café", icon: Coffee },
-  { id: "pizza", label: "Pizza", icon: Pizza },
-  { id: "sandwich", label: "Lanche", icon: Sandwich },
-  { id: "chef-hat", label: "Cozinha", icon: ChefHat },
-  { id: "apple", label: "Frutas", icon: Apple },
-  { id: "carrot", label: "Verduras", icon: Carrot },
-  { id: "beer", label: "Cerveja", icon: Beer },
-  { id: "wine", label: "Vinho", icon: Wine },
-  // Transporte
-  { id: "bus", label: "Ônibus", icon: Bus },
-  { id: "bus-front", label: "Transporte público", icon: BusFront },
-  { id: "car", label: "Carro", icon: Car },
-  { id: "bike", label: "Bicicleta", icon: Bike },
-  { id: "plane", label: "Avião", icon: Plane },
-  { id: "train", label: "Trem", icon: Train },
-  { id: "ship", label: "Navio", icon: Ship },
-  { id: "truck", label: "Frete", icon: Truck },
-  { id: "fuel", label: "Combustível", icon: Fuel },
-  { id: "map-pin", label: "Localização", icon: MapPin },
-  { id: "navigation", label: "Navegação", icon: Navigation },
-  // Saúde
-  { id: "heart", label: "Coração", icon: Heart },
-  { id: "heart-pulse", label: "Saúde", icon: HeartPulse },
-  { id: "activity", label: "Atividade", icon: Activity },
-  { id: "stethoscope", label: "Médico", icon: Stethoscope },
-  { id: "pill", label: "Remédio", icon: Pill },
-  { id: "dumbbell", label: "Academia", icon: Dumbbell },
-  // Trabalho
-  { id: "briefcase", label: "Trabalho", icon: Briefcase },
-  { id: "laptop", label: "Computador", icon: Laptop },
-  { id: "monitor", label: "Monitor", icon: Monitor },
-  { id: "printer", label: "Impressora", icon: Printer },
-  { id: "phone", label: "Telefone", icon: Phone },
-  { id: "mail", label: "E-mail", icon: Mail },
-  { id: "message-square", label: "Mensagem", icon: MessageSquare },
-  { id: "clipboard", label: "Relatório", icon: Clipboard },
-  { id: "file-text", label: "Documento", icon: FileText },
-  { id: "folder", label: "Pasta", icon: Folder },
-  { id: "archive", label: "Arquivo", icon: Archive },
-  { id: "calendar", label: "Agenda", icon: Calendar },
-  { id: "clock", label: "Horas extras", icon: Clock },
-  // Educação
-  { id: "book-open", label: "Livro", icon: BookOpen },
-  { id: "graduation-cap", label: "Educação", icon: GraduationCap },
-  { id: "school", label: "Escola", icon: School },
-  { id: "microscope", label: "Ciência", icon: Microscope },
-  { id: "pencil", label: "Lápis", icon: Pencil },
-  // Lazer & Entretenimento
-  { id: "music", label: "Música", icon: Music },
-  { id: "headphones", label: "Fones", icon: Headphones },
-  { id: "tv", label: "TV / Streaming", icon: Tv },
-  { id: "film", label: "Cinema", icon: Film },
-  { id: "camera", label: "Fotografia", icon: Camera },
-  { id: "gamepad2", label: "Games", icon: Gamepad2 },
-  { id: "party-popper", label: "Festa", icon: PartyPopper },
-  { id: "star", label: "Destaque", icon: Star },
-  { id: "trophy", label: "Conquista", icon: Trophy },
-  { id: "medal", label: "Medalha", icon: Medal },
-  // Tecnologia
-  { id: "smartphone", label: "Celular", icon: Smartphone },
-  { id: "tablet", label: "Tablet", icon: Tablet },
-  { id: "cpu", label: "Hardware", icon: Cpu },
-  { id: "hard-drive", label: "Armazenamento", icon: HardDrive },
-  { id: "wifi", label: "Internet", icon: Wifi },
-  { id: "bluetooth", label: "Bluetooth", icon: Bluetooth },
-  { id: "battery", label: "Bateria", icon: Battery },
-  // Natureza
-  { id: "sun", label: "Sol", icon: Sun },
-  { id: "moon", label: "Lua", icon: Moon },
-  { id: "cloud", label: "Nuvem", icon: Cloud },
-  { id: "umbrella", label: "Chuva", icon: Umbrella },
-  { id: "leaf", label: "Natureza", icon: Leaf },
-  { id: "flower2", label: "Flores", icon: Flower2 },
-  { id: "tree-pine", label: "Árvore", icon: TreePine },
-  // Pessoas & Vida
-  { id: "user", label: "Pessoa", icon: User },
-  { id: "users", label: "Família", icon: Users },
-  { id: "baby", label: "Bebê", icon: Baby },
-  { id: "paw-print", label: "Pet", icon: PawPrint },
-  // Outros
-  { id: "globe", label: "Viagem", icon: Globe },
-  { id: "flag", label: "Meta", icon: Flag },
-  { id: "bell", label: "Alerta", icon: Bell },
-  { id: "bookmark", label: "Marcador", icon: Bookmark },
-];
+type CategoryType = "INCOME" | "EXPENSE" | "BOTH";
 
 interface Category {
   id: string;
   name: string;
   iconId: string | null;
+  type: CategoryType;
   transactionCount: number;
 }
-
-const resolveIcon = (iconId: string | null) =>
-  iconOptions.find((o) => o.id === iconId)?.icon ?? Tag;
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -258,6 +29,7 @@ export default function CategoriesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formIconId, setFormIconId] = useState(iconOptions[0].id);
+  const [formType, setFormType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [iconSearch, setIconSearch] = useState("");
@@ -294,6 +66,7 @@ export default function CategoriesPage() {
     setEditingId(cat.id);
     setFormName(cat.name);
     setFormIconId(cat.iconId ?? iconOptions[0].id);
+    setFormType(cat.type === "BOTH" ? "EXPENSE" : cat.type);
     setFormError("");
     setIconSearch("");
   };
@@ -302,6 +75,7 @@ export default function CategoriesPage() {
     setEditingId(null);
     setFormName("");
     setFormIconId(iconOptions[0].id);
+    setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
   };
@@ -326,7 +100,7 @@ export default function CategoriesPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, iconId: formIconId }),
+        body: JSON.stringify({ name, iconId: formIconId, type: formType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -378,6 +152,10 @@ export default function CategoriesPage() {
     : editingId
       ? "Salvar alterações"
       : "Salvar categoria";
+
+  const isGoalsCategory =
+    editingId !== null &&
+    categories.find((c) => c.id === editingId)?.name === "Metas";
 
   const pendingDeleteName =
     categories.find((c) => c.id === pendingDeleteId)?.name ?? "";
@@ -452,9 +230,22 @@ export default function CategoriesPage() {
                         />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-foreground">
-                          {category.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {category.name}
+                          </p>
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              category.type === "INCOME"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                : category.type === "EXPENSE"
+                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                                  : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {category.type === "INCOME" ? "Entrada" : category.type === "EXPENSE" ? "Saída" : "Ambos"}
+                          </span>
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {category.transactionCount} lançamento
                           {category.transactionCount !== 1 ? "s" : ""}
@@ -501,31 +292,73 @@ export default function CategoriesPage() {
         >
           <h2 className="text-base sm:text-lg font-semibold text-foreground">{formTitle}</h2>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-            Defina um nome e escolha um ícone para identificar seus gastos.
+            Defina um nome, tipo e escolha um ícone para identificar seus gastos.
           </p>
 
           <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="categoria-nome"
-                className="text-sm font-medium text-foreground"
-              >
-                Nome da categoria
-              </label>
-              <Input
-                id="categoria-nome"
-                name="categoria-nome"
-                placeholder="Ex.: Saúde, Educação"
-                value={formName}
-                onChange={(e) => {
-                  setFormName(e.target.value);
-                  setFormError("");
-                }}
-              />
-              {formError && (
-                <p className="text-xs text-rose-500">{formError}</p>
-              )}
-            </div>
+            {isGoalsCategory && (
+              <div className="flex items-start gap-2 rounded-lg border border-border px-3 py-2.5 text-xs text-muted-foreground">
+                <span className="mt-0.5 shrink-0">⚠️</span>
+                <p>
+                  Esta é a <strong>categoria de metas</strong>. Ela é gerenciada automaticamente pelo sistema — apenas o ícone pode ser alterado.
+                </p>
+              </div>
+            )}
+
+            {/* Type toggle */}
+            {!isGoalsCategory && (
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-foreground">Tipo</span>
+                <div className="flex rounded-lg border border-border bg-muted/30 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setFormType("INCOME")}
+                    className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
+                      formType === "INCOME"
+                        ? "bg-emerald-500 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Entrada
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormType("EXPENSE")}
+                    className={`flex-1 rounded-md py-1.5 text-xs font-semibold transition ${
+                      formType === "EXPENSE"
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Saída
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!isGoalsCategory && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="categoria-nome"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Nome da categoria
+                </label>
+                <Input
+                  id="categoria-nome"
+                  name="categoria-nome"
+                  placeholder="Ex.: Saúde, Educação"
+                  value={formName}
+                  onChange={(e) => {
+                    setFormName(e.target.value);
+                    setFormError("");
+                  }}
+                />
+                {formError && (
+                  <p className="text-xs text-rose-500">{formError}</p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
