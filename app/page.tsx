@@ -103,7 +103,7 @@ export default function HomePage() {
             >
               Entrar
             </Link>
-            <Link href="/login">
+            <Link href="/register">
               <Button className="h-auto gap-2 px-5 py-2 text-sm">
                 Criar conta grátis <ArrowRight className="h-4 w-4" />
               </Button>
@@ -131,7 +131,7 @@ export default function HomePage() {
               dinheiro — tudo em uma plataforma simples, visual e gratuita.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
-              <Link href="/login">
+              <Link href="/register">
                 <Button className="gap-2 bg-surface px-8 py-5 text-primary hover:bg-muted">
                   Começar agora <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -288,7 +288,7 @@ export default function HomePage() {
             Crie sua conta gratuitamente e comece a transformar a sua relação
             com o dinheiro hoje mesmo.
           </p>
-          <Link href="/login">
+          <Link href="/register">
             <Button className="mt-8 gap-2 bg-surface px-10 py-5 text-lg text-primary hover:bg-muted">
               Criar minha conta gratuita <ArrowRight className="h-5 w-5" />
             </Button>
@@ -318,7 +318,7 @@ export default function HomePage() {
               Entrar
             </Link>
             <Link
-              href="/login"
+              href="/register"
               className="transition-colors hover:text-foreground"
             >
               Criar conta
