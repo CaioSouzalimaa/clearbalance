@@ -132,13 +132,13 @@ export default function SettingsPage() {
 
   return (
     <SidebarShell>
-      <header className="space-y-1">
+      <header className="space-y-0.5">
+        <p className="text-xs sm:text-sm font-medium text-muted-foreground">
+          Atualize seu perfil e personalize suas preferências.
+        </p>
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
           Configurações
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Atualize seu perfil e personalize suas preferências.
-        </p>
       </header>
 
       <section className="grid gap-3 sm:gap-6 lg:grid-cols-[2fr_1fr]">
@@ -147,7 +147,7 @@ export default function SettingsPage() {
           <h2 className="text-base sm:text-lg font-semibold text-foreground">
             Informações do perfil
           </h2>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
             Mantenha seus dados sempre atualizados.
           </p>
 
@@ -223,7 +223,7 @@ export default function SettingsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Preferências
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               Personalize sua experiência no ClearBalance.
             </p>
 
@@ -238,7 +238,7 @@ export default function SettingsPage() {
           {/* ── Conta ── */}
           <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">Conta</h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               Gerencie sua sessão e acesso ao sistema.
             </p>
             <div className="mt-4 sm:mt-6">
@@ -255,7 +255,7 @@ export default function SettingsPage() {
           {/* ── Segurança / Alterar senha ── */}
           <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
             <h2 className="text-base sm:text-lg font-semibold text-foreground">Segurança</h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               Altere sua senha de acesso.
             </p>
 
@@ -326,7 +326,7 @@ export default function SettingsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-red-600 dark:text-red-400">
               Zona de perigo
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               Ações irreversíveis sobre sua conta.
             </p>
             <div className="mt-4 sm:mt-6">
@@ -366,13 +366,13 @@ export default function SettingsPage() {
 
             {deleteStep === "password" ? (
               <>
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-xs sm:text-sm text-muted-foreground">
                   Para continuar, confirme sua senha atual.
                 </p>
                 <div className="mt-4 space-y-2">
                   <label
                     htmlFor="deletePassword"
-                    className="text-sm font-medium text-foreground"
+                    className="text-xs sm:text-sm font-medium text-foreground"
                   >
                     Senha
                   </label>
@@ -414,7 +414,7 @@ export default function SettingsPage() {
               </>
             ) : (
               <>
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-xs sm:text-sm text-muted-foreground">
                   Seus dados serão{" "}
                   <strong className="text-foreground">apagados permanentemente</strong>.
                   Esta ação é irreversível.

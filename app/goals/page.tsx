@@ -142,7 +142,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
         <h2 className="text-base sm:text-lg font-semibold text-foreground">
           {editingGoal ? "Editar meta" : "Nova meta"}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
           Defina um objetivo financeiro para acompanhar seu progresso.
         </p>
 
@@ -156,7 +156,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
           <div className="space-y-2">
             <label
               htmlFor="goal-name"
-              className="text-sm font-medium text-foreground"
+              className="text-xs sm:text-sm font-medium text-foreground"
             >
               Nome da meta
             </label>
@@ -171,7 +171,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
           <div className="space-y-2">
             <label
               htmlFor="goal-target"
-              className="text-sm font-medium text-foreground"
+              className="text-xs sm:text-sm font-medium text-foreground"
             >
               Valor da meta
             </label>
@@ -187,7 +187,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
           <div className="space-y-2">
             <label
               htmlFor="goal-initial"
-              className="text-sm font-medium text-foreground"
+              className="text-xs sm:text-sm font-medium text-foreground"
             >
               Valor inicial {editingGoal ? "(Saldo atual)" : "(opcional)"}
             </label>
@@ -208,7 +208,7 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
           <div className="space-y-2">
             <label
               htmlFor="goal-deadline"
-              className="text-sm font-medium text-foreground"
+              className="text-xs sm:text-sm font-medium text-foreground"
             >
               Prazo (opcional)
             </label>
@@ -482,12 +482,12 @@ export default function GoalsPage() {
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">
             Acompanhe o progresso das suas metas
           </p>
-          <h1 className="text-lg sm:text-2xl font-semibold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Metas
           </h1>
         </div>
         <div className="flex w-full sm:w-auto">
-          <Button className="w-full sm:w-auto gap-2" onClick={() => setIsModalOpen(true)}>
+          <Button className="w-full sm:w-auto gap-2 text-xs sm:text-sm" onClick={() => setIsModalOpen(true)}>
             <LucideIcon icon={Plus} className="h-4 w-4" aria-hidden />
             Nova meta
           </Button>
@@ -525,7 +525,7 @@ export default function GoalsPage() {
             <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Metas em andamento
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
               Visão geral dos objetivos que você está construindo.
             </p>
           </div>
@@ -649,7 +649,7 @@ export default function GoalsPage() {
                     <div className="flex-1">
                       <label
                         htmlFor={`aporte-${goal.id}`}
-                        className="text-xs font-medium text-muted-foreground"
+                        className="text-xs sm:text-sm font-medium text-foreground"
                       >
                         Registrar aporte ou retirada
                       </label>

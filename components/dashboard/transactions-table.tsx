@@ -425,7 +425,7 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             <h2 className="text-base sm:text-lg font-semibold text-foreground">
               Lançamentos
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
               Confira suas movimentações recentes.
             </p>
           </div>

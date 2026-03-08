@@ -243,11 +243,11 @@ export default function CategoriesPage() {
               <div>
                 <h2
                   id="category-modal-title"
-                  className="text-lg font-semibold text-foreground"
+                  className="text-base sm:text-lg font-semibold text-foreground"
                 >
                   {modalTitle}
                 </h2>
-                <p className="text-sm text-muted-foreground">{modalSubtitle}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{modalSubtitle}</p>
               </div>
 
               <div className="relative py-4 sm:py-5">
@@ -316,7 +316,7 @@ export default function CategoriesPage() {
                     <div className="space-y-2">
                       <label
                         htmlFor="categoria-nome"
-                        className="text-sm font-medium text-foreground"
+                        className="text-xs sm:text-sm font-medium text-foreground"
                       >
                         Nome da categoria
                       </label>
@@ -356,7 +356,7 @@ export default function CategoriesPage() {
                       value={iconSearch}
                       disabled={isSaving}
                       onChange={(e) => setIconSearch(e.target.value)}
-                      className="h-9 text-sm"
+                      className="h-9 text-xs sm:text-sm"
                     />
                     <div className="max-h-40 sm:max-h-48 overflow-y-auto rounded-lg border border-border p-2">
                       {filteredIcons.length === 0 ? (
@@ -443,7 +443,7 @@ export default function CategoriesPage() {
             placeholder="Buscar categorias…"
             value={categorySearch}
             onChange={(e) => setCategorySearch(e.target.value)}
-            className="h-9 pl-9 text-sm"
+            className="h-9 pl-9 text-xs sm:text-sm"
           />
         </div>
 
@@ -495,7 +495,7 @@ export default function CategoriesPage() {
                         {category.name}
                       </p>
                       <span
-                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium leading-none ${
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold leading-none ${
                           category.type === "INCOME"
                             ? "border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
                             : category.type === "EXPENSE"
