@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide";
+import { ArrowDownAZ, ArrowUpZA, Plus, Search } from "lucide";
 
 import { iconOptions, resolveIcon } from "@/lib/icon-options";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
@@ -40,6 +40,7 @@ export default function CategoriesPage() {
 
   /* ── category search ── */
   const [categorySearch, setCategorySearch] = useState("");
+  const [sortAsc, setSortAsc] = useState(true);
 
   /* ── FAB ── */
   const [showFab, setShowFab] = useState(false);
@@ -56,9 +57,12 @@ export default function CategoriesPage() {
 
   const filteredCategories = useMemo(() => {
     const q = categorySearch.toLowerCase().trim();
-    if (!q) return categories;
-    return categories.filter((c) => c.name.toLowerCase().includes(q));
-  }, [categories, categorySearch]);
+    const base = q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
+    return [...base].sort((a, b) => {
+      const cmp = a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+      return sortAsc ? cmp : -cmp;
+    });
+  }, [categories, categorySearch, sortAsc]);
 
   const loadCategories = async () => {
     try {
@@ -434,17 +438,32 @@ export default function CategoriesPage() {
       </header>
 
       <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
-        {/* Search */}
-        <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
-            <LucideIcon icon={Search} className="h-4 w-4" aria-hidden />
-          </span>
-          <Input
-            placeholder="Buscar categorias…"
-            value={categorySearch}
-            onChange={(e) => setCategorySearch(e.target.value)}
-            className="h-9 pl-9 text-xs sm:text-sm"
-          />
+        {/* Search + Sort */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
+              <LucideIcon icon={Search} className="h-4 w-4" aria-hidden />
+            </span>
+            <Input
+              placeholder="Buscar categorias…"
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              className="h-9 pl-9 text-xs sm:text-sm"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            aria-label={sortAsc ? "Ordem Z→A" : "Ordem A→Z"}
+            onClick={() => setSortAsc((v) => !v)}
+            className="h-9 w-9 shrink-0 px-0"
+          >
+            <LucideIcon
+              icon={sortAsc ? ArrowDownAZ : ArrowUpZA}
+              className="h-4 w-4"
+              aria-hidden
+            />
+          </Button>
         </div>
 
         {/* Category list */}
