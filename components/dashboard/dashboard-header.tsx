@@ -57,24 +57,23 @@ export const DashboardHeader = () => {
 
   return (
     <>
-      <header className="flex flex-col gap-2 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <header className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs sm:text-sm font-medium text-muted-foreground">
             Boas-vindas de volta{firstName ? `, ${firstName}` : ""}!
           </p>
-          <h1 className="text-lg sm:text-2xl font-semibold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Visão geral financeira
           </h1>
         </div>
-        <div className="flex w-full sm:w-auto sm:flex-row sm:items-center">
-          <Button
-            data-tour="new-transaction"
-            className="w-full sm:w-auto"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Nova transação
-          </Button>
-        </div>
+        <Button
+          data-tour="new-transaction"
+          className="shrink-0 gap-1.5 text-xs sm:text-sm"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Nova transação
+        </Button>
       </header>
 
       <TransactionModal
@@ -93,7 +92,7 @@ export const DashboardHeader = () => {
         type="button"
         aria-label="Nova transação"
         onClick={() => setIsModalOpen(true)}
-        className={`fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 md:bottom-8 md:right-8 md:h-14 md:w-14 ${
+        className={`fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 md:bottom-8 md:right-8 md:h-14 md:w-14 ${
           showFab ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >

@@ -41,6 +41,9 @@ export default function CategoriesPage() {
   /* ── category search ── */
   const [categorySearch, setCategorySearch] = useState("");
 
+  /* ── FAB ── */
+  const [showFab, setShowFab] = useState(false);
+
   /* ── delete ── */
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,6 +77,12 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     loadCategories();
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setShowFab(window.scrollY > 120);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   /* ── open / close modal ── */
@@ -486,12 +495,12 @@ export default function CategoriesPage() {
                         {category.name}
                       </p>
                       <span
-                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none ${
+                        className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium leading-none ${
                           category.type === "INCOME"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            ? "border-emerald-500 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
                             : category.type === "EXPENSE"
-                              ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
-                              : "bg-muted text-muted-foreground"
+                              ? "border-rose-500 text-rose-600 dark:border-rose-400 dark:text-rose-400"
+                              : "border-border text-muted-foreground"
                         }`}
                       >
                         {category.type === "INCOME"
@@ -512,7 +521,7 @@ export default function CategoriesPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-border h-7 px-2.5 text-xs"
+                      className="border-border h-7 px-2.5 text-[10px]"
                       onClick={() => openEdit(category)}
                     >
                       Editar
@@ -520,7 +529,7 @@ export default function CategoriesPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-border h-7 px-2.5 text-xs text-rose-500 hover:bg-rose-500/10"
+                      className="border-border h-7 px-2.5 text-[10px] text-rose-500 hover:bg-rose-500/10"
                       onClick={() => {
                         if (category.transactionCount > 0) {
                           showFeedback(
@@ -541,6 +550,18 @@ export default function CategoriesPage() {
           )}
         </div>
       </div>
+
+      {/* Floating action button */}
+      <button
+        type="button"
+        aria-label="Nova categoria"
+        onClick={openCreate}
+        className={`fixed bottom-24 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all duration-200 hover:scale-110 active:scale-95 md:bottom-8 md:right-8 md:h-14 md:w-14 ${
+          showFab ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        }`}
+      >
+        <LucideIcon icon={Plus} className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+      </button>
     </SidebarShell>
   );
 }
