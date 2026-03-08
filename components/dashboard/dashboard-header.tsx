@@ -83,6 +83,7 @@ export const DashboardHeader = () => {
         title="Nova transação"
         subtitle="Adicione os detalhes da movimentação financeira."
         submitLabel={isSubmitting ? "Salvando…" : "Salvar transação"}
+        isSubmitting={isSubmitting}
         initialState={createDefaultTransactionFormState()}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}

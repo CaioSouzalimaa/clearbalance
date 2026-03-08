@@ -1,7 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide";
 
 import { LucideIcon } from "@/components/dashboard/sidebar";
 
@@ -17,19 +18,24 @@ interface MonthSelectorProps {
 
 export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const navigate = (delta: number) => {
     const next = new Date(year, month + delta, 1);
     const y = next.getFullYear();
     const m = String(next.getMonth() + 1).padStart(2, "0");
-    router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+    startTransition(() => {
+      router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+    });
   };
 
   const goToToday = () => {
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth() + 1).padStart(2, "0");
-    router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+    startTransition(() => {
+      router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+    });
   };
 
   const now = new Date();
@@ -41,18 +47,26 @@ export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="rounded p-1 text-muted-foreground transition hover:text-foreground"
+          disabled={isPending}
+          className="rounded p-1 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
           aria-label="Mês anterior"
         >
           <LucideIcon icon={ChevronLeft} className="h-4 w-4" aria-hidden />
         </button>
-        <span className="min-w-28 sm:min-w-36 text-center text-xs sm:text-sm font-semibold capitalize text-foreground">
-          {PT_MONTHS_FULL[month]} {year}
+        <span className="relative flex min-w-28 sm:min-w-36 items-center justify-center">
+          {isPending ? (
+            <LucideIcon icon={Loader2} className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />
+          ) : (
+            <span className="text-xs sm:text-sm font-semibold capitalize text-foreground">
+              {PT_MONTHS_FULL[month]} {year}
+            </span>
+          )}
         </span>
         <button
           type="button"
           onClick={() => navigate(1)}
-          className="rounded p-1 text-muted-foreground transition hover:text-foreground"
+          disabled={isPending}
+          className="rounded p-1 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
           aria-label="Próximo mês"
         >
           <LucideIcon icon={ChevronRight} className="h-4 w-4" aria-hidden />
@@ -62,7 +76,8 @@ export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
         <button
           type="button"
           onClick={goToToday}
-          className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+          disabled={isPending}
+          className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
         >
           Mês atual
         </button>

@@ -54,6 +54,7 @@ interface TransactionModalProps {
   title: string;
   subtitle: string;
   submitLabel: string;
+  isSubmitting?: boolean;
   initialState: TransactionFormState;
   onClose: () => void;
   onSubmit: (state: TransactionFormState) => void;
@@ -65,6 +66,7 @@ export const TransactionModal = ({
   title,
   subtitle,
   submitLabel,
+  isSubmitting = false,
   initialState,
   onClose,
   onSubmit,
@@ -183,7 +185,8 @@ export const TransactionModal = ({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          disabled={isSubmitting}
+          className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-lg text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
           aria-label="Fechar modal"
         >
           ×
@@ -204,7 +207,13 @@ export const TransactionModal = ({
           </div>
 
           {/* body content */}
-          <div className="sm:px-6 py-4 sm:py-5">
+          <div className="relative sm:px-6 py-4 sm:py-5">
+            {isSubmitting && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/80 backdrop-blur-sm">
+                <Spinner className="h-8 w-8 text-primary" />
+                <p className="text-sm font-medium text-foreground">Salvando transação…</p>
+              </div>
+            )}
             <form
               className="space-y-4"
               onSubmit={(event) => {
@@ -236,6 +245,7 @@ export const TransactionModal = ({
                   name="descricao"
                   placeholder="Ex.: Pagamento de cliente"
                   value={formState.description}
+                  disabled={isSubmitting}
                   onChange={(event) =>
                     setFormState((prev) => ({
                       ...prev,
@@ -272,6 +282,7 @@ export const TransactionModal = ({
                       inputMode="numeric"
                       placeholder="0,00"
                       value={formattedAmount}
+                      disabled={isSubmitting}
                       onChange={(event) =>
                         setFormState((prev) => ({
                           ...prev,
@@ -295,7 +306,7 @@ export const TransactionModal = ({
                   <select
                     id={`${dialogId}-categoria`}
                     name="categoria"
-                    disabled={isLoadingCategories}
+                    disabled={isLoadingCategories || isSubmitting}
                     className={`flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none disabled:opacity-50 ${submitted && !formState.category.trim() ? "border-red-500" : "border-input"}`}
                     value={formState.category}
                     onChange={(event) =>
@@ -333,7 +344,8 @@ export const TransactionModal = ({
                   <select
                     id={`${dialogId}-tipo`}
                     name="tipo"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={isSubmitting}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
                     value={formState.type}
                     onChange={(event) =>
                       setFormState((prev) => ({
@@ -361,6 +373,7 @@ export const TransactionModal = ({
                     name="data"
                     type="date"
                     value={formState.date}
+                    disabled={isSubmitting}
                     onChange={(event) =>
                       setFormState((prev) => ({
                         ...prev,
@@ -387,6 +400,7 @@ export const TransactionModal = ({
                         type="radio"
                         name={`${dialogId}-recurrenceMode`}
                         value="nao_recorrente"
+                        disabled={isSubmitting}
                         checked={formState.recurrenceMode === "nao_recorrente"}
                         onChange={(event) =>
                           setFormState((prev) => ({
@@ -404,6 +418,7 @@ export const TransactionModal = ({
                         type="radio"
                         name={`${dialogId}-recurrenceMode`}
                         value="recorrente"
+                        disabled={isSubmitting}
                         checked={formState.recurrenceMode === "recorrente"}
                         onChange={(event) =>
                           setFormState((prev) => ({
@@ -432,6 +447,7 @@ export const TransactionModal = ({
                     <select
                       id={`${dialogId}-recurrence-type`}
                       name="recurrenceKind"
+                      disabled={isSubmitting}
                       value={formState.recurrenceKind}
                       onChange={(event) =>
                         setFormState((prev) => ({
@@ -461,6 +477,7 @@ export const TransactionModal = ({
                     <select
                       id={`${dialogId}-recurrence-frequency`}
                       name="recurrenceFrequency"
+                      disabled={isSubmitting}
                       value={formState.recurrenceFrequency}
                       onChange={(event) =>
                         setFormState((prev) => ({
@@ -638,10 +655,19 @@ export const TransactionModal = ({
               </div>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" onClick={onClose}>
+                <Button type="button" variant="outline" disabled={isSubmitting} onClick={onClose}>
                   Cancelar
                 </Button>
-                <Button type="submit">{submitLabel}</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner className="h-4 w-4" />
+                      Salvando…
+                    </span>
+                  ) : (
+                    submitLabel
+                  )}
+                </Button>
               </div>
             </form>
           </div>
