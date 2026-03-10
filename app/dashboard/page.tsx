@@ -111,23 +111,12 @@ export default async function DashboardPage({
           />
         </section>
 
-        <section
-          data-tour="variation-charts"
-          className="grid gap-3 sm:gap-6 md:grid-cols-2"
-        >
+        <section data-tour="variation-charts">
           <VariationChart
-            title="Variação de entradas"
+            title="Variação de entradas e saídas"
             subtitle="Últimos 6 meses"
-            accentClassName="text-primary"
-            accentColor="#69b3a2"
-            data={incomeVariation}
-          />
-          <VariationChart
-            title="Variação de saídas"
-            subtitle="Últimos 6 meses"
-            accentClassName="text-rose-500"
-            accentColor="#f43f5e"
-            data={expenseVariation}
+            incomeData={incomeVariation}
+            expenseData={expenseVariation}
           />
         </section>
 
