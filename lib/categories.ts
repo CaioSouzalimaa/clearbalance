@@ -37,6 +37,7 @@ export interface UICategory {
   id: string;
   name: string;
   iconId: string | null;
+  color: string | null;
   type: "INCOME" | "EXPENSE" | "BOTH";
   transactionCount: number;
 }
@@ -52,6 +53,7 @@ export async function getUserCategories(userId: string): Promise<UICategory[]> {
     id: c.id,
     name: c.name,
     iconId: c.icon ?? null,
+    color: c.color ?? null,
     type: c.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: c._count.transactions,
   }));
@@ -62,7 +64,7 @@ export async function createCategory(
   data: CategoryInput,
 ): Promise<UICategory> {
   const record = await prisma.category.create({
-    data: { userId, name: data.name, icon: data.iconId ?? null, type: data.type ?? "BOTH" },
+    data: { userId, name: data.name, icon: data.iconId ?? null, color: data.color ?? null, type: data.type ?? "BOTH" },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -70,6 +72,7 @@ export async function createCategory(
     id: record.id,
     name: record.name,
     iconId: record.icon ?? null,
+    color: record.color ?? null,
     type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };
@@ -82,7 +85,7 @@ export async function updateCategory(
 ): Promise<UICategory> {
   const record = await prisma.category.update({
     where: { id, userId },
-    data: { name: data.name, icon: data.iconId ?? null, type: data.type ?? "BOTH" },
+    data: { name: data.name, icon: data.iconId ?? null, color: data.color ?? null, type: data.type ?? "BOTH" },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -90,6 +93,7 @@ export async function updateCategory(
     id: record.id,
     name: record.name,
     iconId: record.icon ?? null,
+    color: record.color ?? null,
     type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };

@@ -22,6 +22,7 @@ interface Transaction {
   description: string;
   category: string;
   categoryIconId?: string | null;
+  categoryColor?: string | null;
   date: string;
   amount: string;
   type: "entrada" | "saida";
@@ -522,7 +523,10 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             ? iconOptions.find((o) => o.id === item.categoryIconId)
                             : null;
                           return iconEntry ? (
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                            <span
+                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-white"
+                              style={{ backgroundColor: item.categoryColor ?? "var(--color-muted)" }}
+                            >
                               <LucideIcon icon={iconEntry.icon} className="h-2.5 w-2.5" aria-hidden />
                             </span>
                           ) : null;
@@ -674,7 +678,10 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             ? iconOptions.find((o) => o.id === item.categoryIconId)
                             : null;
                           return iconEntry ? (
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-foreground">
+                            <span
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-white"
+                              style={{ backgroundColor: item.categoryColor ?? "var(--color-muted)" }}
+                            >
                               <LucideIcon icon={iconEntry.icon} className="h-4 w-4" aria-hidden />
                             </span>
                           ) : null;

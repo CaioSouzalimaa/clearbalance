@@ -19,6 +19,7 @@ interface Category {
   id: string;
   name: string;
   iconId: string | null;
+  color: string | null;
   type: CategoryType;
   transactionCount: number;
 }
@@ -33,6 +34,7 @@ export default function CategoriesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formIconId, setFormIconId] = useState(iconOptions[0].id);
+  const [formColor, setFormColor] = useState("#6366f1");
   const [formType, setFormType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -94,6 +96,7 @@ export default function CategoriesPage() {
     setEditingId(null);
     setFormName("");
     setFormIconId(iconOptions[0].id);
+    setFormColor("#6366f1");
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -104,6 +107,7 @@ export default function CategoriesPage() {
     setEditingId(cat.id);
     setFormName(cat.name);
     setFormIconId(cat.iconId ?? iconOptions[0].id);
+    setFormColor(cat.color ?? "#6366f1");
     setFormType(cat.type === "BOTH" ? "EXPENSE" : cat.type);
     setFormError("");
     setIconSearch("");
@@ -115,6 +119,7 @@ export default function CategoriesPage() {
     setEditingId(null);
     setFormName("");
     setFormIconId(iconOptions[0].id);
+    setFormColor("#6366f1");
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -140,7 +145,7 @@ export default function CategoriesPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, iconId: formIconId, type: formType }),
+        body: JSON.stringify({ name, iconId: formIconId, color: formColor, type: formType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -338,6 +343,28 @@ export default function CategoriesPage() {
                     </div>
                   )}
 
+                  {/* Color */}
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="categoria-cor"
+                      className="text-xs sm:text-sm font-medium text-foreground"
+                    >
+                      Cor
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        id="categoria-cor"
+                        type="color"
+                        value={formColor}
+                        disabled={isSaving}
+                        onChange={(e) => setFormColor(e.target.value)}
+                        className="h-9 w-16 cursor-pointer rounded-md border border-border bg-background p-1 disabled:pointer-events-none disabled:opacity-50"
+                        aria-label="Cor da categoria"
+                      />
+                      <span className="text-xs text-muted-foreground">{formColor}</span>
+                    </div>
+                  </div>
+
                   {/* Icon picker */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -499,7 +526,10 @@ export default function CategoriesPage() {
                   className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5 sm:px-4 sm:py-3"
                 >
                   {/* Icon */}
-                  <span className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-muted text-foreground">
+                  <span
+                    className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full text-white"
+                    style={{ backgroundColor: category.color ?? "var(--color-muted)" }}
+                  >
                     <LucideIcon
                       icon={Icon}
                       className="h-4 w-4 sm:h-5 sm:w-5"

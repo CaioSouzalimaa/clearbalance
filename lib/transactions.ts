@@ -16,6 +16,7 @@ export interface UITransaction {
   description: string;
   category: string;
   categoryIconId?: string | null;
+  categoryColor?: string | null;
   date: string;
   amount: string;
   type: "entrada" | "saida";
@@ -172,6 +173,7 @@ function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
     description: tx.description,
     category: tx.category.name,
     categoryIconId: tx.category.icon ?? null,
+    categoryColor: tx.category.color ?? null,
     date: formatDate(tx.date),
     amount,
     type,
@@ -370,12 +372,12 @@ export async function getUserTransactions(
   const [records, recurringRecords] = await Promise.all([
     prisma.transaction.findMany({
       where: { userId, date: { gte: monthStart, lte: monthEnd } },
-      include: { category: { select: { name: true, icon: true } } },
+      include: { category: { select: { name: true, icon: true, color: true } } },
       orderBy: { date: "desc" },
     }),
     prisma.transaction.findMany({
       where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
-      include: { category: { select: { name: true, icon: true } } },
+      include: { category: { select: { name: true, icon: true, color: true } } },
     }),
   ]);
 
@@ -397,7 +399,7 @@ export async function createTransaction(
   const payload = await formToDbPayload(userId, data);
   const record = await prisma.transaction.create({
     data: { ...payload, userId },
-    include: { category: { select: { name: true, icon: true } } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
   });
   return mapDbToUI(record);
 }
@@ -412,7 +414,7 @@ export async function updateTransaction(
   const record = await prisma.transaction.update({
     where: { id, userId },
     data: payload,
-    include: { category: { select: { name: true, icon: true } } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
   });
   return mapDbToUI(record);
 }
@@ -432,7 +434,7 @@ export async function toggleTransactionSettlement(
 ): Promise<UITransaction> {
   const existing = await prisma.transaction.findUnique({
     where: { id, userId },
-    include: { category: { select: { name: true, icon: true } } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
   });
   if (!existing) throw new Error("Transaction not found");
 
@@ -443,7 +445,7 @@ export async function toggleTransactionSettlement(
       isSettled: nextSettled,
       paymentDate: nextSettled ? (existing.paymentDate ?? new Date()) : null,
     },
-    include: { category: { select: { name: true, icon: true } } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
   });
   return mapDbToUI(updated);
 }
@@ -470,12 +472,12 @@ export async function getDashboardData(
   const [currentMonthTxs, recurringRecords, historicalTxs] = await Promise.all([
     prisma.transaction.findMany({
       where: { userId, date: { gte: monthStart, lte: monthEnd } },
-      include: { category: { select: { name: true, icon: true } } },
+      include: { category: { select: { name: true, icon: true, color: true } } },
       orderBy: { date: "desc" },
     }),
     prisma.transaction.findMany({
       where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
-      include: { category: { select: { name: true, icon: true } } },
+      include: { category: { select: { name: true, icon: true, color: true } } },
     }),
     prisma.transaction.findMany({
       where: { userId, date: { lt: monthStart } },
@@ -582,6 +584,14 @@ export async function getDashboardData(
   );
 
   // ── Category distribution (expenses this month, including virtual) ────────
+  // Build a map of category name → color from real and recurring sources
+  const categoryColorMap = new Map<string, string>();
+  for (const tx of [...currentMonthTxs, ...recurringRecords]) {
+    if (tx.category.color) {
+      categoryColorMap.set(tx.category.name, tx.category.color);
+    }
+  }
+
   const expenseTxs = currentMonthTxs.filter(
     (tx) => tx.type === TransactionType.EXPENSE,
   );
@@ -611,7 +621,7 @@ export async function getDashboardData(
     label,
     value: parseFloat(value.div(totalExpenseForDist).mul(100).toFixed(1)),
     amount: parseFloat(value.toFixed(2)),
-    color: CATEGORY_COLORS[expenseColorIndex++ % CATEGORY_COLORS.length],
+    color: categoryColorMap.get(label) || CATEGORY_COLORS[expenseColorIndex++ % CATEGORY_COLORS.length],
   }));
 
   // ── Category distribution (incomes this month, including virtual) ─────────
@@ -644,7 +654,7 @@ export async function getDashboardData(
     label,
     value: parseFloat(value.div(totalIncomeForDist).mul(100).toFixed(1)),
     amount: parseFloat(value.toFixed(2)),
-    color: CATEGORY_COLORS[incomeColorIndex++ % CATEGORY_COLORS.length],
+    color: categoryColorMap.get(label) || CATEGORY_COLORS[incomeColorIndex++ % CATEGORY_COLORS.length],
   }));
 
   // ── 6-month variation ─────────────────────────────────────────────────────
