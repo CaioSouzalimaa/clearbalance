@@ -136,7 +136,7 @@ function formatIso(date: Date): string {
 type PrismaTransaction = Awaited<
   ReturnType<typeof prisma.transaction.findFirst>
 > & {
-  category: { name: string; icon: string | null };
+  category: { name: string; icon: string | null; color: string | null };
 };
 
 function mapDbToUI(tx: NonNullable<PrismaTransaction>): UITransaction {
