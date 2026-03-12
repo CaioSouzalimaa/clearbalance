@@ -524,8 +524,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             : null;
                           return iconEntry ? (
                             <span
-                              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-white"
-                              style={{ backgroundColor: item.categoryColor ?? "var(--color-muted)" }}
+                              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`}
+                              style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}
                             >
                               <LucideIcon icon={iconEntry.icon} className="h-2.5 w-2.5" aria-hidden />
                             </span>
@@ -679,8 +679,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             : null;
                           return iconEntry ? (
                             <span
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-white"
-                              style={{ backgroundColor: item.categoryColor ?? "var(--color-muted)" }}
+                              className={`flex h-8 w-8 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`}
+                              style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}
                             >
                               <LucideIcon icon={iconEntry.icon} className="h-4 w-4" aria-hidden />
                             </span>

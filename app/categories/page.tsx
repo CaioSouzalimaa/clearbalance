@@ -527,8 +527,8 @@ export default function CategoriesPage() {
                 >
                   {/* Icon */}
                   <span
-                    className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full text-white"
-                    style={{ backgroundColor: category.color ?? "var(--color-muted)" }}
+                    className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full ${category.color ? "text-white" : "bg-muted text-foreground"}`}
+                    style={category.color ? { backgroundColor: category.color } : undefined}
                   >
                     <LucideIcon
                       icon={Icon}
