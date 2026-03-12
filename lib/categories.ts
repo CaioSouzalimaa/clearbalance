@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db";
 import { CategoryInput } from "@/lib/validations/categories";
 
@@ -38,6 +40,7 @@ export interface UICategory {
   name: string;
   iconId: string | null;
   color: string | null;
+  budget: number | null;
   type: "INCOME" | "EXPENSE" | "BOTH";
   transactionCount: number;
 }
@@ -54,6 +57,7 @@ export async function getUserCategories(userId: string): Promise<UICategory[]> {
     name: c.name,
     iconId: c.icon ?? null,
     color: c.color ?? null,
+    budget: c.budget != null ? c.budget.toNumber() : null,
     type: c.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: c._count.transactions,
   }));
@@ -64,7 +68,14 @@ export async function createCategory(
   data: CategoryInput,
 ): Promise<UICategory> {
   const record = await prisma.category.create({
-    data: { userId, name: data.name, icon: data.iconId ?? null, color: data.color ?? null, type: data.type ?? "BOTH" },
+    data: {
+      userId,
+      name: data.name,
+      icon: data.iconId ?? null,
+      color: data.color ?? null,
+      budget: data.budget != null ? new Prisma.Decimal(data.budget) : null,
+      type: data.type ?? "BOTH",
+    },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -73,6 +84,7 @@ export async function createCategory(
     name: record.name,
     iconId: record.icon ?? null,
     color: record.color ?? null,
+    budget: record.budget != null ? record.budget.toNumber() : null,
     type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };
@@ -85,7 +97,13 @@ export async function updateCategory(
 ): Promise<UICategory> {
   const record = await prisma.category.update({
     where: { id, userId },
-    data: { name: data.name, icon: data.iconId ?? null, color: data.color ?? null, type: data.type ?? "BOTH" },
+    data: {
+      name: data.name,
+      icon: data.iconId ?? null,
+      color: data.color ?? null,
+      budget: data.budget != null ? new Prisma.Decimal(data.budget) : null,
+      type: data.type ?? "BOTH",
+    },
     include: { _count: { select: { transactions: true } } },
   });
 
@@ -94,6 +112,7 @@ export async function updateCategory(
     name: record.name,
     iconId: record.icon ?? null,
     color: record.color ?? null,
+    budget: record.budget != null ? record.budget.toNumber() : null,
     type: record.type as "INCOME" | "EXPENSE" | "BOTH",
     transactionCount: record._count.transactions,
   };

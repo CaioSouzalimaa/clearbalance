@@ -57,6 +57,15 @@ export interface GoalPoint {
   deadline: string | null;
 }
 
+export interface BudgetProgress {
+  categoryName: string;
+  iconId: string | null;
+  color: string | null;
+  budget: number;
+  spent: number;
+  percentage: number;
+}
+
 export interface DashboardData {
   summaryCards: SummaryCardData[];
   cumulativeBalance: string;
@@ -66,6 +75,7 @@ export interface DashboardData {
   incomeDistribution: CategoryPoint[];
   categoryDistribution: CategoryPoint[];
   goalsProgress: GoalPoint[];
+  budgetProgress: BudgetProgress[];
 }
 
 // ---------------------------------------------------------------------------
@@ -729,6 +739,25 @@ export async function getDashboardData(
     deadline: g.deadline ? g.deadline.toISOString().split("T")[0] : null,
   }));
 
+  // ── Budget progress ───────────────────────────────────────────────────────
+  const budgetCategories = await prisma.category.findMany({
+    where: { userId, budget: { not: null } },
+    select: { name: true, icon: true, color: true, budget: true },
+  });
+
+  const budgetProgress: BudgetProgress[] = budgetCategories.map((cat) => {
+    const budget = cat.budget!.toNumber();
+    const spent = expenseByCategoryMap.get(cat.name)?.toNumber() ?? 0;
+    return {
+      categoryName: cat.name,
+      iconId: cat.icon ?? null,
+      color: cat.color ?? null,
+      budget,
+      spent,
+      percentage: budget > 0 ? parseFloat(((spent / budget) * 100).toFixed(1)) : 0,
+    };
+  });
+
   return {
     summaryCards,
     cumulativeBalance: formatCurrencyBRL(cumulativeBalance),
@@ -738,5 +767,6 @@ export async function getDashboardData(
     incomeDistribution,
     categoryDistribution,
     goalsProgress,
+    budgetProgress,
   };
 }

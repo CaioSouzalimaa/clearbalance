@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/transactions";
+import { BudgetProgressChart } from "@/components/dashboard/budget-progress-chart";
 import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { GoalsProgressChart } from "@/components/dashboard/goals-progress-chart";
@@ -54,6 +55,7 @@ export default async function DashboardPage({
     incomeDistribution,
     categoryDistribution,
     goalsProgress,
+    budgetProgress,
   } = dashboardData;
 
   const hasSeenTour = userPrefs?.hasSeenTour ?? false;
@@ -108,6 +110,14 @@ export default async function DashboardPage({
             title="Metas do mês"
             subtitle="Progresso das suas metas financeiras."
             data={goalsProgress}
+          />
+        </section>
+
+        <section className="grid gap-3 sm:gap-6">
+          <BudgetProgressChart
+            title="Orçamento por categoria"
+            subtitle="Quanto você gastou em relação ao limite mensal de cada categoria."
+            data={budgetProgress}
           />
         </section>
 

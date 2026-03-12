@@ -20,6 +20,7 @@ interface Category {
   name: string;
   iconId: string | null;
   color: string | null;
+  budget: number | null;
   type: CategoryType;
   transactionCount: number;
 }
@@ -35,6 +36,7 @@ export default function CategoriesPage() {
   const [formName, setFormName] = useState("");
   const [formIconId, setFormIconId] = useState(iconOptions[0].id);
   const [formColor, setFormColor] = useState("#6366f1");
+  const [formBudget, setFormBudget] = useState("");
   const [formType, setFormType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -92,11 +94,29 @@ export default function CategoriesPage() {
   }, []);
 
   /* ── open / close modal ── */
+  const formatBudgetBRL = (value: string): string => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return "";
+    const numberValue = Number(digits) / 100;
+    return numberValue.toLocaleString("pt-BR", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const parseBudgetFromFormatted = (value: string): number | null => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return null;
+    return Number(digits) / 100;
+  };
+
   const openCreate = () => {
     setEditingId(null);
     setFormName("");
     setFormIconId(iconOptions[0].id);
     setFormColor("#6366f1");
+    setFormBudget("");
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -108,6 +128,15 @@ export default function CategoriesPage() {
     setFormName(cat.name);
     setFormIconId(cat.iconId ?? iconOptions[0].id);
     setFormColor(cat.color ?? "#6366f1");
+    setFormBudget(
+      cat.budget != null
+        ? cat.budget.toLocaleString("pt-BR", {
+            style: "decimal",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        : "",
+    );
     setFormType(cat.type === "BOTH" ? "EXPENSE" : cat.type);
     setFormError("");
     setIconSearch("");
@@ -120,6 +149,7 @@ export default function CategoriesPage() {
     setFormName("");
     setFormIconId(iconOptions[0].id);
     setFormColor("#6366f1");
+    setFormBudget("");
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -145,7 +175,7 @@ export default function CategoriesPage() {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, iconId: formIconId, color: formColor, type: formType }),
+        body: JSON.stringify({ name, iconId: formIconId, color: formColor, budget: parseBudgetFromFormatted(formBudget), type: formType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -365,6 +395,34 @@ export default function CategoriesPage() {
                     </div>
                   </div>
 
+                  {/* Budget */}
+                  {!isGoalsCategory && (
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="categoria-orcamento"
+                        className="text-xs sm:text-sm font-medium text-foreground"
+                      >
+                        Orçamento mensal{" "}
+                        <span className="text-muted-foreground font-normal">(opcional)</span>
+                      </label>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+                          R$
+                        </span>
+                        <Input
+                          id="categoria-orcamento"
+                          name="categoria-orcamento"
+                          placeholder="0,00"
+                          value={formBudget}
+                          disabled={isSaving}
+                          inputMode="numeric"
+                          onChange={(e) => setFormBudget(formatBudgetBRL(e.target.value))}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Icon picker */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -563,6 +621,15 @@ export default function CategoriesPage() {
                       {category.transactionCount} lançamento
                       {category.transactionCount !== 1 ? "s" : ""}
                     </p>
+                    {category.budget != null && (
+                      <p className="text-xs text-muted-foreground">
+                        Orçamento:{" "}
+                        {category.budget.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </p>
+                    )}
                   </div>
 
                   {/* Actions */}

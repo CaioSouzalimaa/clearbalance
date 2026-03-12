@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Download } from "lucide";
+import { ChevronDown, ChevronUp, Download, Upload } from "lucide";
 import { useToast } from "@/components/ui/toast";
 import { LucideIcon } from "@/components/dashboard/sidebar";
 import { iconOptions } from "@/lib/icon-options";
@@ -54,6 +54,12 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const { toast } = useToast();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // OFX import
+  const [isOfxModalOpen, setIsOfxModalOpen] = useState(false);
+  const [ofxFile, setOfxFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const ofxInputRef = React.useRef<HTMLInputElement>(null);
 
   // Sync with server-rendered data after router.refresh()
   useEffect(() => {
@@ -418,8 +424,96 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     };
   }, [editingTransaction]);
 
+  const handleOfxImport = async () => {
+    if (!ofxFile) return;
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", ofxFile);
+      const res = await fetch("/api/transactions/import", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast((data as { error?: string }).error ?? "Erro ao importar.", "error");
+        return;
+      }
+      const count = (data as { imported?: number }).imported ?? 0;
+      toast(`${count} lançamento${count !== 1 ? "s" : ""} importado${count !== 1 ? "s" : ""} com sucesso.`, "success");
+      setIsOfxModalOpen(false);
+      setOfxFile(null);
+      router.refresh();
+    } catch {
+      toast("Erro ao importar arquivo OFX.", "error");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <>
+      {/* OFX Import Modal */}
+      {isOfxModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ofx-modal-title"
+          onKeyDown={(e) => { if (e.key === "Escape") { setIsOfxModalOpen(false); setOfxFile(null); } }}
+        >
+          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-lg">
+            <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
+              Importar extrato OFX
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+              Selecione um arquivo .ofx ou .qfx exportado pelo seu banco. Os lançamentos serão categorizados automaticamente.
+            </p>
+
+            <div
+              className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 cursor-pointer hover:bg-muted/50 transition"
+              onClick={() => ofxInputRef.current?.click()}
+            >
+              <LucideIcon icon={Upload} className="h-8 w-8 text-muted-foreground" aria-hidden />
+              {ofxFile ? (
+                <p className="text-sm font-medium text-foreground">{ofxFile.name}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Clique para selecionar um arquivo</p>
+              )}
+              <input
+                ref={ofxInputRef}
+                type="file"
+                accept=".ofx,.qfx"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0] ?? null;
+                  setOfxFile(f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            <div className="mt-4 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 text-xs sm:text-sm"
+                onClick={() => { setIsOfxModalOpen(false); setOfxFile(null); }}
+                disabled={isImporting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 text-xs sm:text-sm"
+                onClick={handleOfxImport}
+                disabled={!ofxFile || isImporting}
+              >
+                {isImporting ? "Importando…" : "Importar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -443,6 +537,15 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             >
               <LucideIcon icon={Download} className="h-3.5 w-3.5" />
               Exportar CSV
+            </Button>
+            <Button
+              variant="outline"
+              className="flex items-center gap-1.5 h-8 px-3 text-xs"
+              onClick={() => setIsOfxModalOpen(true)}
+              title="Importar extrato bancário OFX"
+            >
+              <LucideIcon icon={Upload} className="h-3.5 w-3.5" />
+              Importar OFX
             </Button>
           </div>
         </div>
