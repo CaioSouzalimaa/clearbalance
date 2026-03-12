@@ -94,7 +94,8 @@ export const TransactionModal = ({
         if (!initialState.category) {
           const txType = initialState.type ?? "entrada";
           const filtered = data.filter((c) => {
-            if (txType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+            if (txType === "entrada")
+              return c.type === "INCOME" || c.type === "BOTH";
             return c.type === "EXPENSE" || c.type === "BOTH";
           });
           if (filtered.length > 0) {
@@ -125,7 +126,8 @@ export const TransactionModal = ({
 
   const filteredCategories = useMemo(() => {
     return categories.filter((c) => {
-      if (formState.type === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+      if (formState.type === "entrada")
+        return c.type === "INCOME" || c.type === "BOTH";
       return c.type === "EXPENSE" || c.type === "BOTH";
     });
   }, [categories, formState.type]);
@@ -225,7 +227,9 @@ export const TransactionModal = ({
             {isSubmitting && (
               <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background/80 backdrop-blur-sm">
                 <Spinner className="h-8 w-8 text-primary" />
-                <p className="text-sm font-medium text-foreground">Salvando transação…</p>
+                <p className="text-sm font-medium text-foreground">
+                  Salvando transação…
+                </p>
               </div>
             )}
             <form
@@ -289,18 +293,24 @@ export const TransactionModal = ({
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
                     value={formState.type}
                     onChange={(event) => {
-                      const newType = event.target.value as TransactionFormState["type"];
+                      const newType = event.target
+                        .value as TransactionFormState["type"];
                       setFormState((prev) => {
                         // reset category if it doesn't match the new type
                         const matching = categories.filter((c) => {
-                          if (newType === "entrada") return c.type === "INCOME" || c.type === "BOTH";
+                          if (newType === "entrada")
+                            return c.type === "INCOME" || c.type === "BOTH";
                           return c.type === "EXPENSE" || c.type === "BOTH";
                         });
-                        const currentStillValid = matching.some((c) => c.name === prev.category);
+                        const currentStillValid = matching.some(
+                          (c) => c.name === prev.category,
+                        );
                         return {
                           ...prev,
                           type: newType,
-                          category: currentStillValid ? prev.category : (matching[0]?.name ?? ""),
+                          category: currentStillValid
+                            ? prev.category
+                            : (matching[0]?.name ?? ""),
                         };
                       });
                     }}
@@ -314,7 +324,8 @@ export const TransactionModal = ({
                     htmlFor={`${dialogId}-categoria`}
                     className="text-sm font-medium text-foreground"
                   >
-                    Categoria{isLoadingCategories && (
+                    Categoria
+                    {isLoadingCategories && (
                       <Spinner className="ml-1.5 inline h-3.5 w-3.5 text-muted-foreground" />
                     )}
                   </label>
@@ -399,8 +410,9 @@ export const TransactionModal = ({
                       }))
                     }
                     className={
-                      `max-w-[200px] ` +
-                      (submitted && !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(formState.date)
+                      `max-w-50 ` +
+                      (submitted &&
+                      !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(formState.date)
                         ? "border-red-500 focus-visible:ring-red-500"
                         : "")
                     }
@@ -554,7 +566,7 @@ export const TransactionModal = ({
                             billingDay: event.target.value,
                           }))
                         }
-                        className="max-w-[200px]"
+                        className="max-w-50"
                       />
                     ) : (
                       <Input
@@ -593,7 +605,7 @@ export const TransactionModal = ({
                             recurrenceEndDate: event.target.value,
                           }))
                         }
-                        className="max-w-[200px]"
+                        className="max-w-50"
                       />
                       <p className="text-xs text-muted-foreground">
                         Esta recorrência será gerada até a data especificada.
@@ -676,7 +688,12 @@ export const TransactionModal = ({
               </div>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" disabled={isSubmitting} onClick={onClose}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isSubmitting}
+                  onClick={onClose}
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
