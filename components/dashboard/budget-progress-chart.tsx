@@ -60,10 +60,22 @@ export const BudgetProgressChart = ({
 
                 {/* Bar + labels */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate text-xs sm:text-sm font-medium text-foreground">
-                      {item.categoryName}
-                    </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="truncate text-xs sm:text-sm font-medium text-foreground">
+                        {item.categoryName}
+                      </p>
+                      {pct >= 100 && (
+                        <span className="shrink-0 rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-bold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400">
+                          Excedido
+                        </span>
+                      )}
+                      {pct >= 80 && pct < 100 && (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                          Atenção
+                        </span>
+                      )}
+                    </div>
                     <p className="shrink-0 text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                       {formatBRL(item.spent)} / {formatBRL(item.budget)}
                     </p>

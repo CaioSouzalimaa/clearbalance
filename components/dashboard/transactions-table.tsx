@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Download, Upload } from "lucide";
+import { ChevronDown, ChevronUp, Download, Upload, Bookmark, X } from "lucide";
 import { useToast } from "@/components/ui/toast";
 import { LucideIcon } from "@/components/dashboard/sidebar";
 import { iconOptions } from "@/lib/icon-options";
@@ -55,11 +55,34 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // OFX import
+  // OFX import (2-step: file → preview)
   const [isOfxModalOpen, setIsOfxModalOpen] = useState(false);
   const [ofxFile, setOfxFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const ofxInputRef = React.useRef<HTMLInputElement>(null);
+
+  type PreviewRow = {
+    date: string;
+    description: string;
+    amount: number;
+    type: "INCOME" | "EXPENSE";
+    suggestedCategory: string;
+    categoryId: string | null;
+  };
+  type AvailableCategory = { id: string; name: string };
+
+  const [ofxStep, setOfxStep] = useState<1 | 2>(1);
+  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<AvailableCategory[]>([]);
+  const [categorySelections, setCategorySelections] = useState<Record<number, string>>({});
+
+  function closeOfxModal() {
+    setIsOfxModalOpen(false);
+    setOfxFile(null);
+    setOfxStep(1);
+    setPreviewRows([]);
+    setCategorySelections({});
+  }
 
   // Sync with server-rendered data after router.refresh()
   useEffect(() => {
@@ -75,6 +98,42 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   const [recurrenceFilter, setRecurrenceFilter] = useState<
     "todos" | "recorrente" | "nao_recorrente"
   >("todos");
+
+  // ── Saved filters ───────────────────────────────────────────────────────
+  type SavedFilter = {
+    name: string;
+    search: string;
+    status: "todos" | "pendente" | "liquidado";
+    type: "todos" | "entrada" | "saida";
+    recurrence: "todos" | "recorrente" | "nao_recorrente";
+  };
+  const STORAGE_KEY = "clearbalance_saved_filters";
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); } catch { return []; }
+  });
+  const [savingFilterName, setSavingFilterName] = useState("");
+  const [isSavingFilter, setIsSavingFilter] = useState(false);
+
+  const persistFilters = (next: SavedFilter[]) => {
+    setSavedFilters(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  };
+  const applyFilter = (f: SavedFilter) => {
+    setSearchTerm(f.search);
+    setStatusFilter(f.status);
+    setTypeFilter(f.type);
+    setRecurrenceFilter(f.recurrence);
+  };
+  const saveCurrentFilter = () => {
+    const name = savingFilterName.trim();
+    if (!name) return;
+    const f: SavedFilter = { name, search: searchTerm, status: statusFilter, type: typeFilter, recurrence: recurrenceFilter };
+    persistFilters([...savedFilters.filter((s) => s.name !== name), f]);
+    setSavingFilterName("");
+    setIsSavingFilter(false);
+  };
+  const deleteFilter = (name: string) => persistFilters(savedFilters.filter((s) => s.name !== name));
 
   type SortKey = "description" | "category" | "date" | "amount";
   type SortDir = "asc" | "desc";
@@ -424,15 +483,65 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     };
   }, [editingTransaction]);
 
-  const handleOfxImport = async () => {
+  // Step 1 → 2: parse file and show preview
+  const handleOfxPreview = async () => {
     if (!ofxFile) return;
     setIsImporting(true);
     try {
       const formData = new FormData();
       formData.append("file", ofxFile);
-      const res = await fetch("/api/transactions/import", {
+      const res = await fetch("/api/transactions/preview-ofx", {
         method: "POST",
         body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast((data as { error?: string }).error ?? "Erro ao processar arquivo.", "error");
+        return;
+      }
+      const rows = (data as { transactions: PreviewRow[] }).transactions;
+      if (rows.length === 0) {
+        toast("Nenhuma transação encontrada no arquivo.", "error");
+        return;
+      }
+
+      // Fetch user categories for the select
+      const catRes = await fetch("/api/categories");
+      const catData = await catRes.json().catch(() => ({ categories: [] }));
+      const cats: AvailableCategory[] = Array.isArray(catData) ? catData : [];
+      setAvailableCategories(cats);
+
+      // Pre-fill selections from suggested categoryId
+      const selections: Record<number, string> = {};
+      rows.forEach((r, i) => {
+        if (r.categoryId) selections[i] = r.categoryId;
+        else if (cats.length > 0) selections[i] = cats[0].id;
+      });
+      setPreviewRows(rows);
+      setCategorySelections(selections);
+      setOfxStep(2);
+    } catch {
+      toast("Erro ao processar arquivo OFX.", "error");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Step 2: confirm and import
+  const handleOfxImport = async () => {
+    setIsImporting(true);
+    try {
+      const transactions = previewRows.map((r, i) => ({
+        date: r.date,
+        description: r.description,
+        amount: r.amount,
+        type: r.type,
+        categoryId: categorySelections[i] ?? (availableCategories[0]?.id ?? ""),
+      }));
+      const res = await fetch("/api/transactions/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactions }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -441,11 +550,10 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       }
       const count = (data as { imported?: number }).imported ?? 0;
       toast(`${count} lançamento${count !== 1 ? "s" : ""} importado${count !== 1 ? "s" : ""} com sucesso.`, "success");
-      setIsOfxModalOpen(false);
-      setOfxFile(null);
+      closeOfxModal();
       router.refresh();
     } catch {
-      toast("Erro ao importar arquivo OFX.", "error");
+      toast("Erro ao importar lançamentos.", "error");
     } finally {
       setIsImporting(false);
     }
@@ -460,57 +568,127 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
           role="dialog"
           aria-modal="true"
           aria-labelledby="ofx-modal-title"
-          onKeyDown={(e) => { if (e.key === "Escape") { setIsOfxModalOpen(false); setOfxFile(null); } }}
+          onKeyDown={(e) => { if (e.key === "Escape") closeOfxModal(); }}
         >
-          <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-lg">
-            <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
-              Importar extrato OFX
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-              Selecione um arquivo .ofx ou .qfx exportado pelo seu banco. Os lançamentos serão categorizados automaticamente.
-            </p>
+          {/* Step 1 — file picker */}
+          {ofxStep === 1 && (
+            <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-lg">
+              <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
+                Importar extrato OFX
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                Selecione um arquivo .ofx ou .qfx exportado pelo seu banco. Você poderá revisar e ajustar as categorias antes de importar.
+              </p>
 
-            <div
-              className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 cursor-pointer hover:bg-muted/50 transition"
-              onClick={() => ofxInputRef.current?.click()}
-            >
-              <LucideIcon icon={Upload} className="h-8 w-8 text-muted-foreground" aria-hidden />
-              {ofxFile ? (
-                <p className="text-sm font-medium text-foreground">{ofxFile.name}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">Clique para selecionar um arquivo</p>
-              )}
-              <input
-                ref={ofxInputRef}
-                type="file"
-                accept=".ofx,.qfx"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setOfxFile(f);
-                  e.target.value = "";
-                }}
-              />
-            </div>
+              <div
+                className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 cursor-pointer hover:bg-muted/50 transition"
+                onClick={() => ofxInputRef.current?.click()}
+              >
+                <LucideIcon icon={Upload} className="h-8 w-8 text-muted-foreground" aria-hidden />
+                {ofxFile ? (
+                  <p className="text-sm font-medium text-foreground">{ofxFile.name}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Clique para selecionar um arquivo</p>
+                )}
+                <input
+                  ref={ofxInputRef}
+                  type="file"
+                  accept=".ofx,.qfx"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    setOfxFile(f);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
 
-            <div className="mt-4 flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 text-xs sm:text-sm"
-                onClick={() => { setIsOfxModalOpen(false); setOfxFile(null); }}
-                disabled={isImporting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="flex-1 text-xs sm:text-sm"
-                onClick={handleOfxImport}
-                disabled={!ofxFile || isImporting}
-              >
-                {isImporting ? "Importando…" : "Importar"}
-              </Button>
+              <div className="mt-4 flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs sm:text-sm"
+                  onClick={closeOfxModal}
+                  disabled={isImporting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1 text-xs sm:text-sm"
+                  onClick={handleOfxPreview}
+                  disabled={!ofxFile || isImporting}
+                >
+                  {isImporting ? "Processando…" : "Próximo →"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Step 2 — preview + category selects */}
+          {ofxStep === 2 && (
+            <div className="w-full max-w-3xl rounded-xl bg-background p-6 shadow-lg flex flex-col gap-4 max-h-[90vh]">
+              <div>
+                <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
+                  Revisar lançamentos ({previewRows.length})
+                </h2>
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                  Ajuste as categorias antes de importar.
+                </p>
+              </div>
+
+              <div className="overflow-y-auto flex-1 -mx-1 px-1">
+                <table className="w-full text-xs sm:text-sm">
+                  <thead className="sticky top-0 bg-background z-10">
+                    <tr className="border-b border-border text-muted-foreground text-left">
+                      <th className="pb-2 font-medium pr-3">Data</th>
+                      <th className="pb-2 font-medium pr-3">Descrição</th>
+                      <th className="pb-2 font-medium text-right pr-3">Valor</th>
+                      <th className="pb-2 font-medium">Categoria</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {previewRows.map((row, i) => (
+                      <tr key={i} className="hover:bg-muted/30">
+                        <td className="py-2 pr-3 whitespace-nowrap">{row.date}</td>
+                        <td className="py-2 pr-3 max-w-50 truncate">{row.description}</td>
+                        <td className={`py-2 pr-3 text-right tabular-nums font-medium whitespace-nowrap ${row.type === "INCOME" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {row.type === "INCOME" ? "+" : "-"} R$ {row.amount.toFixed(2).replace(".", ",")}
+                        </td>
+                        <td className="py-2">
+                          <select
+                            value={categorySelections[i] ?? ""}
+                            onChange={(e) => setCategorySelections((prev) => ({ ...prev, [i]: e.target.value }))}
+                            className="w-full rounded-lg border border-border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                          >
+                            {availableCategories.map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex gap-3 pt-2 border-t border-border">
+                <Button
+                  variant="outline"
+                  className="flex-1 text-xs sm:text-sm"
+                  onClick={() => setOfxStep(1)}
+                  disabled={isImporting}
+                >
+                  ← Voltar
+                </Button>
+                <Button
+                  className="flex-1 text-xs sm:text-sm"
+                  onClick={handleOfxImport}
+                  disabled={isImporting || previewRows.length === 0}
+                >
+                  {isImporting ? "Importando…" : `Confirmar e importar ${previewRows.length} lançamento${previewRows.length !== 1 ? "s" : ""}`}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -550,6 +728,35 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
           </div>
         </div>
         <div className="border-b border-border bg-muted/20 px-3 py-2 sm:px-6 sm:py-4">
+          {/* Saved filter chips */}
+          {savedFilters.length > 0 && (
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {savedFilters.map((f) => (
+                <div
+                  key={f.name}
+                  className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm"
+                >
+                  <button
+                    type="button"
+                    onClick={() => applyFilter(f)}
+                    className="hover:text-primary transition-colors"
+                  >
+                    <LucideIcon icon={Bookmark} className="mr-1 inline h-3 w-3 text-primary" aria-hidden />
+                    {f.name}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remover filtro ${f.name}`}
+                    onClick={() => deleteFilter(f.name)}
+                    className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 transition-colors"
+                  >
+                    <LucideIcon icon={X} className="h-2.5 w-2.5" aria-hidden />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-3 lg:flex lg:items-center">
               <Input
@@ -601,6 +808,40 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               <option value="nao_recorrente">Não recorrentes</option>
               <option value="recorrente">Recorrentes</option>
             </select>
+
+            {/* Save filter */}
+            {isSavingFilter ? (
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Input
+                  autoFocus
+                  placeholder="Nome do filtro…"
+                  value={savingFilterName}
+                  onChange={(e) => setSavingFilterName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveCurrentFilter();
+                    if (e.key === "Escape") { setIsSavingFilter(false); setSavingFilterName(""); }
+                  }}
+                  className="h-8 w-36 text-xs"
+                />
+                <Button type="button" className="h-8 px-3 text-xs" onClick={saveCurrentFilter} disabled={!savingFilterName.trim()}>
+                  Salvar
+                </Button>
+                <Button type="button" variant="outline" className="h-8 px-2 text-xs" onClick={() => { setIsSavingFilter(false); setSavingFilterName(""); }}>
+                  <LucideIcon icon={X} className="h-3.5 w-3.5" aria-hidden />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0 flex items-center gap-1.5 h-8 px-3 text-xs"
+                onClick={() => setIsSavingFilter(true)}
+                title="Salvar filtro atual"
+              >
+                <LucideIcon icon={Bookmark} className="h-3.5 w-3.5" aria-hidden />
+                Salvar filtro
+              </Button>
+            )}
           </div>
         </div>
         <div className="block md:hidden">

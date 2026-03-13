@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { categorize } from "@/lib/ofx-categorizer";
-import { parseOFX } from "@/lib/ofx-parser";
 import { TransactionType, RecurrenceMode } from "@prisma/client";
 import { Prisma } from "@prisma/client";
+
+interface ConfirmedTransaction {
+  date: string; // "YYYY-MM-DD"
+  description: string;
+  amount: number;
+  type: "INCOME" | "EXPENSE";
+  categoryId: string; // must be an existing category id owned by the user
+}
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -15,84 +21,53 @@ export async function POST(req: NextRequest) {
   }
   const userId = session.user.id;
 
-  // Parse multipart form-data
-  let formData: FormData;
-  try {
-    formData = await req.formData();
-  } catch {
-    return NextResponse.json(
-      { error: "Requisição inválida. Envie um arquivo OFX." },
-      { status: 400 },
-    );
-  }
+  const contentType = req.headers.get("content-type") ?? "";
 
-  const file = formData.get("file");
-  if (!file || !(file instanceof File)) {
-    return NextResponse.json(
-      { error: "Nenhum arquivo enviado." },
-      { status: 400 },
-    );
-  }
+  // ── JSON path: confirmed transactions from the preview step ──────────────
+  if (contentType.includes("application/json")) {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
+    }
 
-  // Basic MIME / extension check — do not rely solely on MIME as browsers may vary
-  const fileName = file.name.toLowerCase();
-  if (!fileName.endsWith(".ofx") && !fileName.endsWith(".qfx")) {
-    return NextResponse.json(
-      { error: "Somente arquivos .ofx ou .qfx são aceitos." },
-      { status: 400 },
-    );
-  }
+    if (
+      !body ||
+      typeof body !== "object" ||
+      !Array.isArray((body as Record<string, unknown>).transactions)
+    ) {
+      return NextResponse.json(
+        { error: 'Esperado { transactions: [...] }' },
+        { status: 400 },
+      );
+    }
 
-  // Limit file size to 5 MB
-  const MAX_BYTES = 5 * 1024 * 1024;
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      { error: "O arquivo excede o limite de 5 MB." },
-      { status: 400 },
-    );
-  }
+    const items = (body as { transactions: ConfirmedTransaction[] }).transactions;
 
-  const content = await file.text();
+    if (items.length === 0) {
+      return NextResponse.json({ error: "Nenhuma transação enviada." }, { status: 400 });
+    }
 
-  // Parse OFX
-  let parsed;
-  try {
-    parsed = parseOFX(content);
-  } catch {
-    return NextResponse.json(
-      { error: "Não foi possível interpretar o arquivo OFX." },
-      { status: 422 },
-    );
-  }
-
-  if (parsed.length === 0) {
-    return NextResponse.json(
-      { error: "Nenhuma transação encontrada no arquivo." },
-      { status: 422 },
-    );
-  }
-
-  // Resolve or create categories for each unique name
-  const categoryNames = [...new Set(parsed.map((t) => categorize(t.description)))];
-  const categoryMap = new Map<string, string>(); // name → id
-
-  for (const name of categoryNames) {
-    const cat = await prisma.category.upsert({
-      where: { userId_name: { userId, name } },
-      create: { userId, name },
-      update: {},
+    // Validate that every categoryId belongs to the authenticated user
+    const categoryIds = [...new Set(items.map((t) => t.categoryId))];
+    const ownedCategories = await prisma.category.findMany({
+      where: { id: { in: categoryIds }, userId },
       select: { id: true },
     });
-    categoryMap.set(name, cat.id);
-  }
+    const ownedIds = new Set(ownedCategories.map((c) => c.id));
+    for (const id of categoryIds) {
+      if (!ownedIds.has(id)) {
+        return NextResponse.json(
+          { error: "Categoria inválida ou não pertence ao usuário." },
+          { status: 403 },
+        );
+      }
+    }
 
-  // Build transaction rows
-  const rows = parsed.map((t) => {
-    const categoryName = categorize(t.description);
-    const categoryId = categoryMap.get(categoryName)!;
-    return {
+    const rows = items.map((t) => ({
       userId,
-      categoryId,
+      categoryId: t.categoryId,
       description: t.description,
       amount: new Prisma.Decimal(t.amount),
       type: t.type === "INCOME" ? TransactionType.INCOME : TransactionType.EXPENSE,
@@ -100,13 +75,15 @@ export async function POST(req: NextRequest) {
       isSettled: true,
       paymentDate: new Date(t.date),
       recurrenceMode: RecurrenceMode.NONE,
-    };
-  });
+    }));
 
-  const result = await prisma.transaction.createMany({
-    data: rows,
-    skipDuplicates: false,
-  });
+    const result = await prisma.transaction.createMany({ data: rows, skipDuplicates: false });
+    return NextResponse.json({ imported: result.count });
+  }
 
-  return NextResponse.json({ imported: result.count });
+  // ── Legacy path kept for backward compatibility (should not be reached) ──
+  return NextResponse.json(
+    { error: "Use o fluxo de pré-visualização: envie para /api/transactions/preview-ofx primeiro." },
+    { status: 400 },
+  );
 }

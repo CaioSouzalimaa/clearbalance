@@ -53,6 +53,9 @@ export default function CategoriesPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  /* ── budget suggestion ── */
+  const [budgetSuggestion, setBudgetSuggestion] = useState<number | null>(null);
+
   const filteredIcons = useMemo(() => {
     const q = iconSearch.toLowerCase().trim();
     if (!q) return iconOptions;
@@ -117,6 +120,7 @@ export default function CategoriesPage() {
     setFormIconId(iconOptions[0].id);
     setFormColor("#6366f1");
     setFormBudget("");
+    setBudgetSuggestion(null);
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -137,7 +141,16 @@ export default function CategoriesPage() {
           })
         : "",
     );
+    setBudgetSuggestion(null);
     setFormType(cat.type === "BOTH" ? "EXPENSE" : cat.type);
+    setFormError("");
+    setIconSearch("");
+    setIsModalOpen(true);
+    // Fetch budget suggestion in background
+    fetch(`/api/categories/${cat.id}/budget-suggestion`)
+      .then((r) => r.json())
+      .then((data: { suggestion: number | null }) => setBudgetSuggestion(data.suggestion))
+      .catch(() => null);
     setFormError("");
     setIconSearch("");
     setIsModalOpen(true);
@@ -150,6 +163,7 @@ export default function CategoriesPage() {
     setFormIconId(iconOptions[0].id);
     setFormColor("#6366f1");
     setFormBudget("");
+    setBudgetSuggestion(null);
     setFormType("EXPENSE");
     setFormError("");
     setIconSearch("");
@@ -420,6 +434,26 @@ export default function CategoriesPage() {
                           className="pl-9"
                         />
                       </div>
+                      {budgetSuggestion != null && (
+                        <p className="text-xs text-muted-foreground">
+                          Sugestão baseada nos últimos 3 meses:{" "}
+                          <button
+                            type="button"
+                            className="font-semibold text-primary underline-offset-2 hover:underline"
+                            onClick={() =>
+                              setFormBudget(
+                                budgetSuggestion.toLocaleString("pt-BR", {
+                                  style: "decimal",
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }),
+                              )
+                            }
+                          >
+                            {budgetSuggestion.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          </button>
+                        </p>
+                      )}
                     </div>
                   )}
 

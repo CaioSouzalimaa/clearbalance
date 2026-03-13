@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/transactions";
+import { BudgetAlertBanner } from "@/components/dashboard/budget-alert-banner";
 import { BudgetProgressChart } from "@/components/dashboard/budget-progress-chart";
 import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -114,6 +115,10 @@ export default async function DashboardPage({
         </section>
 
         <section className="grid gap-3 sm:gap-6">
+          <BudgetAlertBanner
+            exceeded={budgetProgress.filter((b) => b.percentage >= 100).map((b) => b.categoryName)}
+            nearLimit={budgetProgress.filter((b) => b.percentage >= 80 && b.percentage < 100).map((b) => b.categoryName)}
+          />
           <BudgetProgressChart
             title="Orçamento por categoria"
             subtitle="Quanto você gastou em relação ao limite mensal de cada categoria."

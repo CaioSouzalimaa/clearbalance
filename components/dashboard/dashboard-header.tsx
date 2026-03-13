@@ -28,6 +28,20 @@ export const DashboardHeader = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "n" || e.key === "N") {
+        const tag = (e.target as HTMLElement).tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        if ((e.target as HTMLElement).isContentEditable) return;
+        e.preventDefault();
+        setIsModalOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const handleSubmit = async (state: TransactionFormState) => {
     setIsSubmitting(true);
     try {

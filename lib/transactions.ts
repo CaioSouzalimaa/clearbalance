@@ -770,3 +770,227 @@ export async function getDashboardData(
     budgetProgress,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Recurring rules
+// ---------------------------------------------------------------------------
+
+export interface RecurringRule {
+  id: string;
+  description: string;
+  category: string;
+  categoryIconId: string | null;
+  categoryColor: string | null;
+  amount: string;
+  type: "entrada" | "saida";
+  recurrenceKind: "fixa" | "variavel";
+  recurrenceFrequency: "mensal" | "semanal" | "anual";
+  billingDay: string | undefined;
+  startDate: string; // "YYYY-MM-DD"
+  recurrenceEndDate: string | undefined; // "YYYY-MM-DD"
+  nextOccurrence: string; // "DD Mmm YYYY"
+}
+
+/** Calculate next occurrence date from today (inclusive). */
+function getNextOccurrence(
+  tx: { date: Date; recurrenceFrequency: RecurrenceFrequency | null; billingDay: number | null; recurrenceEndDate: Date | null },
+  from: Date,
+): Date | null {
+  const endDate = tx.recurrenceEndDate ? new Date(tx.recurrenceEndDate) : null;
+  if (endDate && from > endDate) return null;
+
+  const freq = tx.recurrenceFrequency;
+  const origin = new Date(tx.date);
+
+  if (!freq || freq === RecurrenceFrequency.MONTHLY || freq === RecurrenceFrequency.DAILY) {
+    const dayOfMonth = tx.billingDay ?? origin.getUTCDate();
+    // Find the next month/day >= from
+    let y = from.getUTCFullYear();
+    let m = from.getUTCMonth();
+    const daysInMonth = (yr: number, mo: number) => new Date(Date.UTC(yr, mo + 1, 0)).getUTCDate();
+    const actualDay = Math.min(dayOfMonth, daysInMonth(y, m));
+    let candidate = new Date(Date.UTC(y, m, actualDay));
+    if (candidate < from) {
+      m++;
+      if (m > 11) { y++; m = 0; }
+      const ad2 = Math.min(dayOfMonth, daysInMonth(y, m));
+      candidate = new Date(Date.UTC(y, m, ad2));
+    }
+    if (endDate && candidate > endDate) return null;
+    return candidate;
+  }
+
+  if (freq === RecurrenceFrequency.WEEKLY) {
+    const targetDay = origin.getUTCDay();
+    const d = new Date(from);
+    for (let i = 0; i < 8; i++) {
+      if (d.getUTCDay() === targetDay) {
+        if (endDate && d > endDate) return null;
+        return d;
+      }
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return null;
+  }
+
+  if (freq === RecurrenceFrequency.YEARLY) {
+    let y = from.getUTCFullYear();
+    let candidate = new Date(Date.UTC(y, origin.getUTCMonth(), origin.getUTCDate()));
+    if (candidate < from) candidate = new Date(Date.UTC(y + 1, origin.getUTCMonth(), origin.getUTCDate()));
+    if (endDate && candidate > endDate) return null;
+    return candidate;
+  }
+
+  return null;
+}
+
+/** Return all active recurring transaction rules for a user. */
+export async function getRecurringRules(userId: string): Promise<RecurringRule[]> {
+  const records = await prisma.transaction.findMany({
+    where: {
+      userId,
+      recurrenceMode: { not: RecurrenceMode.NONE },
+    },
+    include: { category: { select: { name: true, icon: true, color: true } } },
+    orderBy: { date: "asc" },
+  });
+
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  const freqMap: Record<RecurrenceFrequency, RecurringRule["recurrenceFrequency"]> = {
+    MONTHLY: "mensal",
+    WEEKLY: "semanal",
+    YEARLY: "anual",
+    DAILY: "mensal",
+  };
+
+  return records
+    .map((tx) => {
+      const next = getNextOccurrence(tx, today);
+      return {
+        id: tx.id,
+        description: tx.description,
+        category: tx.category.name,
+        categoryIconId: tx.category.icon ?? null,
+        categoryColor: tx.category.color ?? null,
+        amount: formatCurrencyBRL(tx.amount),
+        type: (tx.type === TransactionType.INCOME ? "entrada" : "saida") as "entrada" | "saida",
+        recurrenceKind: (tx.recurrenceMode === RecurrenceMode.FIXED ? "fixa" : "variavel") as "fixa" | "variavel",
+        recurrenceFrequency: freqMap[tx.recurrenceFrequency ?? RecurrenceFrequency.MONTHLY],
+        billingDay: tx.billingDay != null ? String(tx.billingDay) : undefined,
+        startDate: tx.date.toISOString().split("T")[0],
+        recurrenceEndDate: tx.recurrenceEndDate ? tx.recurrenceEndDate.toISOString().split("T")[0] : undefined,
+        nextOccurrence: next ? formatDate(next) : "—",
+        _hasNext: next !== null,
+      };
+    })
+    .filter((r) => r._hasNext)
+    .map(({ _hasNext: _, ...r }) => r);
+}
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+
+export interface MonthlyReportData {
+  summary: { income: number; expense: number; balance: number };
+  categoryExpenses: { name: string; icon: string | null; color: string | null; amount: number; percentage: number }[];
+  categoryIncomes: { name: string; icon: string | null; color: string | null; amount: number; percentage: number }[];
+}
+
+export interface AnnualReportData {
+  year: number;
+  monthlyTotals: { month: string; income: number; expense: number }[];
+  categoryTotals: { name: string; icon: string | null; color: string | null; totalExpense: number }[];
+}
+
+export async function getMonthlyReportData(
+  userId: string,
+  year: number,
+  month: number, // 0-indexed
+): Promise<MonthlyReportData> {
+  const start = new Date(Date.UTC(year, month, 1));
+  const end = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
+
+  const txs = await prisma.transaction.findMany({
+    where: { userId, date: { gte: start, lte: end } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
+  });
+
+  let income = 0;
+  let expense = 0;
+  const expenseMap = new Map<string, { name: string; icon: string | null; color: string | null; amount: number }>();
+  const incomeMap = new Map<string, { name: string; icon: string | null; color: string | null; amount: number }>();
+
+  for (const tx of txs) {
+    const amt = tx.amount.toNumber();
+    const key = tx.category.name;
+    if (tx.type === TransactionType.INCOME) {
+      income += amt;
+      const ex = incomeMap.get(key) ?? { name: key, icon: tx.category.icon ?? null, color: tx.category.color ?? null, amount: 0 };
+      ex.amount += amt;
+      incomeMap.set(key, ex);
+    } else {
+      expense += amt;
+      const ex = expenseMap.get(key) ?? { name: key, icon: tx.category.icon ?? null, color: tx.category.color ?? null, amount: 0 };
+      ex.amount += amt;
+      expenseMap.set(key, ex);
+    }
+  }
+
+  const toList = (map: Map<string, { name: string; icon: string | null; color: string | null; amount: number }>, total: number) =>
+    [...map.values()]
+      .sort((a, b) => b.amount - a.amount)
+      .map((e) => ({
+        ...e,
+        percentage: total > 0 ? Math.round((e.amount / total) * 1000) / 10 : 0,
+      }));
+
+  return {
+    summary: { income, expense, balance: income - expense },
+    categoryExpenses: toList(expenseMap, expense),
+    categoryIncomes: toList(incomeMap, income),
+  };
+}
+
+export async function getAnnualReportData(
+  userId: string,
+  year: number,
+): Promise<AnnualReportData> {
+  const start = new Date(Date.UTC(year, 0, 1));
+  const end = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+
+  const txs = await prisma.transaction.findMany({
+    where: { userId, date: { gte: start, lte: end } },
+    include: { category: { select: { name: true, icon: true, color: true } } },
+  });
+
+  const monthIncome = Array(12).fill(0) as number[];
+  const monthExpense = Array(12).fill(0) as number[];
+  const catMap = new Map<string, { name: string; icon: string | null; color: string | null; totalExpense: number }>();
+
+  for (const tx of txs) {
+    const amt = tx.amount.toNumber();
+    const mo = tx.date.getUTCMonth();
+    if (tx.type === TransactionType.INCOME) {
+      monthIncome[mo] += amt;
+    } else {
+      monthExpense[mo] += amt;
+      const key = tx.category.name;
+      const ex = catMap.get(key) ?? { name: key, icon: tx.category.icon ?? null, color: tx.category.color ?? null, totalExpense: 0 };
+      ex.totalExpense += amt;
+      catMap.set(key, ex);
+    }
+  }
+
+  const monthlyTotals = PT_MONTHS.map((m, i) => ({
+    month: m,
+    income: monthIncome[i],
+    expense: monthExpense[i],
+  }));
+
+  const categoryTotals = [...catMap.values()].sort((a, b) => b.totalExpense - a.totalExpense);
+
+  return { year, monthlyTotals, categoryTotals };
+}

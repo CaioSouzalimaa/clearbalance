@@ -5,10 +5,12 @@ import Image from "next/image";
 import icon from "@/app/icon.png";
 import Link from "next/link";
 import {
+  BarChart2,
   ChevronLeft,
   ChevronRight,
   Goal,
   LayoutDashboard,
+  RotateCcw,
   Settings,
   Tags,
 } from "lucide";
@@ -21,6 +23,8 @@ export const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Categorias", href: "/categories", icon: Tags },
   { label: "Metas", href: "/goals", icon: Goal },
+  { label: "Recorrentes", href: "/recurring", icon: RotateCcw },
+  { label: "Relatórios", href: "/reports", icon: BarChart2 },
   { label: "Configurações", href: "/settings", icon: Settings },
 ];
 
