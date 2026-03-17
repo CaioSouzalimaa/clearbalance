@@ -34,7 +34,7 @@ export interface UITransaction {
 export interface SummaryCardData {
   title: string;
   value: string;
-  helper: string;
+  helper?: string;
 }
 
 export interface ChartPoint {
@@ -480,20 +480,20 @@ export async function getDashboardData(
 
   // ── Current month real transactions + all recurring records ──────────────
   const [currentMonthTxs, recurringRecords, historicalTxs] = await Promise.all([
-    prisma.transaction.findMany({
-      where: { userId, date: { gte: monthStart, lte: monthEnd } },
-      include: { category: { select: { name: true, icon: true, color: true } } },
-      orderBy: { date: "desc" },
-    }),
-    prisma.transaction.findMany({
-      where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
-      include: { category: { select: { name: true, icon: true, color: true } } },
-    }),
-    prisma.transaction.findMany({
-      where: { userId, date: { lt: monthStart } },
-      select: { type: true, amount: true },
-    }),
-  ]);
+      prisma.transaction.findMany({
+        where: { userId, date: { gte: monthStart, lte: monthEnd } },
+        include: { category: { select: { name: true, icon: true, color: true } } },
+        orderBy: { date: "desc" },
+      }),
+      prisma.transaction.findMany({
+        where: { userId, recurrenceMode: { not: RecurrenceMode.NONE } },
+        include: { category: { select: { name: true, icon: true, color: true } } },
+      }),
+      prisma.transaction.findMany({
+        where: { userId, date: { lt: monthStart } },
+        select: { type: true, amount: true },
+      }),
+    ]);
 
   // ── Summary cards ────────────────────────────────────────────────────────
   let totalIncome = new Prisma.Decimal(0);
@@ -568,12 +568,10 @@ export async function getDashboardData(
     {
       title: "Entradas",
       value: formatCurrencyBRL(totalIncome),
-      helper: "Este mês",
     },
     {
       title: "Saídas",
       value: formatCurrencyBRL(totalExpense),
-      helper: "Este mês",
     },
     {
       title: "Saldo",

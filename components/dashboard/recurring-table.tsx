@@ -8,6 +8,8 @@ import { LucideIcon } from "@/components/dashboard/sidebar";
 import { iconOptions } from "@/lib/icon-options";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 import type { RecurringRule } from "@/lib/transactions";
+import { fmtDateShort } from "@/lib/date-utils";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface RecurringTableProps {
   rules: RecurringRule[];
@@ -25,11 +27,6 @@ const freqColor: Record<RecurringRule["recurrenceFrequency"], string> = {
   anual: "border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-400",
 };
 
-function fmtEndDate(iso: string): string {
-  const months = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const [y, m, d] = iso.split("-");
-  return `${d} ${months[parseInt(m, 10) - 1]} ${y}`;
-}
 
 export function RecurringTable({ rules }: RecurringTableProps) {
   const router = useRouter();
@@ -59,12 +56,10 @@ export function RecurringTable({ rules }: RecurringTableProps) {
 
   if (rules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
-        <p className="text-base">Nenhuma transação recorrente encontrada.</p>
-        <p className="text-sm">
-          Crie uma transação marcando-a como recorrente no Dashboard.
-        </p>
-      </div>
+      <EmptyState
+        message="Nenhuma transação recorrente encontrada."
+        className="py-16"
+      />
     );
   }
 
@@ -138,7 +133,7 @@ export function RecurringTable({ rules }: RecurringTableProps) {
                   <td className="py-3 text-sm pr-4 whitespace-nowrap">{rule.nextOccurrence}</td>
                   {/* End */}
                   <td className="py-3 text-sm pr-4 text-muted-foreground whitespace-nowrap">
-                    {rule.recurrenceEndDate ? fmtEndDate(rule.recurrenceEndDate) : "—"}
+                    {rule.recurrenceEndDate ? fmtDateShort(rule.recurrenceEndDate) : "—"}
                   </td>
                   {/* Cancel */}
                   <td className="py-3 text-right pr-2">

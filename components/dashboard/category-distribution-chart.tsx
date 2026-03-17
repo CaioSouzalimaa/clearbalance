@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { formatBRLFromNumber } from "@/lib/formatting";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
@@ -33,9 +35,7 @@ export const CategoryDistributionChart = ({
         {subtitle}
       </p>
       {data.length === 0 ? (
-        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">
-          Nenhum dado disponível ainda.
-        </p>
+        <EmptyState message="Nenhum dado disponível ainda." />
       ) : (
         <div className="mt-3 sm:mt-6 grid gap-3 sm:gap-6 lg:grid-cols-[200px_1fr] lg:items-center">
           <div className="mx-auto h-36 sm:h-48 w-full max-w-45 sm:max-w-55 lg:mx-0">
@@ -58,10 +58,7 @@ export const CategoryDistributionChart = ({
                     callbacks: {
                       label: (context) => {
                         const item = data[context.dataIndex];
-                        const brl = item.amount.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        });
+                        const brl = formatBRLFromNumber(item.amount);
                         return `${context.label}: ${brl} (${item.value}%)`;
                       },
                     },
@@ -86,10 +83,7 @@ export const CategoryDistributionChart = ({
                   </span>
                 </div>
                 <span className="text-muted-foreground">
-                  {item.amount.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}{" "}
+                  {formatBRLFromNumber(item.amount)}{" "}
                   <span className="text-xs opacity-60">({item.value}%)</span>
                 </span>
               </div>

@@ -1,5 +1,8 @@
 "use client";
 
+import { formatBRLFromNumber } from "@/lib/formatting";
+import { EmptyState } from "@/components/ui/empty-state";
+
 interface GoalDataPoint {
   label: string;
   value: number;
@@ -14,8 +17,6 @@ interface GoalsProgressChartProps {
   data: GoalDataPoint[];
 }
 
-const formatBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export const GoalsProgressChart = ({
   title,
@@ -28,7 +29,7 @@ export const GoalsProgressChart = ({
       <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
 
       {data.length === 0 ? (
-        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Nenhuma meta cadastrada.</p>
+        <EmptyState message="Nenhuma meta cadastrada." />
       ) : (
         <div className="mt-3 sm:mt-6 grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((goal) => {
@@ -71,9 +72,9 @@ export const GoalsProgressChart = ({
 
                 {/* Amounts */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{formatBRL(goal.currentAmount)}</span>
+                  <span>{formatBRLFromNumber(goal.currentAmount)}</span>
                   <span className="font-medium text-foreground">
-                    {formatBRL(goal.targetAmount)}
+                    {formatBRLFromNumber(goal.targetAmount)}
                   </span>
                 </div>
 

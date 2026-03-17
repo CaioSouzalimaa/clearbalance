@@ -1,13 +1,15 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Download, Upload, Bookmark, X } from "lucide";
+import { ChevronDown, ChevronUp, Download, Upload } from "lucide";
 import { useToast } from "@/components/ui/toast";
 import { LucideIcon } from "@/components/dashboard/sidebar";
+import { formatBRLInputFromString, formatDecimalInputFromString } from "@/lib/formatting";
+import { PT_MONTHS_SHORT, parseShortDateToIso } from "@/lib/date-utils";
+import { EmptyState } from "@/components/ui/empty-state";
 import { iconOptions } from "@/lib/icon-options";
 import {
   TransactionModal,
@@ -16,6 +18,11 @@ import {
 } from "@/components/dashboard/transaction-modal";
 import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 import { MonthSelector } from "@/components/dashboard/month-selector";
+import {
+  TransactionsFilterBar,
+  FilterState,
+} from "@/components/dashboard/transactions-filter-bar";
+import { TransactionsOFXModal } from "@/components/dashboard/transactions-ofx-modal";
 
 interface Transaction {
   id: string;
@@ -49,91 +56,18 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 }) => {
   const router = useRouter();
   const [rows, setRows] = useState<Transaction[]>(transactions);
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const { toast } = useToast();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // OFX import (2-step: file → preview)
   const [isOfxModalOpen, setIsOfxModalOpen] = useState(false);
-  const [ofxFile, setOfxFile] = useState<File | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const ofxInputRef = React.useRef<HTMLInputElement>(null);
 
-  type PreviewRow = {
-    date: string;
-    description: string;
-    amount: number;
-    type: "INCOME" | "EXPENSE";
-    suggestedCategory: string;
-    categoryId: string | null;
-  };
-  type AvailableCategory = { id: string; name: string };
-
-  const [ofxStep, setOfxStep] = useState<1 | 2>(1);
-  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([]);
-  const [availableCategories, setAvailableCategories] = useState<AvailableCategory[]>([]);
-  const [categorySelections, setCategorySelections] = useState<Record<number, string>>({});
-
-  function closeOfxModal() {
-    setIsOfxModalOpen(false);
-    setOfxFile(null);
-    setOfxStep(1);
-    setPreviewRows([]);
-    setCategorySelections({});
-  }
-
-  // Sync with server-rendered data after router.refresh()
-  useEffect(() => {
-    setRows(transactions);
-  }, [transactions]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "todos" | "pendente" | "liquidado"
-  >("todos");
-  const [typeFilter, setTypeFilter] = useState<"todos" | "entrada" | "saida">(
-    "todos",
-  );
-  const [recurrenceFilter, setRecurrenceFilter] = useState<
-    "todos" | "recorrente" | "nao_recorrente"
-  >("todos");
-
-  // ── Saved filters ───────────────────────────────────────────────────────
-  type SavedFilter = {
-    name: string;
-    search: string;
-    status: "todos" | "pendente" | "liquidado";
-    type: "todos" | "entrada" | "saida";
-    recurrence: "todos" | "recorrente" | "nao_recorrente";
-  };
-  const STORAGE_KEY = "clearbalance_saved_filters";
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>(() => {
-    if (typeof window === "undefined") return [];
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); } catch { return []; }
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    status: "todos",
+    type: "todos",
+    recurrence: "todos",
   });
-  const [savingFilterName, setSavingFilterName] = useState("");
-  const [isSavingFilter, setIsSavingFilter] = useState(false);
-
-  const persistFilters = (next: SavedFilter[]) => {
-    setSavedFilters(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  };
-  const applyFilter = (f: SavedFilter) => {
-    setSearchTerm(f.search);
-    setStatusFilter(f.status);
-    setTypeFilter(f.type);
-    setRecurrenceFilter(f.recurrence);
-  };
-  const saveCurrentFilter = () => {
-    const name = savingFilterName.trim();
-    if (!name) return;
-    const f: SavedFilter = { name, search: searchTerm, status: statusFilter, type: typeFilter, recurrence: recurrenceFilter };
-    persistFilters([...savedFilters.filter((s) => s.name !== name), f]);
-    setSavingFilterName("");
-    setIsSavingFilter(false);
-  };
-  const deleteFilter = (name: string) => persistFilters(savedFilters.filter((s) => s.name !== name));
 
   type SortKey = "description" | "category" | "date" | "amount";
   type SortDir = "asc" | "desc";
@@ -149,83 +83,22 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     }
   };
 
-  const formatCurrencyBRL = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-
-    if (!digits) {
-      return "";
-    }
-
-    const numberValue = Number(digits) / 100;
-
-    return numberValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
-
-  const PT_MONTHS = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
-
-  /** Convert UI date "05 Mar 2025" → "2025-03-05" for date inputs */
-  const parseUiDateToIso = (dateStr: string): string => {
-    if (!dateStr) return "";
-    const parts = dateStr.split(" ");
-    if (parts.length !== 3) return "";
-    const day = parts[0].padStart(2, "0");
-    const monthIndex = PT_MONTHS.indexOf(parts[1]);
-    const year = parts[2];
-    if (monthIndex === -1) return "";
-    return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${day}`;
-  };
+  useEffect(() => {
+    setRows(transactions);
+  }, [transactions]);
 
   const formatAmountWithType = (value: string, type: Transaction["type"]) => {
-    const formatted = formatCurrencyBRL(value);
-
-    if (!formatted) {
-      return "";
-    }
-
+    const formatted = formatBRLInputFromString(value);
+    if (!formatted) return "";
     return `${type === "entrada" ? "+" : "-"} ${formatted}`;
   };
 
   const formatBillingLabel = (transaction: Transaction) => {
-    if (
-      transaction.recurrenceMode !== "recorrente" ||
-      !transaction.billingDay
-    ) {
-      return "";
-    }
-
-    if (transaction.recurrenceFrequency === "semanal") {
+    if (transaction.recurrenceMode !== "recorrente" || !transaction.billingDay) return "";
+    if (transaction.recurrenceFrequency === "semanal" || transaction.recurrenceFrequency === "anual") {
       return `• ${transaction.billingDay}`;
     }
-
-    if (transaction.recurrenceFrequency === "anual") {
-      return `• ${transaction.billingDay}`;
-    }
-
     return `• Dia ${transaction.billingDay}`;
-  };
-
-  const startEditing = (transaction: Transaction) => {
-    setEditingTransaction(transaction);
-  };
-
-  const handleDelete = (id: string) => {
-    setPendingDeleteId(id);
   };
 
   const confirmDelete = async () => {
@@ -251,8 +124,6 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     if (!editingTransaction) return;
     const id = editingTransaction.id;
     const previousRows = rows;
-
-    // Optimistic update
     setRows((prev) =>
       prev.map((item) =>
         item.id === id
@@ -264,18 +135,9 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               amount: formatAmountWithType(formState.amount, formState.type),
               type: formState.type,
               recurrenceMode: formState.recurrenceMode,
-              recurrenceKind:
-                formState.recurrenceMode === "recorrente"
-                  ? formState.recurrenceKind
-                  : undefined,
-              recurrenceFrequency:
-                formState.recurrenceMode === "recorrente"
-                  ? formState.recurrenceFrequency
-                  : undefined,
-              billingDay:
-                formState.recurrenceMode === "recorrente"
-                  ? formState.billingDay
-                  : undefined,
+              recurrenceKind: formState.recurrenceMode === "recorrente" ? formState.recurrenceKind : undefined,
+              recurrenceFrequency: formState.recurrenceMode === "recorrente" ? formState.recurrenceFrequency : undefined,
+              billingDay: formState.recurrenceMode === "recorrente" ? formState.billingDay : undefined,
               isSettled: formState.isSettled,
               paymentDate: formState.isSettled ? formState.paymentDate : "",
             }
@@ -283,7 +145,6 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       ),
     );
     setEditingTransaction(null);
-
     try {
       const res = await fetch(`/api/transactions/${id}`, {
         method: "PUT",
@@ -301,7 +162,6 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
   };
 
   const handleToggleSettlement = async (id: string) => {
-    // Optimistic toggle
     setRows((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
@@ -309,66 +169,46 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         return {
           ...item,
           isSettled: nextSettled,
-          paymentDate: nextSettled
-            ? item.paymentDate || new Date().toISOString().split("T")[0]
-            : "",
+          paymentDate: nextSettled ? item.paymentDate || new Date().toISOString().split("T")[0] : "",
         };
       }),
     );
-
     try {
       const res = await fetch(`/api/transactions/${id}`, { method: "PATCH" });
       if (!res.ok) throw new Error("toggle failed");
       router.refresh();
     } catch (err) {
       console.error(err);
-      // Revert on failure
       setRows(transactions);
     }
   };
 
   const filteredRows = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-
+    const { search, status, type, recurrence } = filters;
+    const normalizedSearch = search.trim().toLowerCase();
     const filtered = rows.filter((item) => {
       const matchesSearch = normalizedSearch
-        ? `${item.description} ${item.category}`
-            .toLowerCase()
-            .includes(normalizedSearch)
+        ? `${item.description} ${item.category}`.toLowerCase().includes(normalizedSearch)
         : true;
       const matchesStatus =
-        statusFilter === "todos"
-          ? true
-          : statusFilter === "liquidado"
-            ? item.isSettled
-            : !item.isSettled;
-      const matchesType =
-        typeFilter === "todos" ? true : item.type === typeFilter;
-      const matchesRecurrence =
-        recurrenceFilter === "todos"
-          ? true
-          : item.recurrenceMode === recurrenceFilter;
-
+        status === "todos" ? true : status === "liquidado" ? item.isSettled : !item.isSettled;
+      const matchesType = type === "todos" ? true : item.type === type;
+      const matchesRecurrence = recurrence === "todos" ? true : item.recurrenceMode === recurrence;
       return matchesSearch && matchesStatus && matchesType && matchesRecurrence;
     });
-
     if (!sortKey) return filtered;
-
     const PT_MONTH_IDX: Record<string, number> = {
       Jan: 0, Fev: 1, Mar: 2, Abr: 3, Mai: 4, Jun: 5,
       Jul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dez: 11,
     };
-
     const parseDate = (d: string) => {
-      const [day, mon, year] = d.split(" ");
-      return new Date(Number(year), PT_MONTH_IDX[mon] ?? 0, Number(day)).getTime();
+      const [day, mon, yr] = d.split(" ");
+      return new Date(Number(yr), PT_MONTH_IDX[mon] ?? 0, Number(day)).getTime();
     };
-
     const parseAmount = (a: string) => {
       const cleaned = a.replace(/[^0-9,]/g, "").replace(",", ".");
       return parseFloat(cleaned) || 0;
     };
-
     return [...filtered].sort((a, b) => {
       let cmp = 0;
       if (sortKey === "description") cmp = a.description.localeCompare(b.description, "pt-BR");
@@ -377,58 +217,17 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       else if (sortKey === "amount") cmp = parseAmount(a.amount) - parseAmount(b.amount);
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [recurrenceFilter, rows, searchTerm, statusFilter, typeFilter, sortKey, sortDir]);
-
-  const PT_MONTHS_NAMES = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
+  }, [filters, rows, sortKey, sortDir]);
 
   function exportToCsv() {
-    const PT_MONTHS_MAP: Record<string, string> = {
-      Jan: "01",
-      Fev: "02",
-      Mar: "03",
-      Abr: "04",
-      Mai: "05",
-      Jun: "06",
-      Jul: "07",
-      Ago: "08",
-      Set: "09",
-      Out: "10",
-      Nov: "11",
-      Dez: "12",
-    };
-    const headers = [
-      "Data",
-      "Descrição",
-      "Categoria",
-      "Tipo",
-      "Valor",
-      "Status",
-      "Data Pagamento",
-      "Recorrência",
-    ];
+    const headers = ["Data", "Descrição", "Categoria", "Tipo", "Valor", "Status", "Data Pagamento", "Recorrência"];
     const csvRows = filteredRows.map((tx) => {
       const parts = tx.date.split(" ");
       const isoDate =
         parts.length === 3
-          ? `${parts[2]}-${PT_MONTHS_MAP[parts[1]] ?? "00"}-${parts[0].padStart(2, "0")}`
+          ? `${parts[2]}-${String(PT_MONTHS_SHORT.indexOf(parts[1]) + 1).padStart(2, "0")}-${parts[0].padStart(2, "0")}`
           : tx.date;
-      const rawAmount = tx.amount
-        .replace(/^[+\-]\s*/, "")
-        .replace(/R\$\s*/, "")
-        .trim();
+      const rawAmount = tx.amount.replace(/^[+\-]\s*/, "").replace(/R\$\s*/, "").trim();
       const tipo = tx.type === "entrada" ? "Entrada" : "Saída";
       const status = tx.isSettled ? "Liquidado" : "Pendente";
       const recorrencia =
@@ -439,35 +238,26 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         isoDate,
         `"${tx.description.replace(/"/g, '""')}"`,
         `"${tx.category.replace(/"/g, '""')}"`,
-        tipo,
-        rawAmount,
-        status,
-        tx.paymentDate ?? "",
-        recorrencia,
+        tipo, rawAmount, status, tx.paymentDate ?? "", recorrencia,
       ].join(",");
     });
     const csv = [headers.join(","), ...csvRows].join("\n");
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
-    });
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `lancamentos-${PT_MONTHS_NAMES[month]}-${year}.csv`;
+    link.download = `lancamentos-${PT_MONTHS_SHORT[month]}-${year}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }
 
   const editingFormState = useMemo<TransactionFormState>(() => {
-    if (!editingTransaction) {
-      return createDefaultTransactionFormState();
-    }
-
+    if (!editingTransaction) return createDefaultTransactionFormState();
     return {
       description: editingTransaction.description,
       category: editingTransaction.category,
-      date: parseUiDateToIso(editingTransaction.date),
-      amount: formatCurrencyBRL(editingTransaction.amount),
+      date: parseShortDateToIso(editingTransaction.date),
+      amount: formatDecimalInputFromString(editingTransaction.amount),
       type: editingTransaction.type,
       recurrenceMode: editingTransaction.recurrenceMode,
       recurrenceKind: editingTransaction.recurrenceKind ?? "fixa",
@@ -477,400 +267,60 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
       isSettled: editingTransaction.isSettled,
       paymentDate:
         editingTransaction.paymentDate ??
-        (editingTransaction.isSettled
-          ? new Date().toISOString().split("T")[0]
-          : ""),
+        (editingTransaction.isSettled ? new Date().toISOString().split("T")[0] : ""),
     };
   }, [editingTransaction]);
 
-  // Step 1 → 2: parse file and show preview
-  const handleOfxPreview = async () => {
-    if (!ofxFile) return;
-    setIsImporting(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", ofxFile);
-      const res = await fetch("/api/transactions/preview-ofx", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast((data as { error?: string }).error ?? "Erro ao processar arquivo.", "error");
-        return;
-      }
-      const rows = (data as { transactions: PreviewRow[] }).transactions;
-      if (rows.length === 0) {
-        toast("Nenhuma transação encontrada no arquivo.", "error");
-        return;
-      }
-
-      // Fetch user categories for the select
-      const catRes = await fetch("/api/categories");
-      const catData = await catRes.json().catch(() => ({ categories: [] }));
-      const cats: AvailableCategory[] = Array.isArray(catData) ? catData : [];
-      setAvailableCategories(cats);
-
-      // Pre-fill selections from suggested categoryId
-      const selections: Record<number, string> = {};
-      rows.forEach((r, i) => {
-        if (r.categoryId) selections[i] = r.categoryId;
-        else if (cats.length > 0) selections[i] = cats[0].id;
-      });
-      setPreviewRows(rows);
-      setCategorySelections(selections);
-      setOfxStep(2);
-    } catch {
-      toast("Erro ao processar arquivo OFX.", "error");
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
-  // Step 2: confirm and import
-  const handleOfxImport = async () => {
-    setIsImporting(true);
-    try {
-      const transactions = previewRows.map((r, i) => ({
-        date: r.date,
-        description: r.description,
-        amount: r.amount,
-        type: r.type,
-        categoryId: categorySelections[i] ?? (availableCategories[0]?.id ?? ""),
-      }));
-      const res = await fetch("/api/transactions/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transactions }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        toast((data as { error?: string }).error ?? "Erro ao importar.", "error");
-        return;
-      }
-      const count = (data as { imported?: number }).imported ?? 0;
-      toast(`${count} lançamento${count !== 1 ? "s" : ""} importado${count !== 1 ? "s" : ""} com sucesso.`, "success");
-      closeOfxModal();
-      router.refresh();
-    } catch {
-      toast("Erro ao importar lançamentos.", "error");
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   return (
     <>
-      {/* OFX Import Modal */}
-      {isOfxModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="ofx-modal-title"
-          onKeyDown={(e) => { if (e.key === "Escape") closeOfxModal(); }}
-        >
-          {/* Step 1 — file picker */}
-          {ofxStep === 1 && (
-            <div className="w-full max-w-md rounded-xl bg-background p-6 shadow-lg">
-              <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
-                Importar extrato OFX
-              </h2>
-              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                Selecione um arquivo .ofx ou .qfx exportado pelo seu banco. Você poderá revisar e ajustar as categorias antes de importar.
-              </p>
-
-              <div
-                className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 cursor-pointer hover:bg-muted/50 transition"
-                onClick={() => ofxInputRef.current?.click()}
-              >
-                <LucideIcon icon={Upload} className="h-8 w-8 text-muted-foreground" aria-hidden />
-                {ofxFile ? (
-                  <p className="text-sm font-medium text-foreground">{ofxFile.name}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Clique para selecionar um arquivo</p>
-                )}
-                <input
-                  ref={ofxInputRef}
-                  type="file"
-                  accept=".ofx,.qfx"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] ?? null;
-                    setOfxFile(f);
-                    e.target.value = "";
-                  }}
-                />
-              </div>
-
-              <div className="mt-4 flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-xs sm:text-sm"
-                  onClick={closeOfxModal}
-                  disabled={isImporting}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  className="flex-1 text-xs sm:text-sm"
-                  onClick={handleOfxPreview}
-                  disabled={!ofxFile || isImporting}
-                >
-                  {isImporting ? "Processando…" : "Próximo →"}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2 — preview + category selects */}
-          {ofxStep === 2 && (
-            <div className="w-full max-w-3xl rounded-xl bg-background p-6 shadow-lg flex flex-col gap-4 max-h-[90vh]">
-              <div>
-                <h2 id="ofx-modal-title" className="text-base sm:text-lg font-semibold text-foreground">
-                  Revisar lançamentos ({previewRows.length})
-                </h2>
-                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                  Ajuste as categorias antes de importar.
-                </p>
-              </div>
-
-              <div className="overflow-y-auto flex-1 -mx-1 px-1">
-                <table className="w-full text-xs sm:text-sm">
-                  <thead className="sticky top-0 bg-background z-10">
-                    <tr className="border-b border-border text-muted-foreground text-left">
-                      <th className="pb-2 font-medium pr-3">Data</th>
-                      <th className="pb-2 font-medium pr-3">Descrição</th>
-                      <th className="pb-2 font-medium text-right pr-3">Valor</th>
-                      <th className="pb-2 font-medium">Categoria</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {previewRows.map((row, i) => (
-                      <tr key={i} className="hover:bg-muted/30">
-                        <td className="py-2 pr-3 whitespace-nowrap">{row.date}</td>
-                        <td className="py-2 pr-3 max-w-50 truncate">{row.description}</td>
-                        <td className={`py-2 pr-3 text-right tabular-nums font-medium whitespace-nowrap ${row.type === "INCOME" ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                          {row.type === "INCOME" ? "+" : "-"} R$ {row.amount.toFixed(2).replace(".", ",")}
-                        </td>
-                        <td className="py-2">
-                          <select
-                            value={categorySelections[i] ?? ""}
-                            onChange={(e) => setCategorySelections((prev) => ({ ...prev, [i]: e.target.value }))}
-                            className="w-full rounded-lg border border-border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                          >
-                            {availableCategories.map((c) => (
-                              <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex gap-3 pt-2 border-t border-border">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-xs sm:text-sm"
-                  onClick={() => setOfxStep(1)}
-                  disabled={isImporting}
-                >
-                  ← Voltar
-                </Button>
-                <Button
-                  className="flex-1 text-xs sm:text-sm"
-                  onClick={handleOfxImport}
-                  disabled={isImporting || previewRows.length === 0}
-                >
-                  {isImporting ? "Importando…" : `Confirmar e importar ${previewRows.length} lançamento${previewRows.length !== 1 ? "s" : ""}`}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <TransactionsOFXModal
+        isOpen={isOfxModalOpen}
+        onClose={() => setIsOfxModalOpen(false)}
+        onImportSuccess={() => router.refresh()}
+      />
 
       <div className="rounded-2xl border border-border bg-surface shadow-sm">
+        {/* Header */}
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:px-6 sm:py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base sm:text-lg font-semibold text-foreground">
-              Lançamentos
-            </h2>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              Confira suas movimentações recentes.
-            </p>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground">Lançamentos</h2>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Confira suas movimentações recentes.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <MonthSelector year={year} month={month} />
             <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               {filteredRows.length} de {rows.length} itens
             </span>
-            <Button
-              variant="outline"
-              className="flex items-center gap-1.5 h-8 px-3 text-xs"
-              onClick={exportToCsv}
-              title="Exportar lançamentos filtrados como CSV"
-            >
+            <Button variant="outline" className="flex items-center gap-1.5 h-8 px-3 text-xs" onClick={exportToCsv} title="Exportar lançamentos filtrados como CSV">
               <LucideIcon icon={Download} className="h-3.5 w-3.5" />
               Exportar CSV
             </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-1.5 h-8 px-3 text-xs"
-              onClick={() => setIsOfxModalOpen(true)}
-              title="Importar extrato bancário OFX"
-            >
+            <Button variant="outline" className="flex items-center gap-1.5 h-8 px-3 text-xs" onClick={() => setIsOfxModalOpen(true)} title="Importar extrato bancário OFX">
               <LucideIcon icon={Upload} className="h-3.5 w-3.5" />
               Importar OFX
             </Button>
           </div>
         </div>
-        <div className="border-b border-border bg-muted/20 px-3 py-2 sm:px-6 sm:py-4">
-          {/* Saved filter chips */}
-          {savedFilters.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-1.5">
-              {savedFilters.map((f) => (
-                <div
-                  key={f.name}
-                  className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground shadow-sm"
-                >
-                  <button
-                    type="button"
-                    onClick={() => applyFilter(f)}
-                    className="hover:text-primary transition-colors"
-                  >
-                    <LucideIcon icon={Bookmark} className="mr-1 inline h-3 w-3 text-primary" aria-hidden />
-                    {f.name}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Remover filtro ${f.name}`}
-                    onClick={() => deleteFilter(f.name)}
-                    className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 transition-colors"
-                  >
-                    <LucideIcon icon={X} className="h-2.5 w-2.5" aria-hidden />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
 
-          <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="grid flex-1 grid-cols-2 gap-2 sm:gap-3 lg:flex lg:items-center">
-              <Input
-                placeholder="Pesquisar..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                className="col-span-2 lg:max-w-sm"
-              />
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(
-                    event.target.value as "todos" | "pendente" | "liquidado",
-                  )
-                }
-                className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-44"
-              >
-                <option value="todos">Status</option>
-                <option value="pendente">Pendentes</option>
-                <option value="liquidado">Liquidados</option>
-              </select>
-              <select
-                value={typeFilter}
-                onChange={(event) =>
-                  setTypeFilter(
-                    event.target.value as "todos" | "entrada" | "saida",
-                  )
-                }
-                className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:w-36"
-              >
-                <option value="todos">Todos os tipos</option>
-                <option value="entrada">Entradas</option>
-                <option value="saida">Saídas</option>
-              </select>
-            </div>
-            <select
-              value={recurrenceFilter}
-              onChange={(event) =>
-                setRecurrenceFilter(
-                  event.target.value as
-                    | "todos"
-                    | "recorrente"
-                    | "nao_recorrente",
-                )
-              }
-              className="flex h-8 sm:h-10 w-full rounded-md border border-border bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-foreground shadow-sm outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-52"
-            >
-              <option value="todos">Recorrências</option>
-              <option value="nao_recorrente">Não recorrentes</option>
-              <option value="recorrente">Recorrentes</option>
-            </select>
+        {/* Filter bar */}
+        <TransactionsFilterBar value={filters} onChange={setFilters} />
 
-            {/* Save filter */}
-            {isSavingFilter ? (
-              <div className="flex shrink-0 items-center gap-1.5">
-                <Input
-                  autoFocus
-                  placeholder="Nome do filtro…"
-                  value={savingFilterName}
-                  onChange={(e) => setSavingFilterName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveCurrentFilter();
-                    if (e.key === "Escape") { setIsSavingFilter(false); setSavingFilterName(""); }
-                  }}
-                  className="h-8 w-36 text-xs"
-                />
-                <Button type="button" className="h-8 px-3 text-xs" onClick={saveCurrentFilter} disabled={!savingFilterName.trim()}>
-                  Salvar
-                </Button>
-                <Button type="button" variant="outline" className="h-8 px-2 text-xs" onClick={() => { setIsSavingFilter(false); setSavingFilterName(""); }}>
-                  <LucideIcon icon={X} className="h-3.5 w-3.5" aria-hidden />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="shrink-0 flex items-center gap-1.5 h-8 px-3 text-xs"
-                onClick={() => setIsSavingFilter(true)}
-                title="Salvar filtro atual"
-              >
-                <LucideIcon icon={Bookmark} className="h-3.5 w-3.5" aria-hidden />
-                Salvar filtro
-              </Button>
-            )}
-          </div>
-        </div>
+        {/* Mobile cards */}
         <div className="block md:hidden">
           <div className="space-y-2 px-3 py-2 sm:space-y-4 sm:px-6 sm:py-4">
             {filteredRows.length === 0 ? (
-              <p className="text-center text-xs sm:text-sm text-muted-foreground">
-                Nenhum lançamento encontrado com os filtros atuais.
-              </p>
+              <EmptyState message="Nenhum lançamento encontrado com os filtros atuais." />
             ) : (
               filteredRows.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-lg border border-border bg-background p-2.5 shadow-sm"
-                >
+                <div key={item.id} className="rounded-lg border border-border bg-background p-2.5 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-foreground truncate">
-                        {item.description}
-                      </p>
+                      <p className="text-xs font-semibold text-foreground truncate">{item.description}</p>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         {(() => {
-                          const iconEntry = item.categoryIconId
-                            ? iconOptions.find((o) => o.id === item.categoryIconId)
-                            : null;
+                          const iconEntry = item.categoryIconId ? iconOptions.find((o) => o.id === item.categoryIconId) : null;
                           return iconEntry ? (
-                            <span
-                              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`}
-                              style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}
-                            >
+                            <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`} style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}>
                               <LucideIcon icon={iconEntry.icon} className="h-2.5 w-2.5" aria-hidden />
                             </span>
                           ) : null;
@@ -880,30 +330,13 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         <span className="shrink-0">{item.date}</span>
                       </div>
                     </div>
-                    <span
-                      className={`shrink-0 text-xs font-semibold ${
-                        item.type === "entrada"
-                          ? "text-emerald-600"
-                          : "text-rose-500"
-                      }`}
-                    >
+                    <span className={`shrink-0 text-xs font-semibold ${item.type === "entrada" ? "text-emerald-600" : "text-rose-500"}`}>
                       {item.amount}
                     </span>
                   </div>
-
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                        item.isSettled
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {item.isSettled
-                        ? item.type === "entrada"
-                          ? "Recebido"
-                          : "Pago"
-                        : "Pendente"}
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.isSettled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                      {item.isSettled ? (item.type === "entrada" ? "Recebido" : "Pago") : "Pendente"}
                     </span>
                     {item.recurrenceMode === "recorrente" && (
                       <span className="text-[10px] text-muted-foreground">
@@ -914,51 +347,22 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       </span>
                     )}
                     {!item.isVirtual && (
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSettlement(item.id)}
-                        className="ml-auto text-[10px] font-medium text-primary transition hover:text-primary/80"
-                      >
-                        {item.isSettled
-                          ? "Marcar pendente"
-                          : item.type === "entrada"
-                            ? "Marcar recebido"
-                            : "Marcar pago"}
+                      <button type="button" onClick={() => handleToggleSettlement(item.id)} className="ml-auto text-[10px] font-medium text-primary transition hover:text-primary/80">
+                        {item.isSettled ? "Marcar pendente" : item.type === "entrada" ? "Marcar recebido" : "Marcar pago"}
                       </button>
                     )}
                   </div>
-
                   {item.isSettled && item.paymentDate ? (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      Pago em {item.paymentDate}
-                    </p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Pago em {item.paymentDate}</p>
                   ) : null}
-
                   <div className="mt-2 flex gap-2">
-                    {!item.isVirtual && (
+                    {!item.isVirtual ? (
                       <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-7 flex-1 border-border text-[10px]"
-                          onClick={() => startEditing(item)}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-7 flex-1 border-border text-[10px] text-rose-500 hover:bg-rose-500/10"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Excluir
-                        </Button>
+                        <Button type="button" variant="outline" className="h-7 flex-1 border-border text-[10px]" onClick={() => setEditingTransaction(item)}>Editar</Button>
+                        <Button type="button" variant="outline" className="h-7 flex-1 border-border text-[10px] text-rose-500 hover:bg-rose-500/10" onClick={() => setPendingDeleteId(item.id)}>Excluir</Button>
                       </>
-                    )}
-                    {item.isVirtual && (
-                      <span className="w-full text-center text-[10px] text-muted-foreground">
-                        Recorrência projetada
-                      </span>
+                    ) : (
+                      <span className="w-full text-center text-[10px] text-muted-foreground">Recorrência projetada</span>
                     )}
                   </div>
                 </div>
@@ -966,6 +370,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             )}
           </div>
         </div>
+
+        {/* Desktop table */}
         <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full text-sm">
             <thead className="bg-background text-left text-muted-foreground">
@@ -1002,30 +408,20 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-6 text-center text-sm text-muted-foreground"
-                  >
-                    Nenhum lançamento encontrado com os filtros atuais.
+                  <td colSpan={7} className="px-6 py-2 text-center">
+                    <EmptyState message="Nenhum lançamento encontrado com os filtros atuais." />
                   </td>
                 </tr>
               ) : (
                 filteredRows.map((item) => (
                   <tr key={item.id} className="border-t border-border">
-                    <td className="px-6 py-4 font-medium text-foreground">
-                      {item.description}
-                    </td>
+                    <td className="px-6 py-4 font-medium text-foreground">{item.description}</td>
                     <td className="px-6 py-4 text-muted-foreground">
                       <div className="flex items-center gap-2">
                         {(() => {
-                          const iconEntry = item.categoryIconId
-                            ? iconOptions.find((o) => o.id === item.categoryIconId)
-                            : null;
+                          const iconEntry = item.categoryIconId ? iconOptions.find((o) => o.id === item.categoryIconId) : null;
                           return iconEntry ? (
-                            <span
-                              className={`flex h-8 w-8 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`}
-                              style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}
-                            >
+                            <span className={`flex h-8 w-8 items-center justify-center rounded-full ${item.categoryColor ? "text-white" : "bg-muted text-foreground"}`} style={item.categoryColor ? { backgroundColor: item.categoryColor } : undefined}>
                               <LucideIcon icon={iconEntry.icon} className="h-4 w-4" aria-hidden />
                             </span>
                           ) : null;
@@ -1033,26 +429,17 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                         <span>{item.category}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {item.date}
-                    </td>
+                    <td className="px-6 py-4 text-muted-foreground">{item.date}</td>
                     <td className="px-6 py-4 text-muted-foreground">
                       <div className="flex flex-col">
                         <span className="font-medium text-foreground">
                           {item.recurrenceMode === "recorrente"
-                            ? item.recurrenceKind === "fixa"
-                              ? "Recorrente fixa"
-                              : "Recorrente variável"
+                            ? item.recurrenceKind === "fixa" ? "Recorrente fixa" : "Recorrente variável"
                             : "Não recorrente"}
                         </span>
-                        {item.recurrenceMode === "recorrente" &&
-                        item.recurrenceFrequency ? (
+                        {item.recurrenceMode === "recorrente" && item.recurrenceFrequency ? (
                           <span className="text-xs text-muted-foreground">
-                            {item.recurrenceFrequency === "mensal"
-                              ? "Mensal"
-                              : item.recurrenceFrequency === "semanal"
-                                ? "Semanal"
-                                : "Anual"}
+                            {item.recurrenceFrequency === "mensal" ? "Mensal" : item.recurrenceFrequency === "semanal" ? "Semanal" : "Anual"}
                             {formatBillingLabel(item)}
                           </span>
                         ) : null}
@@ -1060,73 +447,33 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-2">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            item.isSettled
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {item.isSettled
-                            ? item.type === "entrada"
-                              ? "Recebido"
-                              : "Pago"
-                            : "Pendente"}
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${item.isSettled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                          {item.isSettled ? (item.type === "entrada" ? "Recebido" : "Pago") : "Pendente"}
                         </span>
                         {item.isSettled && item.paymentDate ? (
-                          <span className="text-xs text-muted-foreground">
-                            Pago em {item.paymentDate}
-                          </span>
+                          <span className="text-xs text-muted-foreground">Pago em {item.paymentDate}</span>
                         ) : null}
                         <button
                           type="button"
                           onClick={() => handleToggleSettlement(item.id)}
-                          className={`text-left text-xs font-medium text-primary transition hover:text-primary/80 ${
-                            item.isVirtual ? "hidden" : ""
-                          }`}
+                          className={`text-left text-xs font-medium text-primary transition hover:text-primary/80 ${item.isVirtual ? "hidden" : ""}`}
                         >
-                          {item.isSettled
-                            ? "Marcar como pendente"
-                            : item.type === "entrada"
-                              ? "Marcar como recebido"
-                              : "Marcar como pago"}
+                          {item.isSettled ? "Marcar como pendente" : item.type === "entrada" ? "Marcar como recebido" : "Marcar como pago"}
                         </button>
                       </div>
                     </td>
-                    <td
-                      className={`px-6 py-4 text-right font-semibold ${
-                        item.type === "entrada"
-                          ? "text-emerald-600"
-                          : "text-rose-500"
-                      }`}
-                    >
+                    <td className={`px-6 py-4 text-right font-semibold ${item.type === "entrada" ? "text-emerald-600" : "text-rose-500"}`}>
                       {item.amount}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex justify-end gap-2">
                         {!item.isVirtual ? (
                           <>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="border-border px-3 py-1 text-xs"
-                              onClick={() => startEditing(item)}
-                            >
-                              Editar
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10"
-                              onClick={() => handleDelete(item.id)}
-                            >
-                              Excluir
-                            </Button>
+                            <Button type="button" variant="outline" className="border-border px-3 py-1 text-xs" onClick={() => setEditingTransaction(item)}>Editar</Button>
+                            <Button type="button" variant="outline" className="border-border px-3 py-1 text-xs text-rose-500 hover:bg-rose-500/10" onClick={() => setPendingDeleteId(item.id)}>Excluir</Button>
                           </>
                         ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Projetada
-                          </span>
+                          <span className="text-xs text-muted-foreground">Projetada</span>
                         )}
                       </div>
                     </td>

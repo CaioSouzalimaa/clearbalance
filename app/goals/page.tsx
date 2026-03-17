@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { formatBRLInputFromString, parseBRLInput } from "@/lib/formatting";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Goal {
   id: string;
@@ -27,18 +29,8 @@ interface GoalModalProps {
   onSave: (goal: Goal) => void;
 }
 
-function formatBRL(value: string): string {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "";
-  return (Number(digits) / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-function parseBRL(formatted: string): number {
-  return Number(formatted.replace(/\D/g, "")) / 100;
-}
+const formatBRL = formatBRLInputFromString;
+const parseBRL = parseBRLInput;
 
 function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
   const [formName, setFormName] = useState("");
@@ -175,13 +167,19 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
             >
               Valor da meta
             </label>
-            <Input
-              id="goal-target"
-              inputMode="numeric"
-              placeholder="R$ 0,00"
-              value={formTarget}
-              onChange={(e) => setFormTarget(formatBRL(e.target.value))}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
+                R$
+              </span>
+              <Input
+                id="goal-target"
+                inputMode="numeric"
+                placeholder="0,00"
+                value={formTarget}
+                onChange={(e) => setFormTarget(formatBRL(e.target.value))}
+                className="pl-10"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -191,13 +189,19 @@ function GoalModal({ isOpen, editingGoal, onClose, onSave }: GoalModalProps) {
             >
               Valor inicial {editingGoal ? "(Saldo atual)" : "(opcional)"}
             </label>
-            <Input
-              id="goal-initial"
-              inputMode="numeric"
-              placeholder="R$ 0,00"
-              value={formInitial}
-              onChange={(e) => setFormInitial(formatBRL(e.target.value))}
-            />
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
+                R$
+              </span>
+              <Input
+                id="goal-initial"
+                inputMode="numeric"
+                placeholder="0,00"
+                value={formInitial}
+                onChange={(e) => setFormInitial(formatBRL(e.target.value))}
+                className="pl-10"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               {editingGoal
                 ? "Ajuste manualmente o saldo da meta (não afeta lançamentos)"
@@ -565,9 +569,7 @@ export default function GoalsPage() {
               ))}
             </>
           ) : goals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma meta criada ainda. Clique em "Nova meta" para começar!
-            </p>
+            <EmptyState message='Nenhuma meta criada ainda. Clique em "Nova meta" para começar!' />
           ) : (
             goals.map((goal) => {
               const isContributing = contributingId === goal.id;
@@ -653,17 +655,23 @@ export default function GoalsPage() {
                       >
                         Registrar aporte ou retirada
                       </label>
-                      <Input
-                        id={`aporte-${goal.id}`}
-                        name={`aporte-${goal.id}`}
-                        inputMode="numeric"
-                        placeholder="R$ 0,00"
-                        value={contributions[goal.id] ?? ""}
-                        onChange={(event) =>
-                          handleContributionChange(goal.id, event.target.value)
-                        }
-                        disabled={isContributing || withdrawingId === goal.id}
-                      />
+                      <div className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
+                          R$
+                        </span>
+                        <Input
+                          id={`aporte-${goal.id}`}
+                          name={`aporte-${goal.id}`}
+                          inputMode="numeric"
+                          placeholder="0,00"
+                          value={contributions[goal.id] ?? ""}
+                          onChange={(event) =>
+                            handleContributionChange(goal.id, event.target.value)
+                          }
+                          disabled={isContributing || withdrawingId === goal.id}
+                          className="pl-10"
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button

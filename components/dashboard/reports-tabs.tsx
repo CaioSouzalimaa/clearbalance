@@ -6,13 +6,13 @@ import { CategoryDistributionChart } from "@/components/dashboard/category-distr
 import { VariationChart } from "@/components/dashboard/variation-chart";
 import { MonthSelector } from "@/components/dashboard/month-selector";
 import type { MonthlyReportData, AnnualReportData } from "@/lib/transactions";
+import { formatBRLFromNumber } from "@/lib/formatting";
+import { PT_MONTHS_SHORT } from "@/lib/date-utils";
 
 const COLORS = [
   "#6366f1", "#f43f5e", "#10b981", "#f59e0b", "#3b82f6",
   "#8b5cf6", "#ec4899", "#14b8a6", "#f97316", "#06b6d4",
 ];
-
-const PT_MONTHS_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 interface ReportsTabsProps {
   tab: "monthly" | "annual";
@@ -22,8 +22,7 @@ interface ReportsTabsProps {
   annual: AnnualReportData | null;
 }
 
-const fmtBRL = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fmtBRL = formatBRLFromNumber;
 
 export function ReportsTabs({ tab, year, month, monthly, annual }: ReportsTabsProps) {
   const router = useRouter();

@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { formatDecimalInputFromString } from "@/lib/formatting";
 
 export type RecurrenceMode = "nao_recorrente" | "recorrente";
 export type RecurrenceKind = "fixa" | "variavel";
@@ -132,21 +133,7 @@ export const TransactionModal = ({
     });
   }, [categories, formState.type]);
 
-  const formatCurrencyBRL = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-
-    if (!digits) {
-      return "";
-    }
-
-    const numberValue = Number(digits) / 100;
-
-    return numberValue.toLocaleString("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
+  const formatCurrencyBRL = formatDecimalInputFromString;
 
   const getBillingDayLabel = () => {
     if (formState.recurrenceFrequency === "semanal") {

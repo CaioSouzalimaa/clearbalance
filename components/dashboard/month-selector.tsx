@@ -5,16 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide";
 
 import { LucideIcon } from "@/components/dashboard/sidebar";
-
-const PT_MONTHS_FULL = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
-const PT_MONTHS_SHORT = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
-];
+import { PT_MONTHS_FULL, PT_MONTHS_SHORT } from "@/lib/date-utils";
 
 interface MonthSelectorProps {
   year: number;

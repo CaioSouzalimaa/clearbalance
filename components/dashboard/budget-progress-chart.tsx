@@ -2,6 +2,8 @@
 
 import { resolveIcon } from "@/lib/icon-options";
 import { LucideIcon } from "@/components/dashboard/sidebar";
+import { formatBRLFromNumber } from "@/lib/formatting";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface BudgetProgressItem {
   categoryName: string;
@@ -18,8 +20,6 @@ interface BudgetProgressChartProps {
   data: BudgetProgressItem[];
 }
 
-const formatBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export const BudgetProgressChart = ({
   title,
@@ -32,9 +32,7 @@ export const BudgetProgressChart = ({
       <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-muted-foreground">{subtitle}</p>
 
       {data.length === 0 ? (
-        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">
-          Nenhuma categoria com orçamento definido.
-        </p>
+        <EmptyState message="Nenhuma categoria com orçamento definido." />
       ) : (
         <div className="mt-3 sm:mt-6 space-y-3 sm:space-y-4">
           {data.map((item) => {
@@ -77,7 +75,7 @@ export const BudgetProgressChart = ({
                       )}
                     </div>
                     <p className="shrink-0 text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
-                      {formatBRL(item.spent)} / {formatBRL(item.budget)}
+                      {formatBRLFromNumber(item.spent)} / {formatBRLFromNumber(item.budget)}
                     </p>
                   </div>
                   <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">

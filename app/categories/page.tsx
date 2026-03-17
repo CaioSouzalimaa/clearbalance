@@ -8,6 +8,8 @@ import { ConfirmModal } from "@/components/dashboard/confirm-modal";
 import { LucideIcon } from "@/components/dashboard/sidebar";
 import { SidebarShell } from "@/components/dashboard/sidebar-shell";
 import { Button } from "@/components/ui/button";
+import { formatDecimalInputFromString, parseBRLInput } from "@/lib/formatting";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -97,21 +99,11 @@ export default function CategoriesPage() {
   }, []);
 
   /* ── open / close modal ── */
-  const formatBudgetBRL = (value: string): string => {
-    const digits = value.replace(/\D/g, "");
-    if (!digits) return "";
-    const numberValue = Number(digits) / 100;
-    return numberValue.toLocaleString("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
+  const formatBudgetBRL = formatDecimalInputFromString;
 
   const parseBudgetFromFormatted = (value: string): number | null => {
-    const digits = value.replace(/\D/g, "");
-    if (!digits) return null;
-    return Number(digits) / 100;
+    const parsed = parseBRLInput(value);
+    return parsed === 0 ? null : parsed;
   };
 
   const openCreate = () => {
@@ -420,7 +412,7 @@ export default function CategoriesPage() {
                         <span className="text-muted-foreground font-normal">(opcional)</span>
                       </label>
                       <div className="relative">
-                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
+                        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
                           R$
                         </span>
                         <Input
@@ -431,7 +423,7 @@ export default function CategoriesPage() {
                           disabled={isSaving}
                           inputMode="numeric"
                           onChange={(e) => setFormBudget(formatBudgetBRL(e.target.value))}
-                          className="pl-9"
+                          className="pl-10"
                         />
                       </div>
                       {budgetSuggestion != null && (
@@ -604,11 +596,10 @@ export default function CategoriesPage() {
               ))}
             </>
           ) : filteredCategories.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              {categorySearch
-                ? "Nenhuma categoria encontrada."
-                : "Nenhuma categoria. Crie a primeira!"}
-            </p>
+            <EmptyState
+              message={categorySearch ? "Nenhuma categoria encontrada." : "Nenhuma categoria. Crie a primeira!"}
+              className="py-8"
+            />
           ) : (
             filteredCategories.map((category) => {
               const Icon = resolveIcon(category.iconId);
