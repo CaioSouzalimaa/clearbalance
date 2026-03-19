@@ -10,14 +10,33 @@ import { PT_MONTHS_FULL, PT_MONTHS_SHORT } from "@/lib/date-utils";
 interface MonthSelectorProps {
   year: number;
   month: number; // 0-indexed
+  onMonthChange?: (year: number, month: number) => void;
 }
 
-export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
+export const MonthSelector = ({
+  year,
+  month,
+  onMonthChange,
+}: MonthSelectorProps) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const pushDashboardMonth = (y: number, m: number) => {
+    const mStr = String(m + 1).padStart(2, "0");
+    router.push(`/dashboard?month=${y}-${mStr}`, { scroll: false });
+  };
+
+  const commitMonthChange = (y: number, m: number) => {
+    if (onMonthChange) {
+      onMonthChange(y, m);
+      return;
+    }
+
+    pushDashboardMonth(y, m);
+  };
 
   // Sync picker year when prop changes (e.g. arrow nav outside picker)
   useEffect(() => {
@@ -39,26 +58,25 @@ export const MonthSelector = ({ year, month }: MonthSelectorProps) => {
   const navigate = (delta: number) => {
     const next = new Date(year, month + delta, 1);
     const y = next.getFullYear();
-    const m = String(next.getMonth() + 1).padStart(2, "0");
+    const m = next.getMonth();
     startTransition(() => {
-      router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+      commitMonthChange(y, m);
     });
   };
 
   const goToMonth = (y: number, m: number) => {
-    const mStr = String(m + 1).padStart(2, "0");
     setIsOpen(false);
     startTransition(() => {
-      router.push(`/dashboard?month=${y}-${mStr}`, { scroll: false });
+      commitMonthChange(y, m);
     });
   };
 
   const goToToday = () => {
     const now = new Date();
     const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const m = now.getMonth();
     startTransition(() => {
-      router.push(`/dashboard?month=${y}-${m}`, { scroll: false });
+      commitMonthChange(y, m);
     });
   };
 
