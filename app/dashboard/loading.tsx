@@ -17,7 +17,10 @@ export default function DashboardLoading() {
       <div className="flex-1 space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-52" />
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-9 w-64" />
+          </div>
           <Skeleton className="h-9 w-36 rounded-lg" />
         </div>
 
@@ -29,34 +32,46 @@ export default function DashboardLoading() {
         </div>
 
         {/* Summary cards */}
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+        <section className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-3"
+              className="rounded-2xl border border-border bg-surface p-4 shadow-sm space-y-2"
             >
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-8 rounded-lg" />
-              </div>
-              <Skeleton className="h-7 w-32" />
+              <Skeleton className="h-3.5 w-20" />
+              <Skeleton className="h-7 w-28" />
               <Skeleton className="h-3 w-20" />
             </div>
           ))}
         </section>
 
-        {/* Distribution charts */}
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4"
-            >
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-3 w-56" />
-              <Skeleton className="mx-auto h-40 w-40 rounded-full" />
+        {/* Top charts: variation + categories */}
+        <section className="grid gap-3 sm:gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4 min-h-90 sm:min-h-105">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-52 w-full rounded-lg" />
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4 min-h-90 sm:min-h-105">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-3 w-56" />
+              </div>
+              <Skeleton className="h-8 w-32 rounded-lg" />
             </div>
-          ))}
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-2.5 w-full rounded-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
 
         {/* Goals progress */}
@@ -76,19 +91,31 @@ export default function DashboardLoading() {
           </div>
         </div>
 
-        {/* Variation charts */}
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4"
-            >
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-            </div>
-          ))}
-        </section>
+        {/* Budget progress */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-3 w-72" />
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-2.5 w-full rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Calendar */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </div>
+          <Skeleton className="h-56 w-full rounded-lg" />
+        </div>
 
         {/* Transactions table */}
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-sm space-y-4">
