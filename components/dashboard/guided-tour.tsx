@@ -60,17 +60,27 @@ const getSteps = (isMobile: boolean): DriveStep[] => {
       popover: {
         title: "💰 Resumo do Mês",
         description:
-          "Aqui você vê suas <strong>Entradas</strong>, <strong>Saídas</strong> e o <strong>Saldo</strong> do mês selecionado.",
+          "Aqui você vê suas <strong>Entradas</strong>, <strong>Saídas</strong>, <strong>Saldo</strong> e o <strong>Montante acumulado</strong> para o mês selecionado.",
         side: "bottom",
+        align: "center",
+      },
+    },
+    {
+      element: "[data-tour='variation-charts']",
+      popover: {
+        title: "📈 Variação Mensal",
+        description:
+          "Acompanhe a evolução das suas <strong>entradas</strong> e <strong>saídas</strong> nos últimos 6 meses.",
+        side: "top",
         align: "center",
       },
     },
     {
       element: "[data-tour='charts']",
       popover: {
-        title: "📊 Distribuição por Categoria",
+        title: "📊 Categorias",
         description:
-          "Visualize como suas receitas e despesas estão distribuídas entre as categorias.",
+          "Veja as categorias com maior peso e alterne entre <strong>Saídas</strong> e <strong>Entradas</strong> para comparar rapidamente.",
         side: "top",
         align: "center",
       },
@@ -86,11 +96,11 @@ const getSteps = (isMobile: boolean): DriveStep[] => {
       },
     },
     {
-      element: "[data-tour='variation-charts']",
+      element: "[data-tour='budget-chart']",
       popover: {
-        title: "📈 Variação Mensal",
+        title: "🧾 Orçamento",
         description:
-          "Acompanhe a evolução das suas <strong>receitas</strong> e <strong>despesas</strong> ao longo dos últimos 6 meses.",
+          "Monitore quanto já foi gasto em cada categoria em relação ao limite mensal definido.",
         side: "top",
         align: "center",
       },

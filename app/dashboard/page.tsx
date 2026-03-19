@@ -125,7 +125,7 @@ export default async function DashboardPage({
           />
         </section>
 
-        <section className="grid gap-3 sm:gap-6">
+        <section data-tour="budget-chart" className="grid gap-3 sm:gap-6">
           <BudgetProgressChart
             title="Orçamento por categoria"
             subtitle="Quanto você gastou em relação ao limite mensal de cada categoria."
