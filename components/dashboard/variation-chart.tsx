@@ -22,6 +22,7 @@ interface VariationChartProps {
   subtitle: string;
   incomeData: VariationPoint[];
   expenseData: VariationPoint[];
+  className?: string;
 }
 
 ChartJS.register(
@@ -57,7 +58,6 @@ const dualFillPlugin: Plugin<"line"> = {
 
     const baseline = chart.scales.y.getPixelForValue(0);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPoints = (meta: ReturnType<typeof chart.getDatasetMeta>) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       meta.data.map((el: any) => ({
@@ -137,6 +137,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   subtitle,
   incomeData,
   expenseData,
+  className,
 }) => {
   const isEmpty = incomeData.length === 0 && expenseData.length === 0;
 
@@ -173,7 +174,9 @@ export const VariationChart: React.FC<VariationChartProps> = ({
   };
 
   return (
-    <div className="rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm">
+    <div
+      className={`rounded-xl sm:rounded-2xl border border-border bg-surface p-3 sm:p-6 shadow-sm flex flex-col ${className ?? ""}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm sm:text-base font-semibold text-foreground">{title}</h3>
@@ -199,7 +202,7 @@ export const VariationChart: React.FC<VariationChartProps> = ({
       {isEmpty ? (
         <p className="mt-4 text-xs sm:text-sm text-muted-foreground">Nenhum dado disponível ainda.</p>
       ) : (
-        <div className="mt-3 sm:mt-6 h-36 sm:h-44">
+        <div className="mt-3 sm:mt-6 h-52 flex-1 min-h-50 sm:min-h-65">
           <Line
             data={chartData}
             plugins={[dualFillPlugin]}

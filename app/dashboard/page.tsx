@@ -4,8 +4,8 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDashboardData } from "@/lib/transactions";
+import { CategoryBarsChart } from "../../components/dashboard/category-bars-chart";
 import { BudgetProgressChart } from "@/components/dashboard/budget-progress-chart";
-import { CategoryDistributionChart } from "@/components/dashboard/category-distribution-chart";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { GoalsProgressChart } from "@/components/dashboard/goals-progress-chart";
 import { GuidedTour } from "@/components/dashboard/guided-tour";
@@ -58,6 +58,14 @@ export default async function DashboardPage({
     budgetProgress,
   } = dashboardData;
 
+  const displaySummaryCards = [
+    ...summaryCards,
+    {
+      title: "Montante",
+      value: cumulativeBalance,
+    },
+  ];
+
   const hasSeenTour = userPrefs?.hasSeenTour ?? false;
 
   return (
@@ -73,36 +81,40 @@ export default async function DashboardPage({
 
         <section
           data-tour="summary-cards"
-          className="grid grid-cols-3 gap-2 sm:gap-6"
+          className="grid grid-cols-2 items-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4"
         >
-          {summaryCards.map((card) => (
+          {displaySummaryCards.map((card) => (
             <SummaryCard
               key={card.title}
               {...card}
-              {...(card.title === "Saldo"
-                ? {
-                    subValue: cumulativeBalance,
-                    subHelper: "Montante acumulado",
-                  }
-                : {})}
+              helper={
+                card.title === "Saldo" || card.title === "Montante"
+                  ? undefined
+                  : card.helper
+              }
             />
           ))}
         </section>
 
-        <section
-          data-tour="charts"
-          className="grid gap-3 sm:gap-6 md:grid-cols-2"
-        >
-          <CategoryDistributionChart
-            title="Distribuição de entradas"
-            subtitle="Suas principais categorias de entradas no mês."
-            data={incomeDistribution}
-          />
-          <CategoryDistributionChart
-            title="Distribuição de saídas"
-            subtitle="Suas principais categorias de saídas no mês."
-            data={categoryDistribution}
-          />
+        <section className="grid gap-3 sm:gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <div data-tour="variation-charts" className="h-full">
+            <VariationChart
+              title="Variação de entradas e saídas"
+              subtitle="Últimos 6 meses"
+              incomeData={incomeVariation}
+              expenseData={expenseVariation}
+              className="h-full min-h-90 sm:min-h-105"
+            />
+          </div>
+
+          <div data-tour="charts" className="h-full">
+            <CategoryBarsChart
+              expenseData={categoryDistribution}
+              incomeData={incomeDistribution}
+              maxVisibleItems={5}
+              className="h-full min-h-90 sm:min-h-105"
+            />
+          </div>
         </section>
 
         <section data-tour="goals-chart" className="grid gap-3 sm:gap-6">
@@ -118,15 +130,6 @@ export default async function DashboardPage({
             title="Orçamento por categoria"
             subtitle="Quanto você gastou em relação ao limite mensal de cada categoria."
             data={budgetProgress}
-          />
-        </section>
-
-        <section data-tour="variation-charts">
-          <VariationChart
-            title="Variação de entradas e saídas"
-            subtitle="Últimos 6 meses"
-            incomeData={incomeVariation}
-            expenseData={expenseVariation}
           />
         </section>
 
